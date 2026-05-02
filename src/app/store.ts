@@ -1,9 +1,11 @@
 import { configureStore } from "@reduxjs/toolkit";
+import { focusReducer } from "@features/focus";
 import { quickCaptureReducer } from "@features/quickCapture";
 import { tasksReducer } from "@features/tasks";
 import { baseApi } from "@services/api/baseApi";
 
 const reducer = {
+  focus: focusReducer,
   quickCapture: quickCaptureReducer,
   tasks: tasksReducer,
   [baseApi.reducerPath]: baseApi.reducer,

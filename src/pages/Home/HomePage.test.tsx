@@ -1,45 +1,94 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { configureStore } from "@reduxjs/toolkit";
 import { Provider } from "react-redux";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
-import { store } from "@app/store";
 import { AppLayout } from "@app/AppLayout";
-import { selectCaptureItems } from "@features/quickCapture";
+import { focusReducer } from "@features/focus";
+import {
+  quickCaptureReducer,
+  selectCaptureItems,
+} from "@features/quickCapture";
+import { addTask, tasksReducer } from "@features/tasks";
+import { baseApi } from "@services/api/baseApi";
 import { HomePage } from "./HomePage";
 
-function renderHomePage() {
-  return render(
-    <Provider store={store}>
-      <MemoryRouter>
-        <Routes>
-          <Route element={<AppLayout />}>
-            <Route path="/" element={<HomePage />} />
-          </Route>
-        </Routes>
-      </MemoryRouter>
-    </Provider>,
-  );
+function renderHomePage(
+  setupStore?: (store: ReturnType<typeof createStore>) => void,
+) {
+  const store = createStore();
+  setupStore?.(store);
+
+  return {
+    store,
+    ...render(
+      <Provider store={store}>
+        <MemoryRouter>
+          <Routes>
+            <Route element={<AppLayout />}>
+              <Route path="/" element={<HomePage />} />
+            </Route>
+          </Routes>
+        </MemoryRouter>
+      </Provider>,
+    ),
+  };
+}
+
+function createStore() {
+  const store = configureStore({
+    reducer: {
+      focus: focusReducer,
+      quickCapture: quickCaptureReducer,
+      tasks: tasksReducer,
+      [baseApi.reducerPath]: baseApi.reducer,
+    },
+    middleware: (getDefaultMiddleware) =>
+      getDefaultMiddleware().concat(baseApi.middleware),
+  });
+
+  return store;
 }
 
 describe("HomePage", () => {
-  it("renders the home screen focus surface", () => {
-    renderHomePage();
+  it("renders the calm focus empty state", () => {
+    const { store } = renderHomePage();
 
     expect(
       screen.getByRole("heading", { name: /good morning, james/i }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /start focus/i }),
+      screen.getByRole("heading", { name: /nothing urgent right now/i }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("heading", { name: /today.s plan/i }),
     ).toBeInTheDocument();
+    expect(selectCaptureItems(store.getState())).toHaveLength(0);
+  });
+
+  it("renders and completes the recommended focus task", async () => {
+    const user = userEvent.setup();
+    renderHomePage((store) => {
+      store.dispatch(addTask({ content: "Stretch the launch plan" }));
+    });
+
+    expect(
+      screen.getByRole("heading", { name: /stretch the launch plan/i }),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /^done$/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("heading", { name: /nothing urgent right now/i }),
+      ).toBeInTheDocument();
+    });
   });
 
   it("captures a quick thought from the floating action button", async () => {
     const user = userEvent.setup();
 
-    renderHomePage();
+    const { store } = renderHomePage();
 
     await user.click(
       screen.getByRole("button", { name: /open quick capture/i }),

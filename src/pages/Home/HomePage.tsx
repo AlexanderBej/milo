@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { AnimatePresence, motion } from "framer-motion";
 import {
+  ArrowsClockwise,
   CalendarBlank,
   Chalkboard,
   Check,
+  CheckCircle,
   CheckSquare,
-  Clock,
-  Coffee,
   DotsThreeVertical,
   ForkKnife,
   Lightning,
@@ -29,12 +30,21 @@ import {
 } from "@features/quickCapture";
 import {
   addTask,
+  completeTask,
   selectCouldTasks,
   selectMustTasks,
   selectShouldTasks,
   selectTodoTasks,
 } from "@features/tasks";
 import type { Task } from "@features/tasks";
+import {
+  clearFocus,
+  selectRecommendedFocusTask,
+  skipFocusTask,
+  startFocus,
+  swapFocusTask,
+} from "@features/focus";
+import { NudgeCard as HomeNudgeCard } from "@features/nudges";
 import { formatTimeAgo } from "@shared/utils";
 
 const events = [
@@ -49,6 +59,11 @@ const recentExpenses = [
 ];
 
 const MAX_PLAN_PREVIEW_ITEMS = 4;
+const priorityLabels: Record<Task["priority"], string> = {
+  must: "Must Do",
+  should: "Should Do",
+  could: "Could Do",
+};
 
 export const HomePage = () => {
   return (
@@ -61,7 +76,7 @@ export const HomePage = () => {
           <TodayCard />
         </div>
         <div className={styles.rightColumn}>
-          <NudgeCard />
+          <HomeNudgeCard />
           <InboxCard />
           <FoodCard />
           <MoneyCard />
@@ -87,29 +102,115 @@ const HomeHeader = () => {
 };
 
 const FocusCard = () => {
+  const dispatch = useAppDispatch();
+  const focusTask = useAppSelector(selectRecommendedFocusTask);
+
+  const handleStart = () => {
+    if (!focusTask) {
+      return;
+    }
+
+    dispatch(startFocus(focusTask.id));
+  };
+
+  const handleDone = () => {
+    if (!focusTask) {
+      return;
+    }
+
+    dispatch(completeTask(focusTask.id));
+    dispatch(clearFocus());
+  };
+
+  const handleSwap = () => {
+    if (!focusTask) {
+      return;
+    }
+
+    dispatch(swapFocusTask(focusTask.id));
+  };
+
+  const handleSkip = () => {
+    if (!focusTask) {
+      return;
+    }
+
+    dispatch(skipFocusTask(focusTask.id));
+  };
+
   return (
-    <section className={styles.focusCard}>
-      <div className={styles.focusContent}>
+    <section className={styles.focusCard} aria-label="Focus recommendation">
+      <div className={styles.focusHeader}>
         <p className={styles.focusLabel}>Focus</p>
-        <h2>Review Q2 growth strategy deck</h2>
-        <p>Big impact. Move the needle.</p>
-        <div className={styles.focusActions}>
-          <Button icon={<Play weight="fill" />} size="lg">
-            Start Focus
-          </Button>
-          <Button icon={<Clock />} size="lg" variant="secondary">
-            25 min
-          </Button>
-        </div>
+        <span className={styles.focusHint}>One clear next step</span>
       </div>
-      <div className={styles.focusVisual} aria-hidden>
-        <div className={styles.orbitOuter}>
-          <div className={styles.orbitMiddle}>
-            <div className={styles.orbitInner}>
-              <Target weight="duotone" />
+
+      <AnimatePresence mode="wait">
+        {focusTask ? (
+          <motion.div
+            animate={{ opacity: 1, y: 0 }}
+            className={styles.focusContent}
+            exit={{ opacity: 0, y: -8 }}
+            initial={{ opacity: 0, y: 8 }}
+            key={focusTask.id}
+            transition={{ duration: 0.18, ease: [0.2, 0, 0, 1] }}
+          >
+            <span className={styles.priorityBadge}>
+              {priorityLabels[focusTask.priority]}
+            </span>
+            <h2>{focusTask.content}</h2>
+            <p>Start here. Keep it small and visible.</p>
+            <div className={styles.focusActions}>
+              <Button
+                icon={<Play weight="fill" />}
+                onClick={handleStart}
+                size="lg"
+              >
+                Start
+              </Button>
+              <Button
+                icon={<CheckCircle weight="duotone" />}
+                onClick={handleDone}
+                size="lg"
+                variant="secondary"
+              >
+                Done
+              </Button>
+              <Button
+                icon={<ArrowsClockwise />}
+                onClick={handleSwap}
+                size="lg"
+                variant="secondary"
+              >
+                Swap
+              </Button>
+              <Button
+                icon={<X />}
+                onClick={handleSkip}
+                size="lg"
+                variant="ghost"
+              >
+                Skip
+              </Button>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        ) : (
+          <motion.div
+            animate={{ opacity: 1, y: 0 }}
+            className={styles.focusEmpty}
+            exit={{ opacity: 0, y: -8 }}
+            initial={{ opacity: 0, y: 8 }}
+            key="empty"
+            transition={{ duration: 0.18, ease: [0.2, 0, 0, 1] }}
+          >
+            <span className={styles.priorityBadge}>Clear</span>
+            <h2>Nothing urgent right now.</h2>
+            <p>Add something to your plan or enjoy the quiet.</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <div className={styles.focusMarker} aria-hidden>
+        <Target weight="duotone" />
       </div>
     </section>
   );
@@ -213,25 +314,6 @@ const TodayCard = () => {
       <Button className={styles.fullWidthButton} variant="ghost">
         View full schedule
       </Button>
-    </Card>
-  );
-};
-
-const NudgeCard = () => {
-  return (
-    <Card icon={<Coffee weight="duotone" />} title="Nudge">
-      <div className={styles.messageStack}>
-        <h3>You haven&apos;t taken a break yet.</h3>
-        <p>A short break can help you reset.</p>
-      </div>
-      <div className={styles.secondaryActions}>
-        <Button size="sm" variant="secondary">
-          Take a break
-        </Button>
-        <Button icon={<X />} size="sm" variant="ghost">
-          Dismiss
-        </Button>
-      </div>
     </Card>
   );
 };

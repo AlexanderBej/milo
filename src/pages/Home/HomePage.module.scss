@@ -58,7 +58,9 @@
 .eyebrow,
 .header p,
 .focusLabel,
+.focusHint,
 .focusContent p,
+.focusEmpty p,
 .planSection h3,
 .timelineBody p,
 .timelineBody span,
@@ -81,6 +83,7 @@
 .profileMeta,
 .header p,
 .focusContent p,
+.focusEmpty p,
 .timelineBody span,
 .messageStack p,
 .spendHeader span,
@@ -177,7 +180,8 @@
 }
 
 .header h1,
-.focusContent h2 {
+.focusContent h2,
+.focusEmpty h2 {
   margin: var(--space-1) 0 var(--space-2);
   color: var(--color-text-primary);
   font-size: var(--font-size-2xl);
@@ -187,8 +191,7 @@
 .focusCard {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(14rem, 22rem);
-  gap: var(--space-8);
+  gap: var(--space-6);
   overflow: hidden;
   border: 1px solid
     color-mix(in srgb, var(--color-primary) 25%, var(--color-border-subtle));
@@ -208,23 +211,63 @@
   padding: var(--space-8);
 }
 
+.focusHeader {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.focusHint {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+}
+
 .focusContent {
   position: relative;
   z-index: 1;
   display: grid;
-  align-content: center;
   justify-items: start;
-  min-height: 15rem;
+  max-width: 54rem;
+  min-height: 13rem;
 }
 
-.focusContent h2 {
-  max-width: 12ch;
-  font-size: clamp(var(--font-size-2xl), 4vw, 3.5rem);
+.focusContent h2,
+.focusEmpty h2 {
+  max-width: 18ch;
+  font-size: clamp(var(--font-size-2xl), 4vw, 3.25rem);
 }
 
 .focusContent p {
   color: var(--color-text-secondary);
   font-size: var(--font-size-lg);
+}
+
+.focusEmpty {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  justify-items: start;
+  min-height: 13rem;
+}
+
+.priorityBadge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2rem;
+  border: 1px solid
+    color-mix(in srgb, var(--color-accent-teal) 34%, var(--color-border-subtle));
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--color-bg-elevated) 82%, transparent);
+  color: var(--color-text-primary);
+  padding: 0 var(--space-3);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0;
+  text-transform: uppercase;
 }
 
 .focusActions {
@@ -234,49 +277,23 @@
   margin-top: var(--space-6);
 }
 
-.focusVisual {
-  position: relative;
+.focusMarker {
+  position: absolute;
+  right: var(--space-8);
+  bottom: var(--space-8);
   display: grid;
   place-items: center;
-  min-height: 15rem;
+  width: 4.5rem;
+  height: 4.5rem;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 24%, transparent);
+  border-radius: var(--radius-card);
+  background: color-mix(in srgb, var(--color-bg-elevated) 52%, transparent);
+  color: color-mix(in srgb, var(--color-primary-hover) 78%, transparent);
 }
 
-.orbitOuter,
-.orbitMiddle,
-.orbitInner {
-  display: grid;
-  place-items: center;
-  border-radius: var(--radius-pill);
-}
-
-.orbitOuter {
-  width: min(100%, 20rem);
-  aspect-ratio: 1;
-  border: 1px solid color-mix(in srgb, var(--color-primary) 28%, transparent);
-  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
-}
-
-.orbitMiddle {
-  width: 68%;
-  aspect-ratio: 1;
-  border: 1px solid
-    color-mix(in srgb, var(--color-accent-teal) 30%, transparent);
-}
-
-.orbitInner {
-  width: 48%;
-  aspect-ratio: 1;
-  background: color-mix(
-    in srgb,
-    var(--color-primary) 18%,
-    var(--color-bg-elevated)
-  );
-  color: var(--color-primary-hover);
-}
-
-.orbitInner svg {
-  width: 3.5rem;
-  height: 3.5rem;
+.focusMarker svg {
+  width: 2rem;
+  height: 2rem;
 }
 
 .supportingGrid {
@@ -786,12 +803,8 @@
     grid-template-columns: 1fr;
   }
 
-  .focusVisual {
-    min-height: 10rem;
-  }
-
-  .orbitOuter {
-    width: min(16rem, 72vw);
+  .focusMarker {
+    display: none;
   }
 
   .floatingCaptureButton {
@@ -844,7 +857,8 @@
     min-height: auto;
   }
 
-  .focusContent h2 {
+  .focusContent h2,
+  .focusEmpty h2 {
     max-width: 14ch;
   }
 
