@@ -12,5 +12,6 @@ export {
   quickCaptureReducer,
   removeCapture,
   restoreCapture,
+  setCaptures,
 } from "./quickCaptureSlice";
 export type { CaptureItem } from "@shared/types";

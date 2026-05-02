@@ -1,0 +1,107 @@
+.boardShell {
+  display: grid;
+  gap: var(--space-4);
+  min-height: calc(100vh - var(--space-8) * 2);
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-card);
+  background: color-mix(in srgb, var(--color-bg-card) 78%, transparent);
+  box-shadow: var(--shadow-soft);
+  padding: var(--space-4);
+}
+
+.toolbar h2,
+.toolbar p {
+  margin: 0;
+}
+
+.toolbar h2 {
+  margin-top: var(--space-1);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-xl);
+  line-height: var(--line-height-tight);
+}
+
+.kicker {
+  color: var(--color-primary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.viewport,
+.viewportPanning {
+  position: relative;
+  overflow: auto;
+  min-height: 42rem;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-card);
+  background:
+    linear-gradient(var(--color-border-subtle) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-border-subtle) 1px, transparent 1px),
+    var(--color-bg-surface);
+  background-size: 4rem 4rem;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02), var(--shadow-soft);
+  cursor: grab;
+  touch-action: none;
+}
+
+.viewportPanning {
+  cursor: grabbing;
+}
+
+.canvas {
+  position: relative;
+  width: 2400px;
+  height: 1600px;
+  background:
+    radial-gradient(
+      circle at 24rem 18rem,
+      color-mix(in srgb, var(--color-accent-teal) 6%, transparent),
+      transparent 24rem
+    ),
+    transparent;
+}
+
+.emptyMessage {
+  position: sticky;
+  top: 45%;
+  left: 50%;
+  width: max-content;
+  max-width: min(32rem, calc(100vw - 4rem));
+  transform: translateX(-50%);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-card);
+  background: color-mix(in srgb, var(--color-bg-card) 86%, transparent);
+  color: var(--color-text-secondary);
+  padding: var(--space-4) var(--space-5);
+  font-weight: var(--font-weight-semibold);
+  pointer-events: none;
+}
+
+@media (max-width: 640px) {
+  .boardShell {
+    min-height: auto;
+  }
+
+  .toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .toolbar button {
+    width: 100%;
+  }
+
+  .viewport,
+  .viewportPanning {
+    min-height: 34rem;
+  }
+}

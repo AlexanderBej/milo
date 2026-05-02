@@ -1,0 +1,96 @@
+.note {
+  position: absolute;
+  display: grid;
+  gap: var(--space-3);
+  width: 17.5rem;
+  min-height: 12rem;
+  border: 1px solid color-mix(in srgb, var(--color-accent-amber) 24%, var(--color-border-subtle));
+  border-radius: var(--radius-card);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-accent-amber) 12%, var(--color-bg-elevated)),
+      var(--color-bg-card)
+    );
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.24);
+  padding: var(--space-3);
+  touch-action: none;
+  user-select: none;
+}
+
+.dragHandle {
+  width: 2.75rem;
+  height: 0.28rem;
+  justify-self: center;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--color-text-muted) 46%, transparent);
+}
+
+.textarea {
+  width: 100%;
+  min-height: 7rem;
+  resize: none;
+  border: 0;
+  background: transparent;
+  color: var(--color-text-primary);
+  font: inherit;
+  line-height: var(--line-height-relaxed);
+  outline: none;
+  touch-action: auto;
+  user-select: text;
+}
+
+.textarea::placeholder {
+  color: var(--color-text-muted);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.convertButton,
+.iconButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.25rem;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-button);
+  background: color-mix(in srgb, var(--color-bg-elevated) 78%, transparent);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: var(--transition-surface);
+}
+
+.convertButton {
+  gap: var(--space-2);
+  padding: 0 var(--space-3);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+.iconButton {
+  width: 2.25rem;
+}
+
+.convertButton:hover:not(:disabled),
+.iconButton:hover {
+  border-color: var(--color-border-strong);
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+}
+
+.convertButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.convertButton:focus-visible,
+.iconButton:focus-visible,
+.textarea:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}

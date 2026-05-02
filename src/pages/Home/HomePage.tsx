@@ -24,6 +24,11 @@ import { Card } from "@shared/components/Card";
 import styles from "./HomePage.module.scss";
 import { useAppDispatch, useAppSelector } from "@app/hooks";
 import {
+  addNote,
+  deleteNote as deleteBoardNote,
+  selectBoardNotes,
+} from "@features/board";
+import {
   removeCapture,
   restoreCapture,
   selectCaptureCount,
@@ -104,6 +109,7 @@ export const HomePage = () => {
         </div>
         <div className={styles.rightColumn}>
           <HomeNudgeCard />
+          <BoardCard />
           <InboxCard />
           <FoodCard />
           <MoneyCard />
@@ -345,6 +351,49 @@ const DailyPlanCard = () => {
   );
 };
 
+const getBoardDropPosition = (noteCount: number) => {
+  const offset = noteCount % 7;
+
+  return {
+    x: 260 + offset * 36,
+    y: 220 + offset * 36,
+  };
+};
+
+const BoardCard = () => {
+  const notes = useAppSelector(selectBoardNotes);
+  const visibleNotes = notes.slice(-3).reverse();
+
+  return (
+    <Card
+      actions={
+        <Link className={styles.cardTextLink} to="/board">
+          Open Board
+        </Link>
+      }
+      icon={<Chalkboard weight="duotone" />}
+      title="Board"
+    >
+      <div className={styles.boardPreview}>
+        {notes.length > 0 ? (
+          <>
+            <p className={styles.planProgress}>
+              {notes.length} {notes.length === 1 ? "note" : "notes"} waiting
+            </p>
+            <ul className={styles.boardPreviewList}>
+              {visibleNotes.map((note) => (
+                <li key={note.id}>{note.content || "Empty thought"}</li>
+              ))}
+            </ul>
+          </>
+        ) : (
+          <h3>Drop a thought here. You can organize it later.</h3>
+        )}
+      </div>
+    </Card>
+  );
+};
+
 type PlanPreviewSectionProps = {
   title: string;
   tasks: Task[];
@@ -408,6 +457,7 @@ const InboxCard = () => {
   const dispatch = useAppDispatch();
   const captureCount = useAppSelector(selectCaptureCount);
   const captures = useAppSelector(selectCaptureItems);
+  const boardNotes = useAppSelector(selectBoardNotes);
   const tasks = useAppSelector(selectTasks);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [toast, setToast] = useState<HomeToast | null>(null);
@@ -463,8 +513,30 @@ const InboxCard = () => {
     });
   };
 
-  const handleSendToBoard = (_captureId: string) => {
+  const handleSendToBoard = (captureId: string) => {
+    const index = captures.findIndex((item) => item.id === captureId);
+    const capture = captures.find((item) => item.id === captureId);
+
+    if (!capture) {
+      return;
+    }
+
+    const boardAction = addNote({
+      content: capture.content,
+      ...getBoardDropPosition(boardNotes.length),
+    });
+
+    dispatch(boardAction);
+    dispatch(removeCapture(captureId));
     setOpenMenuId(null);
+    setToast({
+      message: "Sent to Board.",
+      undo: () => {
+        dispatch(deleteBoardNote(boardAction.payload.id));
+        dispatch(restoreCapture({ item: capture, index }));
+        setToast({ message: "Restored to Inbox." });
+      },
+    });
   };
 
   const handleDelete = (captureId: string) => {
@@ -596,7 +668,7 @@ const InboxCard = () => {
                       <Chalkboard aria-hidden size={20} weight="duotone" />
                       <span>
                         <strong>Send to Board</strong>
-                        <small>Add to a project</small>
+                        <small>Place as a note</small>
                       </span>
                     </button>
                     <button

@@ -350,12 +350,16 @@
   gap: var(--space-5);
 }
 
-.planSummary {
+.planSummary,
+.boardPreview {
   gap: var(--space-3);
 }
 
 .planSummary h3,
 .planSummary p,
+.boardPreview h3,
+.boardPreview p,
+.boardPreviewList,
 .planPreviewHeader h3,
 .planPreviewHeader span,
 .planPreviewList,
@@ -364,6 +368,7 @@
 }
 
 .planSummary h3,
+.boardPreview h3,
 .planPreviewHeader h3 {
   color: var(--color-text-primary);
   font-weight: var(--font-weight-semibold);
@@ -371,6 +376,7 @@
 }
 
 .planSummary p,
+.boardPreview p,
 .planPreviewHeader span,
 .planPreviewEmpty {
   color: var(--color-text-muted);
@@ -385,6 +391,29 @@
 .planPreviewSections {
   display: grid;
   gap: var(--space-3);
+}
+
+.boardPreview {
+  display: grid;
+}
+
+.boardPreviewList {
+  display: grid;
+  gap: var(--space-2);
+  padding: 0;
+  list-style: none;
+}
+
+.boardPreviewList li {
+  overflow: hidden;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-button);
+  background: color-mix(in srgb, var(--color-accent-amber) 9%, var(--color-bg-elevated));
+  color: var(--color-text-secondary);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--font-size-sm);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .planPreviewSection {

@@ -1,0 +1,57 @@
+import { Timestamp } from "firebase/firestore";
+
+const dateFields = ["createdAt", "completedAt"] as const;
+
+type FirestoreDateLike = {
+  toDate: () => unknown;
+};
+
+const hasToDate = (value: unknown): value is FirestoreDateLike => {
+  return (
+    value !== null &&
+    typeof value === "object" &&
+    "toDate" in value &&
+    typeof value.toDate === "function"
+  );
+};
+
+const toIsoString = (value: unknown) => {
+  if (typeof value === "string") {
+    return value;
+  }
+
+  if (value instanceof Date) {
+    return value.toISOString();
+  }
+
+  if (value instanceof Timestamp) {
+    return value.toDate().toISOString();
+  }
+
+  if (hasToDate(value)) {
+    const date = value.toDate();
+
+    if (date instanceof Date) {
+      return date.toISOString();
+    }
+  }
+
+  return undefined;
+};
+
+export const normalizeDateFields = <T extends Record<string, unknown>>(
+  data: T,
+) => {
+  const normalized: Record<string, unknown> = { ...data };
+
+  for (const field of dateFields) {
+    const value = normalized[field];
+    const dateString = toIsoString(value);
+
+    if (dateString) {
+      normalized[field] = dateString;
+    }
+  }
+
+  return normalized as T;
+};

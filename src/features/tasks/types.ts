@@ -1,6 +1,6 @@
 export type TaskStatus = "todo" | "done";
 export type TaskPriority = "must" | "should" | "could";
-export type TaskSource = "manual" | "capture" | "inbox";
+export type TaskSource = "manual" | "capture" | "inbox" | "board";
 
 export type Task = {
   id: string;

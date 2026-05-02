@@ -24,7 +24,7 @@ const navItems = [
   { label: "Tasks", icon: CheckSquare },
   { label: "Food", icon: ForkKnife },
   { label: "Money", icon: Wallet },
-  { label: "Whiteboard", icon: Chalkboard },
+  { label: "Board", icon: Chalkboard, path: "/board" },
 ];
 
 export const AppLayout = () => {

@@ -27,6 +27,9 @@ const quickCaptureSlice = createSlice({
         };
       },
     },
+    setCaptures(state, action: PayloadAction<CaptureItem[]>) {
+      state.items = action.payload;
+    },
     removeCapture(state, action: PayloadAction<string>) {
       state.items = state.items.filter((item) => item.id !== action.payload);
     },
@@ -48,6 +51,6 @@ const quickCaptureSlice = createSlice({
   },
 });
 
-export const { addCapture, removeCapture, restoreCapture } =
+export const { addCapture, removeCapture, restoreCapture, setCaptures } =
   quickCaptureSlice.actions;
 export const quickCaptureReducer = quickCaptureSlice.reducer;

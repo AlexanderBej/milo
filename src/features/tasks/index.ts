@@ -16,6 +16,7 @@ export {
   deleteTask,
   moveTask,
   restoreTask,
+  setTasks,
   tasksReducer,
   undoCompleteTask,
   updateTaskPriority,

@@ -4,6 +4,7 @@ import { configureStore } from "@reduxjs/toolkit";
 import { Provider } from "react-redux";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { AppLayout } from "@app/AppLayout";
+import { boardReducer } from "@features/board";
 import { focusReducer } from "@features/focus";
 import {
   quickCaptureReducer,
@@ -38,6 +39,7 @@ function renderHomePage(
 function createStore() {
   const store = configureStore({
     reducer: {
+      board: boardReducer,
       focus: focusReducer,
       quickCapture: quickCaptureReducer,
       tasks: tasksReducer,

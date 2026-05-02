@@ -63,6 +63,11 @@ const tasksSlice = createSlice({
         };
       },
     },
+    setTasks(state, action: PayloadAction<Task[]>) {
+      state.items = action.payload;
+      sortTasksByOrder(state.items);
+      state.message = undefined;
+    },
     completeTask(state, action: PayloadAction<string>) {
       const task = state.items.find((item) => item.id === action.payload);
 
@@ -168,6 +173,7 @@ export const {
   deleteTask,
   moveTask,
   restoreTask,
+  setTasks,
   undoCompleteTask,
   updateTaskPriority,
 } = tasksSlice.actions;
