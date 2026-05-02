@@ -17,7 +17,7 @@ import {
   updateTaskPriority,
   type TaskPriority,
 } from "@features/tasks";
-import { TaskSection } from "../components";
+import { TaskSection } from "../../features/tasks/components";
 import styles from "./DailyPlanPage.module.scss";
 
 const priorityOptions: Array<{ label: string; value: TaskPriority }> = [
