@@ -1,16 +1,25 @@
-import type { HTMLAttributes, ReactNode } from 'react';
-import { clsx } from 'clsx';
-import styles from './Card.module.scss';
+import type { HTMLAttributes, ReactNode } from "react";
+import { clsx } from "clsx";
+import styles from "./Card.module.scss";
 
 export type CardProps = HTMLAttributes<HTMLElement> & {
   title?: string;
+  subtitle?: string;
   icon?: ReactNode;
   actions?: ReactNode;
   children: ReactNode;
 };
 
-export function Card({ title, icon, actions, children, className, ...props }: CardProps) {
-  const hasHeader = title || icon || actions;
+export const Card = ({
+  title,
+  subtitle,
+  icon,
+  actions,
+  children,
+  className,
+  ...props
+}: CardProps) => {
+  const hasHeader = title || icon || actions || subtitle;
 
   return (
     <section className={clsx(styles.card, className)} {...props}>
@@ -19,6 +28,7 @@ export function Card({ title, icon, actions, children, className, ...props }: Ca
           <div className={styles.titleGroup}>
             {icon ? <span className={styles.icon}>{icon}</span> : null}
             {title ? <h2 className={styles.title}>{title}</h2> : null}
+            {subtitle ? <p className={styles.subtitle}>{subtitle}</p> : null}
           </div>
           {actions ? <div className={styles.actions}>{actions}</div> : null}
         </header>
@@ -26,4 +36,4 @@ export function Card({ title, icon, actions, children, className, ...props }: Ca
       <div className={styles.body}>{children}</div>
     </section>
   );
-}
+};

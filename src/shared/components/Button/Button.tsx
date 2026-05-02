@@ -1,9 +1,9 @@
-import type { ButtonHTMLAttributes, ReactNode } from 'react';
-import { clsx } from 'clsx';
-import styles from './Button.module.scss';
+import type { ButtonHTMLAttributes, ReactNode } from "react";
+import { clsx } from "clsx";
+import styles from "./Button.module.scss";
 
-type ButtonVariant = 'primary' | 'secondary' | 'ghost';
-type ButtonSize = 'sm' | 'md' | 'lg';
+type ButtonVariant = "primary" | "secondary" | "ghost";
+type ButtonSize = "sm" | "md" | "lg";
 
 export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: ButtonVariant;
@@ -11,15 +11,15 @@ export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   icon?: ReactNode;
 };
 
-export function Button({
-  variant = 'primary',
-  size = 'md',
+export const Button = ({
+  variant = "primary",
+  size = "md",
   icon,
   children,
   className,
-  type = 'button',
+  type = "button",
   ...props
-}: ButtonProps) {
+}: ButtonProps) => {
   return (
     <button
       className={clsx(styles.button, styles[variant], styles[size], className)}
@@ -30,4 +30,4 @@ export function Button({
       {children ? <span className={styles.label}>{children}</span> : null}
     </button>
   );
-}
+};

@@ -1,0 +1,110 @@
+.item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-3);
+  align-items: start;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-card);
+  background: color-mix(in srgb, var(--color-bg-elevated) 72%, transparent);
+  padding: var(--space-3);
+}
+
+.done {
+  opacity: 0.72;
+}
+
+.contentWrap {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.content {
+  overflow-wrap: anywhere;
+  margin: 0;
+  color: var(--color-text-primary);
+  line-height: var(--line-height-base);
+}
+
+.done .content {
+  color: var(--color-text-secondary);
+  text-decoration: line-through;
+}
+
+.priorityControls,
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.priorityButton {
+  min-height: 2rem;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-pill);
+  background: var(--color-bg-card);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 0 var(--space-3);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  transition: var(--transition-surface);
+}
+
+.priorityButton:hover,
+.priorityButtonActive {
+  border-color: color-mix(in srgb, var(--color-primary) 42%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--color-primary) 14%,
+    var(--color-bg-card)
+  );
+  color: var(--color-text-primary);
+}
+
+.actions {
+  flex-wrap: nowrap;
+}
+
+.iconButton,
+.iconButtonDanger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-button);
+  background: var(--color-bg-card);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: var(--transition-surface);
+}
+
+.iconButton:hover {
+  border-color: var(--color-border-strong);
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+}
+
+.iconButtonDanger {
+  color: color-mix(in srgb, #ff6b6b 82%, var(--color-text-primary));
+}
+
+.iconButtonDanger:hover {
+  border-color: color-mix(in srgb, #ff6b6b 34%, transparent);
+  background: color-mix(in srgb, #ff6b6b 12%, var(--color-bg-card));
+}
+
+.priorityButton:focus-visible,
+.iconButton:focus-visible,
+.iconButtonDanger:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+
+@media (max-width: 36rem) {
+  .item {
+    grid-template-columns: 1fr;
+  }
+}

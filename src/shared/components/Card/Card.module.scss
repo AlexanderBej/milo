@@ -49,6 +49,15 @@
   line-height: var(--line-height-tight);
 }
 
+.subtitle {
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-md);
+  font-weight: 100;
+  line-height: var(--line-height-tight);
+}
+
 .actions {
   display: inline-flex;
   flex: 0 0 auto;

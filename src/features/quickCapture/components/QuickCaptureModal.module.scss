@@ -1,0 +1,142 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: end center;
+  background: rgba(0, 0, 0, 0.54);
+  padding: var(--space-5);
+}
+
+.backdropButton {
+  position: absolute;
+  inset: 0;
+  background: transparent;
+  cursor: default;
+}
+
+.sheet {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: var(--space-5);
+  width: min(100%, 38rem);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: calc(var(--radius-card) + var(--space-1));
+  background: var(--color-bg-elevated);
+  box-shadow: var(--shadow-soft);
+  padding: var(--space-6);
+}
+
+.header,
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.header h2,
+.eyebrow {
+  margin: 0;
+}
+
+.header h2 {
+  margin-top: var(--space-1);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-xl);
+  line-height: var(--line-height-tight);
+}
+
+.eyebrow {
+  color: var(--color-primary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.textarea {
+  width: 100%;
+  min-height: 11rem;
+  resize: vertical;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-input);
+  outline: none;
+  background: var(--color-bg-card);
+  color: var(--color-text-primary);
+  padding: var(--space-4);
+  line-height: var(--line-height-base);
+  transition: var(--transition-focus), var(--transition-colors);
+}
+
+.textarea::placeholder {
+  color: var(--color-text-muted);
+}
+
+.textarea:focus {
+  border-color: color-mix(in srgb, var(--color-primary) 42%, transparent);
+  box-shadow: var(--shadow-focus);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .backdrop {
+    animation: fadeIn var(--duration-fast) var(--ease-standard);
+  }
+
+  .sheet {
+    animation: sheetIn var(--duration-base) var(--ease-standard);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes sheetIn {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (min-width: 720px) {
+  .backdrop {
+    place-items: center;
+  }
+}
+
+@media (max-width: 520px) {
+  .backdrop {
+    align-items: end;
+    padding: var(--space-3);
+  }
+
+  .sheet {
+    padding: var(--space-5);
+  }
+
+  .header,
+  .footer {
+    align-items: stretch;
+  }
+
+  .footer {
+    flex-direction: column-reverse;
+  }
+
+  .footer button {
+    width: 100%;
+  }
+}
