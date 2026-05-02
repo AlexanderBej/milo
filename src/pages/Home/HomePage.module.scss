@@ -277,6 +277,40 @@
   margin-top: var(--space-6);
 }
 
+.inlineToast,
+.cardToast {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  gap: var(--space-2);
+  min-height: 2.5rem;
+  border: 1px solid
+    color-mix(in srgb, var(--color-accent-green) 28%, transparent);
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--color-bg-elevated) 86%, transparent);
+  color: var(--color-text-primary);
+  padding: 0 var(--space-3);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+.inlineToast svg,
+.cardToast svg {
+  color: var(--color-accent-green);
+}
+
+.inlineToast button,
+.cardToast button {
+  border: 0;
+  background: transparent;
+  color: var(--color-primary-hover);
+  cursor: pointer;
+  font: inherit;
+  font-weight: var(--font-weight-bold);
+}
+
 .focusMarker {
   position: absolute;
   right: var(--space-8);
@@ -341,6 +375,11 @@
 .planPreviewEmpty {
   color: var(--color-text-muted);
   font-size: var(--font-size-sm);
+}
+
+.planSummary .planProgress {
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-semibold);
 }
 
 .planPreviewSections {
@@ -422,6 +461,20 @@
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
   text-decoration: none;
+}
+
+.cardMeta,
+.cardHint {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.cardMeta {
+  font-weight: var(--font-weight-semibold);
+}
+
+.cardHint {
+  margin: 0;
 }
 
 .cardTextLink:hover {

@@ -25,16 +25,21 @@ import styles from "./HomePage.module.scss";
 import { useAppDispatch, useAppSelector } from "@app/hooks";
 import {
   removeCapture,
+  restoreCapture,
   selectCaptureCount,
   selectCaptureItems,
 } from "@features/quickCapture";
 import {
   addTask,
   completeTask,
+  deleteTask,
+  selectDoneTasks,
   selectCouldTasks,
   selectMustTasks,
   selectShouldTasks,
+  selectTasks,
   selectTodoTasks,
+  undoCompleteTask,
 } from "@features/tasks";
 import type { Task } from "@features/tasks";
 import {
@@ -63,6 +68,28 @@ const priorityLabels: Record<Task["priority"], string> = {
   must: "Must Do",
   should: "Should Do",
   could: "Could Do",
+};
+
+type HomeToast = {
+  message: string;
+  undo?: () => void;
+};
+
+const getBestAlternativeTask = (tasks: Task[], currentTaskId: string) => {
+  const availableTasks = tasks.filter(
+    (task) => task.status === "todo" && task.id !== currentTaskId,
+  );
+  const priorityOrder: Task["priority"][] = ["must", "should", "could"];
+
+  for (const priority of priorityOrder) {
+    const task = availableTasks.find((item) => item.priority === priority);
+
+    if (task) {
+      return task;
+    }
+  }
+
+  return null;
 };
 
 export const HomePage = () => {
@@ -104,6 +131,22 @@ const HomeHeader = () => {
 const FocusCard = () => {
   const dispatch = useAppDispatch();
   const focusTask = useAppSelector(selectRecommendedFocusTask);
+  const tasks = useAppSelector(selectTasks);
+  const [toast, setToast] = useState<HomeToast | null>(null);
+
+  useEffect(() => {
+    if (!toast) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      setToast(null);
+    }, 6000);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [toast]);
 
   const handleStart = () => {
     if (!focusTask) {
@@ -111,6 +154,7 @@ const FocusCard = () => {
     }
 
     dispatch(startFocus(focusTask.id));
+    setToast({ message: "Ready when you are." });
   };
 
   const handleDone = () => {
@@ -120,6 +164,13 @@ const FocusCard = () => {
 
     dispatch(completeTask(focusTask.id));
     dispatch(clearFocus());
+    setToast({
+      message: "Nice. That task is done.",
+      undo: () => {
+        dispatch(undoCompleteTask(focusTask.id));
+        setToast({ message: "Task restored." });
+      },
+    });
   };
 
   const handleSwap = () => {
@@ -127,7 +178,15 @@ const FocusCard = () => {
       return;
     }
 
+    const alternativeTask = getBestAlternativeTask(tasks, focusTask.id);
+
+    if (!alternativeTask) {
+      setToast({ message: "Nothing else is waiting. This might be the one." });
+      return;
+    }
+
     dispatch(swapFocusTask(focusTask.id));
+    setToast({ message: "Moved to another next step." });
   };
 
   const handleSkip = () => {
@@ -136,6 +195,7 @@ const FocusCard = () => {
     }
 
     dispatch(skipFocusTask(focusTask.id));
+    setToast({ message: "Skipped for now." });
   };
 
   return (
@@ -204,11 +264,27 @@ const FocusCard = () => {
             transition={{ duration: 0.18, ease: [0.2, 0, 0, 1] }}
           >
             <span className={styles.priorityBadge}>Clear</span>
-            <h2>Nothing urgent right now.</h2>
+            <h2>Nothing needs your focus right now.</h2>
             <p>Add something to your plan or enjoy the quiet.</p>
           </motion.div>
         )}
       </AnimatePresence>
+      {toast ? (
+        <div className={styles.inlineToast} role="status">
+          <CheckCircle aria-hidden size={18} weight="fill" />
+          <span>{toast.message}</span>
+          {toast.undo ? (
+            <button
+              onClick={() => {
+                toast.undo?.();
+              }}
+              type="button"
+            >
+              Undo
+            </button>
+          ) : null}
+        </div>
+      ) : null}
       <div className={styles.focusMarker} aria-hidden>
         <Target weight="duotone" />
       </div>
@@ -220,7 +296,9 @@ const DailyPlanCard = () => {
   const mustTasks = useAppSelector(selectMustTasks);
   const shouldTasks = useAppSelector(selectShouldTasks);
   const couldTasks = useAppSelector(selectCouldTasks);
+  const doneTasks = useAppSelector(selectDoneTasks);
   const todoTasks = useAppSelector(selectTodoTasks);
+  const totalTasks = todoTasks.length + doneTasks.length;
   const sections = [
     { title: "Must Do", tasks: mustTasks },
     { title: "Should Do", tasks: shouldTasks },
@@ -238,6 +316,11 @@ const DailyPlanCard = () => {
       title="Today’s Plan"
     >
       <div className={styles.planSummary}>
+        {totalTasks > 0 ? (
+          <p className={styles.planProgress}>
+            {doneTasks.length} of {totalTasks} done
+          </p>
+        ) : null}
         {todoTasks.length > 0 ? (
           <div className={styles.planPreviewSections}>
             {sections.map((section) => (
@@ -250,8 +333,11 @@ const DailyPlanCard = () => {
           </div>
         ) : (
           <>
-            <h3>Nothing planned yet.</h3>
-            <p>What would make today a win?</p>
+            <h3>
+              {totalTasks > 0
+                ? "You’re done for today. Nice work."
+                : "Your plan is clear. Add something small when you’re ready."}
+            </h3>
           </>
         )}
       </div>
@@ -322,35 +408,59 @@ const InboxCard = () => {
   const dispatch = useAppDispatch();
   const captureCount = useAppSelector(selectCaptureCount);
   const captures = useAppSelector(selectCaptureItems);
+  const tasks = useAppSelector(selectTasks);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [toast, setToast] = useState<HomeToast | null>(null);
 
   const buildHeader = (count: number) => {
     return count && count > 0
       ? `You have ${count.toString()} unsorted ${count === 1 ? "thought" : "thoughts"}`
-      : "Nothing here — your mind is clear.";
+      : "No loose thoughts right now.";
   };
 
   const handleMarkDone = (captureId: string) => {
+    const index = captures.findIndex((item) => item.id === captureId);
+    const capture = captures.find((item) => item.id === captureId);
+
     dispatch(removeCapture(captureId));
     setOpenMenuId(null);
+
+    if (capture) {
+      setToast({
+        message: "Inbox item processed.",
+        undo: () => {
+          dispatch(restoreCapture({ item: capture, index }));
+          setToast({ message: "Restored to Inbox." });
+        },
+      });
+    }
   };
 
   const handleConvertToTask = (captureId: string) => {
+    const index = captures.findIndex((item) => item.id === captureId);
     const capture = captures.find((item) => item.id === captureId);
 
     if (!capture) {
       return;
     }
 
-    dispatch(
-      addTask({
-        content: capture.content,
-        priority: "should",
-        source: "inbox",
-      }),
-    );
+    const taskAction = addTask({
+      content: capture.content,
+      priority: "should",
+      source: "inbox",
+    });
+
+    dispatch(taskAction);
     dispatch(removeCapture(captureId));
     setOpenMenuId(null);
+    setToast({
+      message: "Task added to today.",
+      undo: () => {
+        dispatch(deleteTask(taskAction.payload.id));
+        dispatch(restoreCapture({ item: capture, index }));
+        setToast({ message: "Restored to Inbox." });
+      },
+    });
   };
 
   const handleSendToBoard = (_captureId: string) => {
@@ -358,9 +468,36 @@ const InboxCard = () => {
   };
 
   const handleDelete = (captureId: string) => {
+    const index = captures.findIndex((item) => item.id === captureId);
+    const capture = captures.find((item) => item.id === captureId);
+
     dispatch(removeCapture(captureId));
     setOpenMenuId(null);
+
+    if (capture) {
+      setToast({
+        message: "Removed. Undo?",
+        undo: () => {
+          dispatch(restoreCapture({ item: capture, index }));
+          setToast({ message: "Restored to Inbox." });
+        },
+      });
+    }
   };
+
+  useEffect(() => {
+    if (!toast) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      setToast(null);
+    }, 6000);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [toast]);
 
   useEffect(() => {
     if (!openMenuId) {
@@ -387,13 +524,13 @@ const InboxCard = () => {
 
   return (
     <Card
+      className={styles.inboxCard}
       icon={<Tray weight="duotone" />}
       title="Inbox"
       actions={[
-        <Button key={1} variant="primary">
-          <Lightning weight="duotone" />
-          <span>Process All</span>
-        </Button>,
+        <span className={styles.cardMeta} key="count">
+          {captureCount} waiting
+        </span>,
       ]}
     >
       <div className={styles.messageStack}>
@@ -482,10 +619,28 @@ const InboxCard = () => {
             </div>
           </div>
         ))}
+        {toast ? (
+          <div className={styles.cardToast} role="status">
+            <CheckCircle aria-hidden size={18} weight="fill" />
+            <span>{toast.message}</span>
+            {toast.undo ? (
+              <button
+                onClick={() => {
+                  toast.undo?.();
+                }}
+                type="button"
+              >
+                Undo
+              </button>
+            ) : null}
+          </div>
+        ) : null}
       </div>
-      <Button className={styles.fullWidthButton} size="sm" variant="secondary">
-        Log a meal
-      </Button>
+      {tasks.length === 0 && captureCount === 0 ? (
+        <p className={styles.cardHint}>
+          Capture a thought whenever something starts waiting.
+        </p>
+      ) : null}
     </Card>
   );
 };

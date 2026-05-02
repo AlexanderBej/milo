@@ -1,4 +1,4 @@
-import { Check, Trash, X } from "phosphor-react";
+import { ArrowDown, ArrowUp, Check, Trash, X } from "phosphor-react";
 import { motion } from "framer-motion";
 import { clsx } from "clsx";
 
@@ -15,6 +15,7 @@ type TaskItemProps = {
   task: Task;
   onComplete: (taskId: string) => void;
   onDelete: (taskId: string) => void;
+  onMove?: (taskId: string, direction: "up" | "down") => void;
   onPriorityChange: (taskId: string, priority: TaskPriority) => void;
   onUndo?: (taskId: string) => void;
 };
@@ -23,6 +24,7 @@ export const TaskItem = ({
   task,
   onComplete,
   onDelete,
+  onMove,
   onPriorityChange,
   onUndo,
 }: TaskItemProps) => {
@@ -62,6 +64,30 @@ export const TaskItem = ({
         ) : null}
       </div>
       <div className={styles.actions}>
+        {!isDone && onMove ? (
+          <>
+            <button
+              aria-label="Move task up"
+              className={styles.iconButton}
+              onClick={() => {
+                onMove(task.id, "up");
+              }}
+              type="button"
+            >
+              <ArrowUp aria-hidden size={18} weight="bold" />
+            </button>
+            <button
+              aria-label="Move task down"
+              className={styles.iconButton}
+              onClick={() => {
+                onMove(task.id, "down");
+              }}
+              type="button"
+            >
+              <ArrowDown aria-hidden size={18} weight="bold" />
+            </button>
+          </>
+        ) : null}
         {isDone ? (
           <button
             aria-label="Undo completed task"

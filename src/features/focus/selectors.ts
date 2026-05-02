@@ -17,6 +17,11 @@ export const selectSkippedFocusTaskIds = createSelector(
   (focus) => focus.skippedTaskIds,
 );
 
+export const selectLastSwappedFocusTaskId = createSelector(
+  [selectFocusState],
+  (focus) => focus.lastSwappedTaskId,
+);
+
 export const selectFocusStartedAt = createSelector(
   [selectFocusState],
   (focus) => focus.startedAt,
@@ -41,9 +46,15 @@ export const selectRecommendedFocusTask = createSelector(
     const availableTasks = tasks.filter((task) =>
       isAvailableFocusTask(task, focus.skippedTaskIds),
     );
+    const preferredTasks =
+      availableTasks.length > 1
+        ? availableTasks.filter(
+            (task) => task.id !== (focus.lastSwappedTaskId ?? null),
+          )
+        : availableTasks;
 
     for (const priority of priorityOrder) {
-      const task = availableTasks.find((item) => item.priority === priority);
+      const task = preferredTasks.find((item) => item.priority === priority);
 
       if (task) {
         return task;

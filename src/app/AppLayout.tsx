@@ -137,7 +137,7 @@ export const AppLayout = () => {
       {showCapturedToast ? (
         <div className={styles.toast} role="status">
           <CheckCircle aria-hidden size={20} weight="fill" />
-          <span>Captured</span>
+          <span>Captured. It’s in your inbox.</span>
         </div>
       ) : null}
     </div>

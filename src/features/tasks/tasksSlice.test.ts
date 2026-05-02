@@ -32,7 +32,7 @@ describe("tasksReducer", () => {
 
     expect(state.items).toHaveLength(3);
     expect(state.message).toBe(
-      "Let’s keep Must Do to 3 so today stays doable.",
+      "You have a lot marked as Must. Consider moving one to Should.",
     );
   });
 
@@ -56,7 +56,7 @@ describe("tasksReducer", () => {
 
     expect(state.items[0]).toMatchObject({ priority: "should" });
     expect(state.message).toBe(
-      "Let’s keep Must Do to 3 so today stays doable.",
+      "You have a lot marked as Must. Consider moving one to Should.",
     );
   });
 

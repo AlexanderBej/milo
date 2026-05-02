@@ -43,22 +43,22 @@ export const generateNudges = ({
     nudges.push({
       id: "inbox-getting-full",
       type: "action",
-      message: "Your inbox is getting full. Want to sort a few thoughts?",
+      message: "A few thoughts are waiting in Inbox.",
       context: "A quick pass can clear some mental space.",
       priority: 90,
       primaryAction: {
-        label: "Open inbox",
-        route: "/inbox",
+        label: "Open Home",
+        route: "/",
       },
     });
   }
 
-  if (activeMustTasks.length > 3) {
+  if (activeMustTasks.length >= 3) {
     nudges.push({
       id: "too-many-must-dos",
       type: "planning",
-      message: "That’s a lot of Must Do items. Want to simplify today?",
-      context: "You can move one or two things to Should or Could.",
+      message: "You have a lot marked as Must.",
+      context: "Consider moving one to Should so today stays doable.",
       priority: 85,
       primaryAction: {
         label: "Open plan",
@@ -93,8 +93,8 @@ export const generateNudges = ({
       context: "Pick something light and let momentum do the rest.",
       priority: 70,
       primaryAction: {
-        label: "Open focus",
-        route: "/focus",
+        label: "Open Home",
+        route: "/",
       },
     });
   }
@@ -107,8 +107,8 @@ export const generateNudges = ({
       context: "Swapping is allowed. The goal is to lower friction.",
       priority: 75,
       primaryAction: {
-        label: "Open focus",
-        route: "/focus",
+        label: "Open Home",
+        route: "/",
       },
     });
   }

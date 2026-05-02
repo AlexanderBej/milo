@@ -7,6 +7,7 @@ export type Task = {
   content: string;
   status: TaskStatus;
   priority: TaskPriority;
+  order?: number;
   createdAt: string;
   completedAt?: string;
   source?: TaskSource;

@@ -3,9 +3,8 @@ import type { RootState } from "@app/store";
 
 export const selectTasksState = (state: RootState) => state.tasks;
 
-export const selectTasks = createSelector(
-  [selectTasksState],
-  (tasks) => tasks.items,
+export const selectTasks = createSelector([selectTasksState], (tasks) =>
+  [...tasks.items].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
 );
 
 export const selectTaskMessage = createSelector(

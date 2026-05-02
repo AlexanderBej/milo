@@ -6,11 +6,16 @@ export type TasksState = {
   message?: string;
 };
 
-const MUST_LIMIT_MESSAGE = "Let’s keep Must Do to 3 so today stays doable.";
+const MUST_LIMIT_MESSAGE =
+  "You have a lot marked as Must. Consider moving one to Should.";
 const MUST_TASK_LIMIT = 3;
 
 const initialState: TasksState = {
   items: [],
+};
+
+const sortTasksByOrder = (items: Task[]) => {
+  items.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 };
 
 const countActiveMustTasks = (items: Task[]) => {
@@ -51,6 +56,7 @@ const tasksSlice = createSlice({
             content,
             status: "todo" as const,
             priority,
+            order: -Date.now(),
             createdAt: new Date().toISOString(),
             source,
           },
@@ -80,6 +86,19 @@ const tasksSlice = createSlice({
     deleteTask(state, action: PayloadAction<string>) {
       state.items = state.items.filter((task) => task.id !== action.payload);
     },
+    restoreTask(state, action: PayloadAction<{ task: Task; index?: number }>) {
+      const exists = state.items.some(
+        (task) => task.id === action.payload.task.id,
+      );
+
+      if (exists) {
+        return;
+      }
+
+      const insertAt = action.payload.index ?? state.items.length;
+      state.items.splice(insertAt, 0, action.payload.task);
+      sortTasksByOrder(state.items);
+    },
     updateTaskPriority(
       state,
       action: PayloadAction<{ id: string; priority: TaskPriority }>,
@@ -106,6 +125,36 @@ const tasksSlice = createSlice({
       task.priority = action.payload.priority;
       state.message = undefined;
     },
+    moveTask(
+      state,
+      action: PayloadAction<{ id: string; direction: "up" | "down" }>,
+    ) {
+      sortTasksByOrder(state.items);
+
+      const task = state.items.find((item) => item.id === action.payload.id);
+
+      if (!task) {
+        return;
+      }
+
+      const sameLaneTasks = state.items.filter(
+        (item) =>
+          item.status === task.status && item.priority === task.priority,
+      );
+      const laneIndex = sameLaneTasks.findIndex((item) => item.id === task.id);
+      const targetLaneIndex =
+        action.payload.direction === "up" ? laneIndex - 1 : laneIndex + 1;
+
+      if (targetLaneIndex < 0 || targetLaneIndex >= sameLaneTasks.length) {
+        return;
+      }
+
+      const targetTask = sameLaneTasks[targetLaneIndex];
+      const currentOrder = task.order;
+      task.order = targetTask.order;
+      targetTask.order = currentOrder;
+      sortTasksByOrder(state.items);
+    },
     clearTaskMessage(state) {
       state.message = undefined;
     },
@@ -117,6 +166,8 @@ export const {
   clearTaskMessage,
   completeTask,
   deleteTask,
+  moveTask,
+  restoreTask,
   undoCompleteTask,
   updateTaskPriority,
 } = tasksSlice.actions;

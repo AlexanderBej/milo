@@ -58,7 +58,9 @@ describe("HomePage", () => {
       screen.getByRole("heading", { name: /good morning, james/i }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: /nothing urgent right now/i }),
+      screen.getByRole("heading", {
+        name: /nothing needs your focus right now/i,
+      }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("heading", { name: /today.s plan/i }),
@@ -80,7 +82,9 @@ describe("HomePage", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByRole("heading", { name: /nothing urgent right now/i }),
+        screen.getByRole("heading", {
+          name: /nothing needs your focus right now/i,
+        }),
       ).toBeInTheDocument();
     });
   });

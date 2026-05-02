@@ -8,10 +8,13 @@ import {
   clearTaskMessage,
   completeTask,
   deleteTask,
+  moveTask,
+  restoreTask,
   selectCouldTasks,
   selectDoneTasks,
   selectMustTasks,
   selectShouldTasks,
+  selectTasks,
   selectTaskMessage,
   undoCompleteTask,
   updateTaskPriority,
@@ -26,8 +29,14 @@ const priorityOptions: Array<{ label: string; value: TaskPriority }> = [
   { label: "Could", value: "could" },
 ];
 
+type PlanToast = {
+  message: string;
+  undo?: () => void;
+};
+
 export const DailyPlanPage = () => {
   const dispatch = useAppDispatch();
+  const tasks = useAppSelector(selectTasks);
   const mustTasks = useAppSelector(selectMustTasks);
   const shouldTasks = useAppSelector(selectShouldTasks);
   const couldTasks = useAppSelector(selectCouldTasks);
@@ -35,20 +44,25 @@ export const DailyPlanPage = () => {
   const message = useAppSelector(selectTaskMessage);
   const [content, setContent] = useState("");
   const [priority, setPriority] = useState<TaskPriority>("should");
+  const [toast, setToast] = useState<PlanToast | null>(null);
+  const todoCount = mustTasks.length + shouldTasks.length + couldTasks.length;
+  const hasTasks = tasks.length > 0;
+  const allTasksDone = hasTasks && todoCount === 0;
 
   useEffect(() => {
-    if (!message) {
+    if (!message && !toast) {
       return;
     }
 
     const timer = window.setTimeout(() => {
       dispatch(clearTaskMessage());
-    }, 3600);
+      setToast(null);
+    }, 6000);
 
     return () => {
       window.clearTimeout(timer);
     };
-  }, [dispatch, message]);
+  }, [dispatch, message, toast]);
 
   const handleSubmit = (event: SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -59,12 +73,54 @@ export const DailyPlanPage = () => {
       return;
     }
 
+    const canAddTask = priority !== "must" || mustTasks.length < 3;
+
     dispatch(addTask({ content: trimmedContent, priority }));
     setContent("");
+
+    if (canAddTask) {
+      setToast({ message: "Task added to today." });
+    }
   };
 
   const handlePriorityChange = (taskId: string, taskPriority: TaskPriority) => {
     dispatch(updateTaskPriority({ id: taskId, priority: taskPriority }));
+  };
+
+  const findTaskSnapshot = (taskId: string) => {
+    const index = tasks.findIndex((task) => task.id === taskId);
+    const task = tasks.find((item) => item.id === taskId);
+
+    return task ? { index, task } : null;
+  };
+
+  const handleComplete = (taskId: string) => {
+    dispatch(completeTask(taskId));
+    setToast({
+      message: "Nice. That task is done.",
+      undo: () => {
+        dispatch(undoCompleteTask(taskId));
+        setToast({ message: "Task restored." });
+      },
+    });
+  };
+
+  const handleDelete = (taskId: string) => {
+    const snapshot = findTaskSnapshot(taskId);
+
+    dispatch(deleteTask(taskId));
+
+    if (!snapshot) {
+      return;
+    }
+
+    setToast({
+      message: "Removed. Undo?",
+      undo: () => {
+        dispatch(restoreTask(snapshot));
+        setToast({ message: "Task restored." });
+      },
+    });
   };
 
   return (
@@ -78,14 +134,26 @@ export const DailyPlanPage = () => {
       </header>
 
       <section className={styles.inputPanel} aria-label="Add task">
-        {message ? (
+        {message || toast ? (
           <div className={styles.message} role="status">
             <CheckCircle aria-hidden size={20} weight="fill" />
-            <span>{message}</span>
+            <span>{message ?? toast?.message}</span>
+            {toast?.undo ? (
+              <button
+                className={styles.undoButton}
+                onClick={() => {
+                  toast.undo?.();
+                }}
+                type="button"
+              >
+                Undo
+              </button>
+            ) : null}
             <button
               aria-label="Dismiss task message"
               onClick={() => {
                 dispatch(clearTaskMessage());
+                setToast(null);
               }}
               type="button"
             >
@@ -132,41 +200,48 @@ export const DailyPlanPage = () => {
         </form>
       </section>
 
+      {!hasTasks ? (
+        <section className={styles.emptyPanel} aria-live="polite">
+          <h2>Your plan is clear. Add something small when you’re ready.</h2>
+        </section>
+      ) : allTasksDone ? (
+        <section className={styles.emptyPanel} aria-live="polite">
+          <h2>You’re done for today. Nice work.</h2>
+        </section>
+      ) : null}
+
       <section className={styles.grid} aria-label="Planning sections">
         <TaskSection
-          emptyText="No must-do tasks yet."
+          emptyText="No Must tasks waiting."
           helper="Up to 3 things that make today a win."
-          onComplete={(taskId) => {
-            dispatch(completeTask(taskId));
-          }}
-          onDelete={(taskId) => {
-            dispatch(deleteTask(taskId));
+          onComplete={handleComplete}
+          onDelete={handleDelete}
+          onMove={(taskId, direction) => {
+            dispatch(moveTask({ id: taskId, direction }));
           }}
           onPriorityChange={handlePriorityChange}
           tasks={mustTasks}
           title="Must Do"
         />
         <TaskSection
-          emptyText="No should-do tasks yet."
+          emptyText="No Should tasks waiting."
           helper="Helpful next steps if you have room."
-          onComplete={(taskId) => {
-            dispatch(completeTask(taskId));
-          }}
-          onDelete={(taskId) => {
-            dispatch(deleteTask(taskId));
+          onComplete={handleComplete}
+          onDelete={handleDelete}
+          onMove={(taskId, direction) => {
+            dispatch(moveTask({ id: taskId, direction }));
           }}
           onPriorityChange={handlePriorityChange}
           tasks={shouldTasks}
           title="Should Do"
         />
         <TaskSection
-          emptyText="No could-do tasks yet."
+          emptyText="No Could tasks waiting."
           helper="Low-pressure extras."
-          onComplete={(taskId) => {
-            dispatch(completeTask(taskId));
-          }}
-          onDelete={(taskId) => {
-            dispatch(deleteTask(taskId));
+          onComplete={handleComplete}
+          onDelete={handleDelete}
+          onMove={(taskId, direction) => {
+            dispatch(moveTask({ id: taskId, direction }));
           }}
           onPriorityChange={handlePriorityChange}
           tasks={couldTasks}
@@ -179,12 +254,11 @@ export const DailyPlanPage = () => {
           emptyText="Nothing completed yet."
           helper="Finished work, kept lightly out of the way."
           onComplete={() => undefined}
-          onDelete={(taskId) => {
-            dispatch(deleteTask(taskId));
-          }}
+          onDelete={handleDelete}
           onPriorityChange={handlePriorityChange}
           onUndo={(taskId) => {
             dispatch(undoCompleteTask(taskId));
+            setToast({ message: "Task restored." });
           }}
           tasks={doneTasks}
           title="Done"

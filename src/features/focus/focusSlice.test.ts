@@ -42,7 +42,8 @@ describe("focusReducer", () => {
     state = focusReducer(state, swapFocusTask("task-2"));
     state = focusReducer(state, swapFocusTask("task-2"));
 
-    expect(state.skippedTaskIds).toEqual(["task-1", "task-2"]);
+    expect(state.skippedTaskIds).toEqual(["task-1"]);
+    expect(state.lastSwappedTaskId).toBe("task-2");
   });
 });
 

@@ -12,6 +12,7 @@ type TaskSectionProps = {
   tasks: Task[];
   onComplete: (taskId: string) => void;
   onDelete: (taskId: string) => void;
+  onMove?: (taskId: string, direction: "up" | "down") => void;
   onPriorityChange: (taskId: string, priority: TaskPriority) => void;
   onUndo?: (taskId: string) => void;
 };
@@ -23,6 +24,7 @@ export const TaskSection = ({
   tasks,
   onComplete,
   onDelete,
+  onMove,
   onPriorityChange,
   onUndo,
 }: TaskSectionProps) => {
@@ -36,6 +38,7 @@ export const TaskSection = ({
                 key={task.id}
                 onComplete={onComplete}
                 onDelete={onDelete}
+                onMove={onMove}
                 onPriorityChange={onPriorityChange}
                 onUndo={onUndo}
                 task={task}
