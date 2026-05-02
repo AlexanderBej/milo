@@ -51,6 +51,7 @@
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02), var(--shadow-soft);
   cursor: grab;
   touch-action: none;
+  user-select: none;
 }
 
 .viewportPanning {
@@ -72,18 +73,35 @@
 
 .emptyMessage {
   position: sticky;
-  top: 45%;
+  top: 38%;
   left: 50%;
-  width: max-content;
-  max-width: min(32rem, calc(100vw - 4rem));
+  display: grid;
+  justify-items: center;
+  gap: var(--space-3);
+  width: min(32rem, calc(100vw - 4rem));
   transform: translateX(-50%);
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-card);
   background: color-mix(in srgb, var(--color-bg-card) 86%, transparent);
-  color: var(--color-text-secondary);
-  padding: var(--space-4) var(--space-5);
-  font-weight: var(--font-weight-semibold);
-  pointer-events: none;
+  box-shadow: var(--shadow-soft);
+  padding: var(--space-5);
+  text-align: center;
+}
+
+.emptyMessage h3,
+.emptyMessage p {
+  margin: 0;
+}
+
+.emptyMessage h3 {
+  color: var(--color-text-primary);
+  font-size: var(--font-size-lg);
+  line-height: var(--line-height-tight);
+}
+
+.emptyMessage p {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
 }
 
 @media (max-width: 640px) {

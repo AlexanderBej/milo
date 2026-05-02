@@ -1,0 +1,297 @@
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
+import {
+  Bell,
+  Database,
+  DownloadSimple,
+  GearSix,
+  PaintBrush,
+  Sliders,
+  Trash,
+} from "phosphor-react";
+
+import { useAppDispatch, useAppSelector } from "@app/hooks";
+import { setBoardNotes } from "@features/board";
+import { clearFocus } from "@features/focus";
+import {
+  selectPreferences,
+  updatePreferences,
+  type LayoutDensity,
+  type PreferencePriority,
+  type StartScreen,
+} from "@features/preferences";
+import { setCaptures } from "@features/quickCapture";
+import { setTasks } from "@features/tasks";
+import { Button } from "@shared/components/Button";
+import { Card } from "@shared/components/Card";
+import styles from "./SettingsPage.module.scss";
+
+const startScreenOptions: Array<{ label: string; value: StartScreen }> = [
+  { label: "Home", value: "home" },
+  { label: "Inbox", value: "inbox" },
+  { label: "Daily Plan", value: "plan" },
+  { label: "Focus", value: "focus" },
+  { label: "Board", value: "board" },
+];
+
+const priorityOptions: Array<{ label: string; value: PreferencePriority }> = [
+  { label: "Must", value: "must" },
+  { label: "Should", value: "should" },
+  { label: "Could", value: "could" },
+];
+
+const snoozeOptions = [15, 30, 60, 120];
+
+export const SettingsPage = () => {
+  const dispatch = useAppDispatch();
+  const preferences = useAppSelector(selectPreferences);
+  const state = useAppSelector((appState) => appState);
+  const hasMounted = useRef(false);
+  const [saveMessage, setSaveMessage] = useState("Saved automatically");
+
+  useEffect(() => {
+    if (!hasMounted.current) {
+      hasMounted.current = true;
+      return;
+    }
+
+    setSaveMessage("Saved");
+
+    const timer = window.setTimeout(() => {
+      setSaveMessage("Saved automatically");
+    }, 1800);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [preferences]);
+
+  const updateDisplayName = (event: ChangeEvent<HTMLInputElement>) => {
+    dispatch(updatePreferences({ displayName: event.target.value }));
+  };
+
+  const exportJson = () => {
+    const exportState = {
+      board: state.board,
+      focus: state.focus,
+      preferences: state.preferences,
+      quickCapture: state.quickCapture,
+      tasks: state.tasks,
+    };
+    const blob = new Blob([JSON.stringify(exportState, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = `milo-export-${new Date().toISOString().slice(0, 10)}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const resetLocalData = () => {
+    const confirmed = window.confirm(
+      "Reset local demo data on this device? Firebase data will not be deleted.",
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    dispatch(setCaptures([]));
+    dispatch(setTasks([]));
+    dispatch(setBoardNotes([]));
+    dispatch(clearFocus());
+    window.sessionStorage.removeItem("milo:nudges:hidden");
+    setSaveMessage("Local data reset");
+  };
+
+  return (
+    <main className={styles.page}>
+      <header className={styles.header}>
+        <div>
+          <p className={styles.eyebrow}>Settings</p>
+          <h1>Preferences</h1>
+          <p>Small adjustments so MILO feels easier to come back to.</p>
+        </div>
+        <div className={styles.saveStatus} role="status">
+          {saveMessage}
+        </div>
+      </header>
+
+      <section className={styles.grid} aria-label="MILO preferences">
+        <Card icon={<GearSix weight="duotone" />} title="General">
+          <div className={styles.fieldStack}>
+            <label className={styles.field}>
+              <span>What should MILO call you?</span>
+              <input
+                className={styles.input}
+                onChange={updateDisplayName}
+                placeholder="Your name"
+                type="text"
+                value={preferences.displayName}
+              />
+            </label>
+
+            <label className={styles.field}>
+              <span>Where should MILO open first?</span>
+              <select
+                className={styles.select}
+                onChange={(event) => {
+                  dispatch(
+                    updatePreferences({
+                      defaultStartScreen: event.target.value as StartScreen,
+                    }),
+                  );
+                }}
+                value={preferences.defaultStartScreen}
+              >
+                {startScreenOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+        </Card>
+
+        <Card icon={<PaintBrush weight="duotone" />} title="Appearance">
+          <div className={styles.fieldStack}>
+            <p className={styles.infoText}>
+              MILO uses a calm dark theme for now.
+            </p>
+            <label className={styles.field}>
+              <span>Layout density</span>
+              <select
+                className={styles.select}
+                onChange={(event) => {
+                  dispatch(
+                    updatePreferences({
+                      layoutDensity: event.target.value as LayoutDensity,
+                    }),
+                  );
+                }}
+                value={preferences.layoutDensity}
+              >
+                <option value="comfortable">Comfortable</option>
+                <option value="compact">Compact</option>
+              </select>
+            </label>
+          </div>
+        </Card>
+
+        <Card icon={<Sliders weight="duotone" />} title="Planning">
+          <div className={styles.fieldStack}>
+            <label className={styles.field}>
+              <span>Must Do limit</span>
+              <select
+                className={styles.select}
+                onChange={(event) => {
+                  dispatch(
+                    updatePreferences({
+                      mustDoLimit: Number(event.target.value),
+                    }),
+                  );
+                }}
+                value={preferences.mustDoLimit}
+              >
+                {[1, 2, 3, 4, 5].map((limit) => (
+                  <option key={limit} value={limit}>
+                    {limit}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className={styles.field}>
+              <span>Default task priority from Inbox</span>
+              <select
+                className={styles.select}
+                onChange={(event) => {
+                  dispatch(
+                    updatePreferences({
+                      defaultInboxPriority: event.target
+                        .value as PreferencePriority,
+                    }),
+                  );
+                }}
+                value={preferences.defaultInboxPriority}
+              >
+                {priorityOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+        </Card>
+
+        <Card icon={<Bell weight="duotone" />} title="Nudges">
+          <div className={styles.fieldStack}>
+            <label className={styles.switchField}>
+              <span>Enable nudges</span>
+              <input
+                checked={preferences.nudgesEnabled}
+                onChange={(event) => {
+                  dispatch(
+                    updatePreferences({ nudgesEnabled: event.target.checked }),
+                  );
+                }}
+                type="checkbox"
+              />
+            </label>
+            <p className={styles.infoText}>
+              Nudges should feel supportive, not pushy.
+            </p>
+            <label className={styles.field}>
+              <span>Snooze duration</span>
+              <select
+                className={styles.select}
+                onChange={(event) => {
+                  dispatch(
+                    updatePreferences({
+                      nudgeSnoozeMinutes: Number(event.target.value),
+                    }),
+                  );
+                }}
+                value={preferences.nudgeSnoozeMinutes}
+              >
+                {snoozeOptions.map((minutes) => (
+                  <option key={minutes} value={minutes}>
+                    {minutes} min
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+        </Card>
+
+        <Card icon={<Database weight="duotone" />} title="Data">
+          <div className={styles.fieldStack}>
+            <p className={styles.infoText}>
+              Sync is handled automatically when Firebase is configured.
+            </p>
+            <div className={styles.buttonRow}>
+              <Button
+                icon={<DownloadSimple weight="bold" />}
+                onClick={exportJson}
+                variant="secondary"
+              >
+                Export JSON
+              </Button>
+              <Button
+                icon={<Trash weight="bold" />}
+                onClick={resetLocalData}
+                variant="ghost"
+              >
+                Reset demo/local data
+              </Button>
+            </div>
+          </div>
+        </Card>
+      </section>
+    </main>
+  );
+};

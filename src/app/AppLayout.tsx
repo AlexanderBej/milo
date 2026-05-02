@@ -6,6 +6,7 @@ import {
   CheckCircle,
   CheckSquare,
   ForkKnife,
+  GearSix,
   House,
   PlusCircle,
   Sun,
@@ -14,7 +15,9 @@ import {
 } from "phosphor-react";
 
 import { QuickCaptureModal } from "@features/quickCapture/components";
+import { selectDisplayName } from "@features/preferences";
 import { Button } from "@shared/components/Button";
+import { useAppSelector } from "./hooks";
 import styles from "./AppLayout.module.scss";
 
 const navItems = [
@@ -25,10 +28,12 @@ const navItems = [
   { label: "Food", icon: ForkKnife },
   { label: "Money", icon: Wallet },
   { label: "Board", icon: Chalkboard, path: "/board" },
+  { label: "Settings", icon: GearSix, path: "/settings" },
 ];
 
 export const AppLayout = () => {
   const location = useLocation();
+  const displayName = useAppSelector(selectDisplayName);
   const [isCaptureOpen, setIsCaptureOpen] = useState(false);
   const [showCapturedToast, setShowCapturedToast] = useState(false);
 
@@ -112,7 +117,9 @@ export const AppLayout = () => {
           <div className={styles.profile}>
             <UserCircle aria-hidden size={32} weight="duotone" />
             <div>
-              <p className={styles.profileName}>James</p>
+              <p className={styles.profileName}>
+                {displayName.trim() || "MILO friend"}
+              </p>
               <p className={styles.profileMeta}>Ready for focus</p>
             </div>
           </div>

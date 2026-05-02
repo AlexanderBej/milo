@@ -10,6 +10,7 @@ import {
   quickCaptureReducer,
   selectCaptureItems,
 } from "@features/quickCapture";
+import { preferencesReducer } from "@features/preferences";
 import { addTask, tasksReducer } from "@features/tasks";
 import { baseApi } from "@services/api/baseApi";
 import { HomePage } from "./HomePage";
@@ -41,6 +42,7 @@ function createStore() {
     reducer: {
       board: boardReducer,
       focus: focusReducer,
+      preferences: preferencesReducer,
       quickCapture: quickCaptureReducer,
       tasks: tasksReducer,
       [baseApi.reducerPath]: baseApi.reducer,

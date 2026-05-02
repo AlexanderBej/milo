@@ -14,22 +14,12 @@ import { BoardCanvas } from "@features/board/components";
 import { addTask } from "@features/tasks";
 import styles from "./BoardPage.module.scss";
 
-const NOTE_OFFSET = 36;
-const START_X = 260;
-const START_Y = 220;
-
-const getNextPosition = (noteCount: number) => {
-  const offset = noteCount % 7;
-
-  return {
-    x: START_X + offset * NOTE_OFFSET,
-    y: START_Y + offset * NOTE_OFFSET,
-  };
-};
-
 export const BoardPage = () => {
   const dispatch = useAppDispatch();
   const notes = useAppSelector(selectBoardNotes);
+  const [highlightedNoteId, setHighlightedNoteId] = useState<string | null>(
+    null,
+  );
   const [toast, setToast] = useState<string | null>(null);
 
   useEffect(() => {
@@ -46,8 +36,25 @@ export const BoardPage = () => {
     };
   }, [toast]);
 
-  const handleAddNote = () => {
-    dispatch(addNote(getNextPosition(notes.length)));
+  useEffect(() => {
+    if (!highlightedNoteId) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      setHighlightedNoteId(null);
+    }, 1200);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [highlightedNoteId]);
+
+  const handleAddNote = (position: { x: number; y: number }) => {
+    const action = addNote({ ...position });
+
+    dispatch(action);
+    setHighlightedNoteId(action.payload.id);
     setToast("Note added.");
   };
 
@@ -59,8 +66,19 @@ export const BoardPage = () => {
     }
 
     dispatch(addTask({ content, priority: "could", source: "board" }));
-    dispatch(deleteNote(note.id));
-    setToast("Moved to today as a Could task.");
+    setToast("Task created from note.");
+  };
+
+  const handleDuplicateNote = (note: BoardNote) => {
+    const action = addNote({
+      content: note.content,
+      x: Math.min(note.x + 36, 2088),
+      y: Math.min(note.y + 36, 1368),
+    });
+
+    dispatch(action);
+    setHighlightedNoteId(action.payload.id);
+    setToast("Note duplicated.");
   };
 
   return (
@@ -75,6 +93,7 @@ export const BoardPage = () => {
         </div>
       </header>
       <BoardCanvas
+        highlightedNoteId={highlightedNoteId}
         notes={notes}
         onAddNote={handleAddNote}
         onConvertToTask={handleConvertToTask}
@@ -82,6 +101,7 @@ export const BoardPage = () => {
           dispatch(deleteNote(noteId));
           setToast("Note deleted.");
         }}
+        onDuplicateNote={handleDuplicateNote}
         onMoveNote={(noteId, x, y) => {
           dispatch(moveNote({ id: noteId, x, y }));
         }}

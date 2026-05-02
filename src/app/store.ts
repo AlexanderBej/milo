@@ -9,6 +9,11 @@ import {
 } from "@features/board";
 import { focusReducer, type FocusState } from "@features/focus";
 import {
+  defaultPreferences,
+  preferencesReducer,
+  type PreferencesState,
+} from "@features/preferences";
+import {
   addCapture,
   quickCaptureReducer,
   removeCapture,
@@ -41,6 +46,7 @@ import type { CaptureItem } from "@shared/types";
 const reducer = {
   board: boardReducer,
   focus: focusReducer,
+  preferences: preferencesReducer,
   quickCapture: quickCaptureReducer,
   tasks: tasksReducer,
   [baseApi.reducerPath]: baseApi.reducer,
@@ -53,6 +59,7 @@ type PersistedState = {
     notes?: BoardNote[];
   };
   focus?: Partial<FocusState>;
+  preferences?: Partial<PreferencesState>;
   quickCapture?: {
     items?: CaptureItem[];
   };
@@ -111,6 +118,16 @@ const buildPreloadedState = () => {
           typeof note.y === "number",
       )
     : [];
+  const preferences = persistedState.preferences
+    ? {
+        ...defaultPreferences,
+        ...persistedState.preferences,
+        mustDoLimit:
+          typeof persistedState.preferences.mustDoLimit === "number"
+            ? Math.min(5, Math.max(1, persistedState.preferences.mustDoLimit))
+            : defaultPreferences.mustDoLimit,
+      }
+    : defaultPreferences;
 
   return {
     board: {
@@ -124,6 +141,7 @@ const buildPreloadedState = () => {
         : [],
       startedAt: persistedState.focus?.startedAt ?? null,
     },
+    preferences,
     quickCapture: {
       items: captures,
     },
@@ -313,6 +331,7 @@ if (typeof window !== "undefined") {
       STORAGE_KEY,
       JSON.stringify({
         focus: state.focus,
+        preferences: state.preferences,
         board: state.board,
         quickCapture: state.quickCapture,
         tasks: state.tasks,

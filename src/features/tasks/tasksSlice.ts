@@ -24,29 +24,45 @@ const countActiveMustTasks = (items: Task[]) => {
   ).length;
 };
 
+const getMustTaskLimit = (limit?: number) => {
+  if (typeof limit !== "number" || !Number.isFinite(limit)) {
+    return MUST_TASK_LIMIT;
+  }
+
+  return Math.min(5, Math.max(1, Math.round(limit)));
+};
+
+type AddTaskPayload = Task & {
+  maxMustDoLimit?: number;
+};
+
 const tasksSlice = createSlice({
   name: "tasks",
   initialState,
   reducers: {
     addTask: {
-      reducer(state, action: PayloadAction<Task>) {
+      reducer(state, action: PayloadAction<AddTaskPayload>) {
+        const { maxMustDoLimit, ...task } = action.payload;
+
         if (
-          action.payload.priority === "must" &&
-          countActiveMustTasks(state.items) >= MUST_TASK_LIMIT
+          task.priority === "must" &&
+          countActiveMustTasks(state.items) >= getMustTaskLimit(maxMustDoLimit)
         ) {
           state.message = MUST_LIMIT_MESSAGE;
           return;
         }
 
-        state.items.unshift(action.payload);
+        state.items.unshift(task);
         state.message = undefined;
       },
       prepare({
         content,
+        maxMustDoLimit,
         priority = "should",
         source = "manual",
       }: {
         content: string;
+        maxMustDoLimit?: number;
         priority?: TaskPriority;
         source?: TaskSource;
       }) {
@@ -59,6 +75,7 @@ const tasksSlice = createSlice({
             order: -Date.now(),
             createdAt: new Date().toISOString(),
             source,
+            maxMustDoLimit,
           },
         };
       },
@@ -106,7 +123,11 @@ const tasksSlice = createSlice({
     },
     updateTaskPriority(
       state,
-      action: PayloadAction<{ id: string; priority: TaskPriority }>,
+      action: PayloadAction<{
+        id: string;
+        maxMustDoLimit?: number;
+        priority: TaskPriority;
+      }>,
     ) {
       const task = state.items.find((item) => item.id === action.payload.id);
 
@@ -121,7 +142,8 @@ const tasksSlice = createSlice({
 
       if (
         isMovingTodoIntoMust &&
-        countActiveMustTasks(state.items) >= MUST_TASK_LIMIT
+        countActiveMustTasks(state.items) >=
+          getMustTaskLimit(action.payload.maxMustDoLimit)
       ) {
         state.message = MUST_LIMIT_MESSAGE;
         return;

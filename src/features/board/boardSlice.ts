@@ -20,7 +20,7 @@ const boardSlice = createSlice({
         return {
           payload: {
             id: nanoid(),
-            content: input?.content?.trim() || "New thought",
+            content: input?.content?.trim() ?? "",
             x: input?.x ?? START_X,
             y: input?.y ?? START_Y,
             createdAt: new Date().toISOString(),

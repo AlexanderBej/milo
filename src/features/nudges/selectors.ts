@@ -5,21 +5,27 @@ import { generateNudges, generateTopNudge } from "./nudgeRules";
 const selectCaptureItems = (state: RootState) => state.quickCapture.items;
 const selectTaskItems = (state: RootState) => state.tasks.items;
 const selectFocusState = (state: RootState) => state.focus;
+const selectNudgesEnabled = (state: RootState) =>
+  state.preferences.nudgesEnabled;
 
 export const selectNudges = createSelector(
-  [selectCaptureItems, selectTaskItems, selectFocusState],
-  (captures, tasks, focus) =>
-    generateNudges({
-      captures,
-      tasks,
-      focus,
-    }),
+  [selectCaptureItems, selectTaskItems, selectFocusState, selectNudgesEnabled],
+  (captures, tasks, focus, nudgesEnabled) =>
+    nudgesEnabled
+      ? generateNudges({
+          captures,
+          tasks,
+          focus,
+        })
+      : [],
 );
 
 export const selectActiveNudge = (state: RootState, now?: Date) =>
-  generateTopNudge({
-    captures: state.quickCapture.items,
-    tasks: state.tasks.items,
-    focus: state.focus,
-    now,
-  });
+  state.preferences.nudgesEnabled
+    ? generateTopNudge({
+        captures: state.quickCapture.items,
+        tasks: state.tasks.items,
+        focus: state.focus,
+        now,
+      })
+    : null;

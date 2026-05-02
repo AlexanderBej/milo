@@ -48,6 +48,11 @@ import {
 } from "@features/tasks";
 import type { Task } from "@features/tasks";
 import {
+  selectDefaultInboxPriority,
+  selectDisplayName,
+  selectMustDoLimit,
+} from "@features/preferences";
+import {
   clearFocus,
   selectRecommendedFocusTask,
   skipFocusTask,
@@ -120,11 +125,14 @@ export const HomePage = () => {
 };
 
 const HomeHeader = () => {
+  const displayName = useAppSelector(selectDisplayName);
+  const greetingName = displayName.trim() || "James";
+
   return (
     <header className={styles.header}>
       <div>
         <p className={styles.eyebrow}>Home</p>
-        <h1>Good morning, James</h1>
+        <h1>Good morning, {greetingName}</h1>
         <p>Let&apos;s focus on what matters today.</p>
       </div>
       <Button icon={<Lightning weight="fill" />} variant="secondary">
@@ -458,6 +466,8 @@ const InboxCard = () => {
   const captureCount = useAppSelector(selectCaptureCount);
   const captures = useAppSelector(selectCaptureItems);
   const boardNotes = useAppSelector(selectBoardNotes);
+  const defaultInboxPriority = useAppSelector(selectDefaultInboxPriority);
+  const mustDoLimit = useAppSelector(selectMustDoLimit);
   const tasks = useAppSelector(selectTasks);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [toast, setToast] = useState<HomeToast | null>(null);
@@ -496,7 +506,8 @@ const InboxCard = () => {
 
     const taskAction = addTask({
       content: capture.content,
-      priority: "should",
+      maxMustDoLimit: mustDoLimit,
+      priority: defaultInboxPriority,
       source: "inbox",
     });
 

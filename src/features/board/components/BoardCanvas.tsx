@@ -8,10 +8,12 @@ import { BoardNote } from "./BoardNote";
 import styles from "./BoardCanvas.module.scss";
 
 type BoardCanvasProps = {
+  highlightedNoteId?: string | null;
   notes: BoardNoteType[];
-  onAddNote: () => void;
+  onAddNote: (position: { x: number; y: number }) => void;
   onConvertToTask: (note: BoardNoteType) => void;
   onDeleteNote: (noteId: string) => void;
+  onDuplicateNote: (note: BoardNoteType) => void;
   onMoveNote: (noteId: string, x: number, y: number) => void;
   onUpdateNote: (noteId: string, content: string) => void;
 };
@@ -25,10 +27,12 @@ type PanState = {
 };
 
 export const BoardCanvas = ({
+  highlightedNoteId,
   notes,
   onAddNote,
   onConvertToTask,
   onDeleteNote,
+  onDuplicateNote,
   onMoveNote,
   onUpdateNote,
 }: BoardCanvasProps) => {
@@ -46,12 +50,36 @@ export const BoardCanvas = ({
     viewport.scrollTo({ left: 180, top: 120 });
   }, []);
 
+  const getVisibleCenterPosition = () => {
+    const viewport = viewportRef.current;
+
+    if (!viewport) {
+      return { x: 260, y: 220 };
+    }
+
+    return {
+      x: Math.min(
+        Math.max(viewport.scrollLeft + viewport.clientWidth / 2 - 140, 24),
+        2088,
+      ),
+      y: Math.min(
+        Math.max(viewport.scrollTop + viewport.clientHeight / 2 - 105, 24),
+        1368,
+      ),
+    };
+  };
+
+  const handleAddNote = () => {
+    onAddNote(getVisibleCenterPosition());
+  };
+
   const handlePointerDown = (event: PointerEvent<HTMLDivElement>) => {
     const target = event.target;
 
     if (
       target instanceof Element &&
-      target.closest("[data-board-note='true']")
+      (target.closest("[data-board-note='true']") ||
+        target.closest("[data-board-canvas-static='true']"))
     ) {
       return;
     }
@@ -99,7 +127,7 @@ export const BoardCanvas = ({
           <p className={styles.kicker}>Thinking space</p>
           <h2>Board</h2>
         </div>
-        <Button icon={<PlusCircle weight="fill" />} onClick={onAddNote}>
+        <Button icon={<PlusCircle weight="fill" />} onClick={handleAddNote}>
           Add note
         </Button>
       </div>
@@ -113,17 +141,30 @@ export const BoardCanvas = ({
       >
         <div className={styles.canvas}>
           {notes.length === 0 ? (
-            <div className={styles.emptyMessage}>
-              Drop a thought here. You can organize it later.
+            <div
+              className={styles.emptyMessage}
+              data-board-canvas-static="true"
+            >
+              <h3>Drop a thought here.</h3>
+              <p>Use the board when an idea is too messy for a task list.</p>
+              <Button
+                icon={<PlusCircle weight="fill" />}
+                onClick={handleAddNote}
+                size="sm"
+              >
+                Add note
+              </Button>
             </div>
           ) : null}
           <AnimatePresence>
             {notes.map((note) => (
               <BoardNote
                 key={note.id}
+                isHighlighted={highlightedNoteId === note.id}
                 note={note}
                 onConvertToTask={onConvertToTask}
                 onDelete={onDeleteNote}
+                onDuplicate={onDuplicateNote}
                 onMove={onMoveNote}
                 onUpdate={onUpdateNote}
               />

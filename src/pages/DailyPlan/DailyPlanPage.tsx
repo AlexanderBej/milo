@@ -20,6 +20,7 @@ import {
   updateTaskPriority,
   type TaskPriority,
 } from "@features/tasks";
+import { selectMustDoLimit } from "@features/preferences";
 import { TaskSection } from "../../features/tasks/components";
 import styles from "./DailyPlanPage.module.scss";
 
@@ -42,6 +43,7 @@ export const DailyPlanPage = () => {
   const couldTasks = useAppSelector(selectCouldTasks);
   const doneTasks = useAppSelector(selectDoneTasks);
   const message = useAppSelector(selectTaskMessage);
+  const mustDoLimit = useAppSelector(selectMustDoLimit);
   const [content, setContent] = useState("");
   const [priority, setPriority] = useState<TaskPriority>("should");
   const [toast, setToast] = useState<PlanToast | null>(null);
@@ -73,9 +75,15 @@ export const DailyPlanPage = () => {
       return;
     }
 
-    const canAddTask = priority !== "must" || mustTasks.length < 3;
+    const canAddTask = priority !== "must" || mustTasks.length < mustDoLimit;
 
-    dispatch(addTask({ content: trimmedContent, priority }));
+    dispatch(
+      addTask({
+        content: trimmedContent,
+        maxMustDoLimit: mustDoLimit,
+        priority,
+      }),
+    );
     setContent("");
 
     if (canAddTask) {
@@ -84,7 +92,13 @@ export const DailyPlanPage = () => {
   };
 
   const handlePriorityChange = (taskId: string, taskPriority: TaskPriority) => {
-    dispatch(updateTaskPriority({ id: taskId, priority: taskPriority }));
+    dispatch(
+      updateTaskPriority({
+        id: taskId,
+        maxMustDoLimit: mustDoLimit,
+        priority: taskPriority,
+      }),
+    );
   };
 
   const findTaskSnapshot = (taskId: string) => {
@@ -213,7 +227,7 @@ export const DailyPlanPage = () => {
       <section className={styles.grid} aria-label="Planning sections">
         <TaskSection
           emptyText="No Must tasks waiting."
-          helper="Up to 3 things that make today a win."
+          helper={`Up to ${mustDoLimit} things that make today a win.`}
           onComplete={handleComplete}
           onDelete={handleDelete}
           onMove={(taskId, direction) => {
