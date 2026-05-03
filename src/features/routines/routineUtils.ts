@@ -1,6 +1,7 @@
+import { isWithinTimeWindow } from "@features/time/timeUtils";
 import type { Routine, RoutineCompletion } from "./types";
 
-export const getTodayDateKey = (now = new Date()) => {
+export const getDailyPeriodKey = (now = new Date()) => {
   const year = now.getFullYear();
   const month = String(now.getMonth() + 1).padStart(2, "0");
   const day = String(now.getDate()).padStart(2, "0");
@@ -8,49 +9,59 @@ export const getTodayDateKey = (now = new Date()) => {
   return `${String(year)}-${month}-${day}`;
 };
 
-export const doesRoutineApplyToday = (routine: Routine, date = new Date()) => {
-  if (routine.schedule === "daily") {
-    return true;
-  }
+export const getTodayDateKey = getDailyPeriodKey;
 
-  const day = date.getDay();
-  const isWeekend = day === 0 || day === 6;
+export const getWeeklyPeriodKey = (now = new Date()) => {
+  const date = new Date(now);
+  date.setHours(0, 0, 0, 0);
+  date.setDate(date.getDate() + 3 - ((date.getDay() + 6) % 7));
 
-  return routine.schedule === "weekends" ? isWeekend : !isWeekend;
+  const weekOne = new Date(date.getFullYear(), 0, 4);
+  const week =
+    1 +
+    Math.round(
+      ((date.getTime() - weekOne.getTime()) / 86400000 -
+        3 +
+        ((weekOne.getDay() + 6) % 7)) /
+        7,
+    );
+
+  return `${String(date.getFullYear())}-W${String(week).padStart(2, "0")}`;
 };
 
-const getMinutesFromTime = (time: string) => {
-  const [hours = "0", minutes = "0"] = time.split(":");
+export const getRoutinePeriodKey = (routine: Routine, now = new Date()) =>
+  routine.schedule === "weekly"
+    ? getWeeklyPeriodKey(now)
+    : getDailyPeriodKey(now);
 
-  return Number(hours) * 60 + Number(minutes);
+export const doesRoutineApplyToday = (routine: Routine, date = new Date()) => {
+  void routine;
+  void date;
+  return true;
 };
 
 export const isCurrentTimeInsideWindow = (
   timeWindow: Routine["timeWindow"],
   now = new Date(),
-) => {
-  const currentMinutes = now.getHours() * 60 + now.getMinutes();
-  const startMinutes = getMinutesFromTime(timeWindow.start);
-  const endMinutes = getMinutesFromTime(timeWindow.end);
+) => isWithinTimeWindow(now, timeWindow.start, timeWindow.end);
 
-  if (startMinutes <= endMinutes) {
-    return currentMinutes >= startMinutes && currentMinutes <= endMinutes;
-  }
-
-  return currentMinutes >= startMinutes || currentMinutes <= endMinutes;
-};
+export const getRoutineCompletionForPeriod = (
+  routineId: string,
+  periodKey: string,
+  completions: RoutineCompletion[],
+) =>
+  completions.find(
+    (completion) =>
+      completion.routineId === routineId && completion.periodKey === periodKey,
+  );
 
 export const getRoutineCompletionForDate = (
   completions: RoutineCompletion[],
   routineId: string,
   date: string,
-) =>
-  completions.find(
-    (completion) =>
-      completion.routineId === routineId && completion.date === date,
-  );
+) => getRoutineCompletionForPeriod(routineId, date, completions);
 
-export const isRoutineCompleteForDate = (
+export const isRoutineCompleteForPeriod = (
   routine: Routine,
   completion?: RoutineCompletion,
 ) => {
@@ -66,3 +77,5 @@ export const isRoutineCompleteForDate = (
     completion.completedChecklistItems.includes(item),
   );
 };
+
+export const isRoutineCompleteForDate = isRoutineCompleteForPeriod;

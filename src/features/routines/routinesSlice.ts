@@ -1,8 +1,8 @@
 import { createSlice, nanoid, type PayloadAction } from "@reduxjs/toolkit";
 import {
-  getRoutineCompletionForDate,
-  getTodayDateKey,
-  isRoutineCompleteForDate,
+  getRoutineCompletionForPeriod,
+  getRoutinePeriodKey,
+  isRoutineCompleteForPeriod,
 } from "./routineUtils";
 import type { Routine, RoutineCompletion, RoutineSchedule } from "./types";
 
@@ -33,16 +33,91 @@ type UpdateRoutinePayload = {
 type ToggleRoutineChecklistItemPayload = {
   routineId: string;
   date?: string;
+  periodKey?: string;
+  now?: string;
   item: string;
 };
 
 type CompleteRoutinePayload = {
   routineId: string;
   date?: string;
+  periodKey?: string;
+  now?: string;
 };
 
 const normalizeChecklist = (checklist: string[]) =>
   Array.from(new Set(checklist.map((item) => item.trim()).filter(Boolean)));
+
+type PersistedRoutine = Omit<Routine, "active" | "checklist" | "schedule"> & {
+  active?: boolean;
+  checklist?: unknown;
+  schedule?: unknown;
+};
+
+type PersistedRoutineCompletion = Omit<
+  RoutineCompletion,
+  "completedChecklistItems" | "createdAt" | "id" | "periodKey" | "updatedAt"
+> & {
+  completedChecklistItems?: string[];
+  createdAt?: string;
+  date?: string;
+  id?: string;
+  periodKey?: string;
+  updatedAt?: string;
+};
+
+const normalizeSchedule = (schedule: unknown): RoutineSchedule =>
+  schedule === "weekly" ? "weekly" : "daily";
+
+const normalizeRoutine = (routine: PersistedRoutine): Routine => ({
+  ...routine,
+  checklist: Array.isArray(routine.checklist)
+    ? normalizeChecklist(
+        routine.checklist.filter(
+          (item): item is string => typeof item === "string",
+        ),
+      )
+    : [],
+  schedule: normalizeSchedule(routine.schedule),
+  active: routine.active ?? true,
+});
+
+const getCompletionPeriodKey = (completion: PersistedRoutineCompletion) =>
+  completion.periodKey ?? completion.date ?? "";
+
+const normalizeCompletion = (completion: PersistedRoutineCompletion) => {
+  const periodKey = getCompletionPeriodKey(completion);
+  const timestamp =
+    completion.updatedAt ??
+    completion.completedAt ??
+    completion.createdAt ??
+    new Date().toISOString();
+
+  return {
+    id: completion.id || `${completion.routineId}_${periodKey}`,
+    routineId: completion.routineId,
+    periodKey,
+    completedChecklistItems: Array.isArray(completion.completedChecklistItems)
+      ? completion.completedChecklistItems
+      : [],
+    completedAt: completion.completedAt,
+    createdAt: completion.createdAt ?? timestamp,
+    updatedAt: timestamp,
+  };
+};
+
+const createRoutineCompletion = (
+  routineId: string,
+  periodKey: string,
+  nowIso: string,
+): RoutineCompletion => ({
+  id: `${routineId}_${periodKey}`,
+  routineId,
+  periodKey,
+  completedChecklistItems: [],
+  createdAt: nowIso,
+  updatedAt: nowIso,
+});
 
 const routinesSlice = createSlice({
   name: "routines",
@@ -59,7 +134,7 @@ const routinesSlice = createSlice({
             title: payload.title.trim(),
             description: payload.description?.trim() || undefined,
             checklist: normalizeChecklist(payload.checklist),
-            schedule: payload.schedule,
+            schedule: normalizeSchedule(payload.schedule),
             timeWindow: payload.timeWindow,
             active: payload.active ?? true,
             createdAt: new Date().toISOString(),
@@ -68,12 +143,17 @@ const routinesSlice = createSlice({
       },
     },
 
-    setRoutines(state, action: PayloadAction<Routine[]>) {
-      state.routines = action.payload;
+    setRoutines(state, action: PayloadAction<PersistedRoutine[]>) {
+      state.routines = action.payload.map(normalizeRoutine);
     },
 
-    setRoutineCompletions(state, action: PayloadAction<RoutineCompletion[]>) {
-      state.completions = action.payload;
+    setRoutineCompletions(
+      state,
+      action: PayloadAction<PersistedRoutineCompletion[]>,
+    ) {
+      state.completions = action.payload
+        .map(normalizeCompletion)
+        .filter((completion) => completion.routineId && completion.periodKey);
     },
 
     updateRoutine(state, action: PayloadAction<UpdateRoutinePayload>) {
@@ -95,6 +175,9 @@ const routinesSlice = createSlice({
         checklist: action.payload.changes.checklist
           ? normalizeChecklist(action.payload.changes.checklist)
           : routine.checklist,
+        schedule: action.payload.changes.schedule
+          ? normalizeSchedule(action.payload.changes.schedule)
+          : routine.schedule,
       });
     },
 
@@ -115,31 +198,41 @@ const routinesSlice = createSlice({
       );
     },
 
-    toggleRoutineChecklistItemForDate(
+    toggleRoutineChecklistItemForPeriod(
       state,
       action: PayloadAction<ToggleRoutineChecklistItemPayload>,
     ) {
-      const date = action.payload.date ?? getTodayDateKey();
+      const now = action.payload.now
+        ? new Date(action.payload.now)
+        : new Date();
       const routine = state.routines.find(
         (item) => item.id === action.payload.routineId,
       );
+      const periodKey = action.payload.periodKey
+        ? action.payload.periodKey
+        : action.payload.date
+          ? action.payload.date
+          : routine
+            ? getRoutinePeriodKey(routine, now)
+            : "";
+      const nowIso = now.toISOString();
 
       if (!routine || !routine.checklist.includes(action.payload.item)) {
         return;
       }
 
-      let completion = getRoutineCompletionForDate(
-        state.completions,
+      let completion = getRoutineCompletionForPeriod(
         action.payload.routineId,
-        date,
+        periodKey,
+        state.completions,
       );
 
       if (!completion) {
-        completion = {
-          routineId: action.payload.routineId,
-          date,
-          completedChecklistItems: [],
-        };
+        completion = createRoutineCompletion(
+          action.payload.routineId,
+          periodKey,
+          nowIso,
+        );
         state.completions.push(completion);
       }
 
@@ -149,59 +242,76 @@ const routinesSlice = createSlice({
             (item) => item !== action.payload.item,
           );
         delete completion.completedAt;
+        completion.updatedAt = nowIso;
         return;
       }
 
       completion.completedChecklistItems.push(action.payload.item);
+      completion.updatedAt = nowIso;
 
-      if (isRoutineCompleteForDate(routine, completion)) {
-        completion.completedAt = new Date().toISOString();
+      if (isRoutineCompleteForPeriod(routine, completion)) {
+        completion.completedAt = nowIso;
       }
     },
 
-    completeRoutineForDate(
+    completeRoutineForPeriod(
       state,
       action: PayloadAction<CompleteRoutinePayload>,
     ) {
-      const date = action.payload.date ?? getTodayDateKey();
+      const now = action.payload.now
+        ? new Date(action.payload.now)
+        : new Date();
       const routine = state.routines.find(
         (item) => item.id === action.payload.routineId,
       );
+      const periodKey = action.payload.periodKey
+        ? action.payload.periodKey
+        : action.payload.date
+          ? action.payload.date
+          : routine
+            ? getRoutinePeriodKey(routine, now)
+            : "";
+      const nowIso = now.toISOString();
 
       if (!routine) {
         return;
       }
 
-      let completion = getRoutineCompletionForDate(
-        state.completions,
+      let completion = getRoutineCompletionForPeriod(
         action.payload.routineId,
-        date,
+        periodKey,
+        state.completions,
       );
 
       if (!completion) {
-        completion = {
-          routineId: action.payload.routineId,
-          date,
-          completedChecklistItems: [],
-        };
+        completion = createRoutineCompletion(
+          action.payload.routineId,
+          periodKey,
+          nowIso,
+        );
         state.completions.push(completion);
       }
 
       completion.completedChecklistItems = [...routine.checklist];
-      completion.completedAt = new Date().toISOString();
+      completion.completedAt = nowIso;
+      completion.updatedAt = nowIso;
     },
   },
 });
 
 export const {
   addRoutine,
-  completeRoutineForDate,
+  completeRoutineForPeriod,
   deactivateRoutine,
   deleteRoutine,
   setRoutineCompletions,
   setRoutines,
-  toggleRoutineChecklistItemForDate,
+  toggleRoutineChecklistItemForPeriod,
   updateRoutine,
 } = routinesSlice.actions;
+
+export const completeRoutineForDate = completeRoutineForPeriod;
+export const toggleRoutineChecklistItemForDate =
+  toggleRoutineChecklistItemForPeriod;
 
 export const routinesReducer = routinesSlice.reducer;

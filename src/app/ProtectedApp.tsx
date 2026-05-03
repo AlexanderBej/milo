@@ -1,5 +1,6 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAppSelector } from "@app/hooks";
+import { TimeEngine } from "@features/time/TimeEngine";
 import styles from "./ProtectedApp.module.scss";
 
 export const AuthLoadingScreen = () => (
@@ -23,5 +24,10 @@ export const ProtectedApp = () => {
     return <Navigate replace state={{ from: location }} to="/auth" />;
   }
 
-  return <Outlet />;
+  return (
+    <>
+      <TimeEngine />
+      <Outlet />
+    </>
+  );
 };

@@ -18,17 +18,33 @@ const ensureDb = () => {
   return db;
 };
 
+const toUnknownRecord = (data: unknown): Record<string, unknown> => {
+  if (!data || typeof data !== "object") {
+    return {};
+  }
+
+  return data as Record<string, unknown>;
+};
+
 export const getRoutines = async (userId: string): Promise<Routine[]> => {
   const snapshot = await getDocs(
     collection(ensureDb(), getRoutinesPath(userId)),
   );
 
   return snapshot.docs.map((routineDoc) => {
-    const data = normalizeDateFields(routineDoc.data());
+    const data = normalizeDateFields(toUnknownRecord(routineDoc.data()));
+    const checklist = Array.isArray(data.checklist)
+      ? data.checklist.filter(
+          (item): item is string => typeof item === "string",
+        )
+      : [];
 
     return {
       ...data,
       id: typeof data.id === "string" ? data.id : routineDoc.id,
+      active: data.active ?? true,
+      checklist,
+      schedule: data.schedule === "weekly" ? "weekly" : "daily",
     } as Routine;
   });
 };
@@ -55,10 +71,27 @@ export const getRoutineCompletions = async (
   );
 
   return snapshot.docs.map((completionDoc) => {
-    const data = normalizeDateFields(completionDoc.data());
+    const data = normalizeDateFields(toUnknownRecord(completionDoc.data()));
+    const periodKey =
+      typeof data.periodKey === "string"
+        ? data.periodKey
+        : typeof data.date === "string"
+          ? data.date
+          : "";
+    const completedChecklistItems = Array.isArray(data.completedChecklistItems)
+      ? data.completedChecklistItems.filter(
+          (item): item is string => typeof item === "string",
+        )
+      : [];
 
     return {
       ...data,
+      id:
+        typeof data.id === "string"
+          ? data.id
+          : `${String(data.routineId)}_${periodKey}`,
+      periodKey,
+      completedChecklistItems,
     } as RoutineCompletion;
   });
 };
@@ -68,21 +101,16 @@ export const saveRoutineCompletion = async (
   completion: RoutineCompletion,
 ): Promise<void> => {
   await setDoc(
-    doc(
-      ensureDb(),
-      getRoutineCompletionsPath(userId),
-      `${completion.routineId}_${completion.date}`,
-    ),
+    doc(ensureDb(), getRoutineCompletionsPath(userId), completion.id),
     completion,
   );
 };
 
 export const deleteRoutineCompletion = async (
   userId: string,
-  routineId: string,
-  date: string,
+  completionId: string,
 ): Promise<void> => {
   await deleteDoc(
-    doc(ensureDb(), getRoutineCompletionsPath(userId), `${routineId}_${date}`),
+    doc(ensureDb(), getRoutineCompletionsPath(userId), completionId),
   );
 };

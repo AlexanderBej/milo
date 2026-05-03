@@ -8,10 +8,12 @@ export type Task = {
   id: string;
   content: string;
   status: TaskStatus;
+  completed: boolean;
   priority: TaskPriority;
   order?: number;
   createdAt: string;
   completedAt?: string;
+  archivedAt?: string;
   source?: TaskSource;
   dueDate?: string;
   timeSlot?: TaskTimeSlot;

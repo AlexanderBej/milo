@@ -1,10 +1,11 @@
 import { createSelector } from "@reduxjs/toolkit";
 import type { RootState } from "@app/store";
+import { selectNowIso } from "@features/time/selectors";
 import {
   doesRoutineApplyToday,
-  getRoutineCompletionForDate,
-  getTodayDateKey,
-  isRoutineCompleteForDate,
+  getRoutineCompletionForPeriod,
+  getRoutinePeriodKey,
+  isRoutineCompleteForPeriod,
 } from "./routineUtils";
 
 export const selectRoutinesState = (state: RootState) => state.routines;
@@ -25,29 +26,54 @@ export const selectActiveRoutines = createSelector(
 );
 
 export const selectTodayRoutineProgress = createSelector(
-  [selectActiveRoutines, selectRoutineCompletions],
-  (routines, completions) => {
-    const today = getTodayDateKey();
-    const now = new Date(`${today}T12:00:00`);
+  [selectActiveRoutines, selectRoutineCompletions, selectNowIso],
+  (routines, completions, nowIso) => {
+    const now = new Date(nowIso);
 
     return routines
       .filter((routine) => doesRoutineApplyToday(routine, now))
       .map((routine) => {
-        const completion = getRoutineCompletionForDate(
-          completions,
+        const periodKey = getRoutinePeriodKey(routine, now);
+        const completion = getRoutineCompletionForPeriod(
           routine.id,
-          today,
+          periodKey,
+          completions,
         );
 
         return {
           routine,
           completion,
+          periodKey,
           completedCount: completion?.completedChecklistItems.length ?? 0,
           totalCount: routine.checklist.length,
-          isComplete: isRoutineCompleteForDate(routine, completion),
+          isComplete: isRoutineCompleteForPeriod(routine, completion),
         };
       });
   },
 );
 
 export const getTodayRoutineProgress = selectTodayRoutineProgress;
+
+export const selectCurrentPeriodRoutineCompletion = createSelector(
+  [
+    selectRoutineCompletions,
+    selectRoutines,
+    selectNowIso,
+    (_state: RootState, routineId: string) => routineId,
+  ],
+  (completions, routines, nowIso, routineId) => {
+    const routine = routines.find((item) => item.id === routineId);
+
+    if (!routine) {
+      return null;
+    }
+
+    return (
+      getRoutineCompletionForPeriod(
+        routineId,
+        getRoutinePeriodKey(routine, new Date(nowIso)),
+        completions,
+      ) ?? null
+    );
+  },
+);

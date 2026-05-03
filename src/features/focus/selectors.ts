@@ -31,6 +31,8 @@ export const selectFocusStartedAt = createSelector(
 const isAvailableFocusTask = (task: Task, skippedTaskIds: string[]) => {
   return (
     task.status === "todo" &&
+    !task.completed &&
+    !task.archivedAt &&
     getTaskPlanningSection(task) === "today" &&
     !skippedTaskIds.includes(task.id)
   );

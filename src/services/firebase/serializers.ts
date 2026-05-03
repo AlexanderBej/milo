@@ -1,6 +1,13 @@
 import { Timestamp } from "firebase/firestore";
 
-const dateFields = ["createdAt", "completedAt"] as const;
+const dateFields = [
+  "archivedAt",
+  "completedAt",
+  "createdAt",
+  "deletedAt",
+  "processedAt",
+  "updatedAt",
+] as const;
 
 type FirestoreDateLike = {
   toDate: () => unknown;

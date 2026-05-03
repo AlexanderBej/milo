@@ -11,6 +11,7 @@ const buildTask = (
   content: `${priority} task`,
   priority,
   status,
+  completed: status === "done",
   createdAt: "2026-05-02T08:00:00.000Z",
 });
 

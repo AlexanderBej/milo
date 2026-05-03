@@ -13,18 +13,21 @@ import { useAppDispatch, useAppSelector } from "@app/hooks";
 import { Button } from "@shared/components/Button";
 import {
   addRoutine,
+  completeRoutineForPeriod,
   deleteRoutine,
   selectRoutines,
+  selectTodayRoutineProgress,
+  toggleRoutineChecklistItemForPeriod,
   updateRoutine,
   type Routine,
   type RoutineSchedule,
 } from "@features/routines";
+import { useNow } from "@features/time";
 import styles from "./RoutinesPage.module.scss";
 
 const scheduleOptions: Array<{ label: string; value: RoutineSchedule }> = [
   { label: "Daily", value: "daily" },
-  { label: "Weekdays", value: "weekdays" },
-  { label: "Weekends", value: "weekends" },
+  { label: "Weekly", value: "weekly" },
 ];
 
 const defaultChecklist = ["Water", "Medication", "Get dressed"];
@@ -52,6 +55,8 @@ type RoutineFormState = ReturnType<typeof createEmptyForm>;
 export const RoutinesPage = () => {
   const dispatch = useAppDispatch();
   const routines = useAppSelector(selectRoutines);
+  const routineProgress = useAppSelector(selectTodayRoutineProgress);
+  const now = useNow();
   const [form, setForm] = useState<RoutineFormState>(createEmptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
 
@@ -69,6 +74,13 @@ export const RoutinesPage = () => {
 
   const editingRoutine = routines.find((routine) => routine.id === editingId);
   const formTitle = editingRoutine ? "Edit routine" : "Create routine";
+  const progressByRoutineId = useMemo(
+    () =>
+      new Map(
+        routineProgress.map((progress) => [progress.routine.id, progress]),
+      ),
+    [routineProgress],
+  );
 
   const updateForm = <Key extends keyof RoutineFormState>(
     key: Key,
@@ -250,82 +262,134 @@ export const RoutinesPage = () => {
 
         <section className={styles.routineList} aria-label="Saved routines">
           {sortedRoutines.length > 0 ? (
-            sortedRoutines.map((routine) => (
-              <article
-                className={
-                  routine.active ? styles.routineCard : styles.routineCardMuted
-                }
-                key={routine.id}
-              >
-                <div className={styles.routineHeader}>
-                  <div>
-                    <p className={styles.routineMeta}>
-                      {routine.schedule} · {routine.timeWindow.start}-
-                      {routine.timeWindow.end}
-                    </p>
-                    <h2>{routine.title}</h2>
-                    {routine.description ? <p>{routine.description}</p> : null}
+            sortedRoutines.map((routine) => {
+              const progress = progressByRoutineId.get(routine.id);
+              const completedItems =
+                progress?.completion?.completedChecklistItems ?? [];
+
+              return (
+                <article
+                  className={
+                    routine.active
+                      ? styles.routineCard
+                      : styles.routineCardMuted
+                  }
+                  key={routine.id}
+                >
+                  <div className={styles.routineHeader}>
+                    <div>
+                      <p className={styles.routineMeta}>
+                        {routine.schedule} · {routine.timeWindow.start}-
+                        {routine.timeWindow.end}
+                      </p>
+                      <h2>{routine.title}</h2>
+                      {routine.description ? (
+                        <p>{routine.description}</p>
+                      ) : null}
+                    </div>
+                    {routine.active ? (
+                      <span className={styles.activeBadge}>
+                        <CheckCircle aria-hidden size={16} weight="fill" />
+                        Active
+                      </span>
+                    ) : (
+                      <span className={styles.pausedBadge}>
+                        <PauseCircle aria-hidden size={16} />
+                        Paused
+                      </span>
+                    )}
                   </div>
-                  {routine.active ? (
-                    <span className={styles.activeBadge}>
-                      <CheckCircle aria-hidden size={16} weight="fill" />
-                      Active
-                    </span>
-                  ) : (
-                    <span className={styles.pausedBadge}>
-                      <PauseCircle aria-hidden size={16} />
-                      Paused
-                    </span>
-                  )}
-                </div>
 
-                <ul className={styles.checklist}>
-                  {routine.checklist.map((item) => (
-                    <li key={item}>
-                      <span aria-hidden />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
+                  <ul className={styles.checklist}>
+                    {routine.checklist.map((item) => {
+                      const isChecked = completedItems.includes(item);
 
-                <div className={styles.cardActions}>
-                  <Button
-                    icon={<PencilSimple />}
-                    onClick={() => {
-                      startEditing(routine);
-                    }}
-                    size="sm"
-                    variant="secondary"
-                  >
-                    Edit
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      dispatch(
-                        updateRoutine({
-                          id: routine.id,
-                          changes: { active: !routine.active },
-                        }),
+                      return (
+                        <li key={item}>
+                          <label>
+                            <input
+                              checked={isChecked}
+                              disabled={!routine.active || !progress}
+                              onChange={() => {
+                                if (!progress) {
+                                  return;
+                                }
+
+                                dispatch(
+                                  toggleRoutineChecklistItemForPeriod({
+                                    routineId: routine.id,
+                                    periodKey: progress.periodKey,
+                                    now: now.toISOString(),
+                                    item,
+                                  }),
+                                );
+                              }}
+                              type="checkbox"
+                            />
+                            {item}
+                          </label>
+                        </li>
                       );
-                    }}
-                    size="sm"
-                    variant="ghost"
-                  >
-                    {routine.active ? "Pause" : "Resume"}
-                  </Button>
-                  <Button
-                    icon={<Trash />}
-                    onClick={() => {
-                      dispatch(deleteRoutine(routine.id));
-                    }}
-                    size="sm"
-                    variant="ghost"
-                  >
-                    Delete
-                  </Button>
-                </div>
-              </article>
-            ))
+                    })}
+                  </ul>
+
+                  <div className={styles.cardActions}>
+                    {progress ? (
+                      <Button
+                        disabled={progress.isComplete}
+                        onClick={() => {
+                          dispatch(
+                            completeRoutineForPeriod({
+                              routineId: routine.id,
+                              periodKey: progress.periodKey,
+                              now: now.toISOString(),
+                            }),
+                          );
+                        }}
+                        size="sm"
+                        variant={progress.isComplete ? "ghost" : "secondary"}
+                      >
+                        {progress.isComplete ? "Complete" : "Complete now"}
+                      </Button>
+                    ) : null}
+                    <Button
+                      icon={<PencilSimple />}
+                      onClick={() => {
+                        startEditing(routine);
+                      }}
+                      size="sm"
+                      variant="secondary"
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        dispatch(
+                          updateRoutine({
+                            id: routine.id,
+                            changes: { active: !routine.active },
+                          }),
+                        );
+                      }}
+                      size="sm"
+                      variant="ghost"
+                    >
+                      {routine.active ? "Pause" : "Resume"}
+                    </Button>
+                    <Button
+                      icon={<Trash />}
+                      onClick={() => {
+                        dispatch(deleteRoutine(routine.id));
+                      }}
+                      size="sm"
+                      variant="ghost"
+                    >
+                      Delete
+                    </Button>
+                  </div>
+                </article>
+              );
+            })
           ) : (
             <div className={styles.emptyState}>
               <Clock aria-hidden size={28} weight="duotone" />

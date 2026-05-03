@@ -8,8 +8,16 @@ export const selectCaptureItems = createSelector(
   (quickCapture) => quickCapture.items,
 );
 
-export const selectCaptureCount = createSelector(
+export const selectActiveInboxCaptures = createSelector(
   [selectCaptureItems],
+  (items) =>
+    items.filter(
+      (item) => !item.processed && !item.archivedAt && !item.deletedAt,
+    ),
+);
+
+export const selectCaptureCount = createSelector(
+  [selectActiveInboxCaptures],
   (items) => items.length,
 );
 
@@ -19,7 +27,7 @@ export const selectHasCaptures = createSelector(
 );
 
 export const selectLatestCapture = createSelector(
-  [selectCaptureItems],
+  [selectActiveInboxCaptures],
   (items) => items[0] ?? null,
 );
 
@@ -29,6 +37,6 @@ export const selectCaptureById = createSelector(
 );
 
 export const selectRecentCaptures = createSelector(
-  [selectCaptureItems],
+  [selectActiveInboxCaptures],
   (items) => items.slice(0, 5),
 );

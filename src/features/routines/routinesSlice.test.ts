@@ -1,8 +1,8 @@
 import {
   addRoutine,
-  completeRoutineForDate,
+  completeRoutineForPeriod,
   routinesReducer,
-  toggleRoutineChecklistItemForDate,
+  toggleRoutineChecklistItemForPeriod,
 } from "./routinesSlice";
 
 describe("routinesReducer", () => {
@@ -21,33 +21,35 @@ describe("routinesReducer", () => {
 
     state = routinesReducer(
       state,
-      toggleRoutineChecklistItemForDate({
+      toggleRoutineChecklistItemForPeriod({
         routineId,
-        date: "2026-05-03",
+        periodKey: "2026-05-03",
+        now: "2026-05-03T08:00:00.000Z",
         item: "Water",
       }),
     );
 
-    expect(state.completions).toEqual([
-      {
-        routineId,
-        date: "2026-05-03",
-        completedChecklistItems: ["Water"],
-      },
-    ]);
+    expect(state.completions[0]).toMatchObject({
+      routineId,
+      periodKey: "2026-05-03",
+      completedChecklistItems: ["Water"],
+    });
 
     state = routinesReducer(
       state,
-      toggleRoutineChecklistItemForDate({
+      toggleRoutineChecklistItemForPeriod({
         routineId,
-        date: "2026-05-04",
+        periodKey: "2026-05-04",
+        now: "2026-05-04T08:00:00.000Z",
         item: "Meds",
       }),
     );
 
     expect(state.completions).toHaveLength(2);
     expect(
-      state.completions.find((completion) => completion.date === "2026-05-03"),
+      state.completions.find(
+        (completion) => completion.periodKey === "2026-05-03",
+      ),
     ).toMatchObject({ completedChecklistItems: ["Water"] });
   });
 
@@ -66,12 +68,16 @@ describe("routinesReducer", () => {
 
     state = routinesReducer(
       state,
-      completeRoutineForDate({ routineId, date: "2026-05-03" }),
+      completeRoutineForPeriod({
+        routineId,
+        periodKey: "2026-05-03",
+        now: "2026-05-03T21:00:00.000Z",
+      }),
     );
 
     expect(state.completions[0]).toMatchObject({
       routineId,
-      date: "2026-05-03",
+      periodKey: "2026-05-03",
       completedChecklistItems: ["Brush teeth", "Set alarm"],
     });
     expect(state.completions[0].completedAt).toBeDefined();

@@ -16,18 +16,19 @@ import {
   selectBoardNotes,
 } from "@features/board";
 import {
-  removeCapture,
+  processCapture,
   restoreCapture,
+  selectActiveInboxCaptures,
   selectCaptureCount,
-  selectCaptureItems,
+  softDeleteCapture,
 } from "@features/quickCapture";
 import { addTask, deleteTask, selectTasks } from "@features/tasks";
 import {
   selectDefaultInboxPriority,
   selectMustDoLimit,
 } from "@features/preferences";
+import { formatRelativeTime, useNow } from "@features/time";
 import { Card } from "@shared/components/Card";
-import { formatTimeAgo } from "@shared/utils";
 import { getTodayDateString } from "@shared/utils/planning";
 import styles from "./InboxPage.module.scss";
 
@@ -48,11 +49,12 @@ const getBoardDropPosition = (noteCount: number) => {
 export const InboxPage = () => {
   const dispatch = useAppDispatch();
   const captureCount = useAppSelector(selectCaptureCount);
-  const captures = useAppSelector(selectCaptureItems);
+  const captures = useAppSelector(selectActiveInboxCaptures);
   const boardNotes = useAppSelector(selectBoardNotes);
   const defaultInboxPriority = useAppSelector(selectDefaultInboxPriority);
   const mustDoLimit = useAppSelector(selectMustDoLimit);
   const tasks = useAppSelector(selectTasks);
+  const now = useNow();
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [toast, setToast] = useState<InboxToast | null>(null);
 
@@ -60,7 +62,7 @@ export const InboxPage = () => {
     const index = captures.findIndex((item) => item.id === captureId);
     const capture = captures.find((item) => item.id === captureId);
 
-    dispatch(removeCapture(captureId));
+    dispatch(processCapture(captureId));
     setOpenMenuId(null);
 
     if (capture) {
@@ -93,7 +95,7 @@ export const InboxPage = () => {
     });
 
     dispatch(taskAction);
-    dispatch(removeCapture(captureId));
+    dispatch(processCapture(captureId));
     setOpenMenuId(null);
     setToast({
       message: "Task added to Agenda.",
@@ -119,7 +121,7 @@ export const InboxPage = () => {
     });
 
     dispatch(boardAction);
-    dispatch(removeCapture(captureId));
+    dispatch(processCapture(captureId));
     setOpenMenuId(null);
     setToast({
       message: "Sent to Board.",
@@ -135,7 +137,7 @@ export const InboxPage = () => {
     const index = captures.findIndex((item) => item.id === captureId);
     const capture = captures.find((item) => item.id === captureId);
 
-    dispatch(removeCapture(captureId));
+    dispatch(softDeleteCapture(captureId));
     setOpenMenuId(null);
 
     if (capture) {
@@ -217,7 +219,7 @@ export const InboxPage = () => {
               <div className={styles.columnFlex}>
                 <span>{capture.content}</span>
                 <span className={styles.timeAgo}>
-                  Captured {formatTimeAgo(capture.createdAt)}
+                  Captured {formatRelativeTime(capture.createdAt, now)}
                 </span>
               </div>
               <div className={styles.inboxActions}>

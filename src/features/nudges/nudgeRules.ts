@@ -1,10 +1,10 @@
 import type { FocusState } from "@features/focus";
 import {
   doesRoutineApplyToday,
-  getRoutineCompletionForDate,
-  getTodayDateKey,
+  getRoutineCompletionForPeriod,
+  getRoutinePeriodKey,
   isCurrentTimeInsideWindow,
-  isRoutineCompleteForDate,
+  isRoutineCompleteForPeriod,
   type Routine,
   type RoutineCompletion,
 } from "@features/routines";
@@ -18,7 +18,7 @@ export type NudgeRuleInput = {
   focus: FocusState;
   routines?: Routine[];
   routineCompletions?: RoutineCompletion[];
-  now?: Date;
+  now: Date;
 };
 
 const sortByPriority = (nudges: Nudge[]) => {
@@ -41,9 +41,11 @@ export const generateNudges = ({
   focus,
   routines = [],
   routineCompletions = [],
-  now = new Date(),
+  now,
 }: NudgeRuleInput): Nudge[] => {
-  const activeTasks = tasks.filter((task) => task.status === "todo");
+  const activeTasks = tasks.filter(
+    (task) => task.status === "todo" && !task.completed && !task.archivedAt,
+  );
   const activeMustTasks = activeTasks.filter(
     (task) => task.priority === "must",
   );
@@ -51,25 +53,27 @@ export const generateNudges = ({
     (task) => task.completedAt && isSameLocalDate(task.completedAt, now),
   );
   const nudges: Nudge[] = [];
-  const today = getTodayDateKey(now);
   const openRoutine = routines.find((routine) => {
-    const completion = getRoutineCompletionForDate(
-      routineCompletions,
+    const periodKey = getRoutinePeriodKey(routine, now);
+    const completion = getRoutineCompletionForPeriod(
       routine.id,
-      today,
+      periodKey,
+      routineCompletions,
     );
 
     return (
       routine.active &&
       doesRoutineApplyToday(routine, now) &&
       isCurrentTimeInsideWindow(routine.timeWindow, now) &&
-      !isRoutineCompleteForDate(routine, completion)
+      !isRoutineCompleteForPeriod(routine, completion)
     );
   });
 
   if (openRoutine) {
+    const periodKey = getRoutinePeriodKey(openRoutine, now);
+
     nudges.push({
-      id: `routine-window-open-${openRoutine.id}-${today}`,
+      id: `routine-window-open-${openRoutine.id}-${periodKey}`,
       type: "routine",
       message: `${openRoutine.title} window is open.`,
       context: "A few repeatable steps can lower the lift.",

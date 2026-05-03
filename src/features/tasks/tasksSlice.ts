@@ -12,6 +12,10 @@ export type TasksState = {
   message?: string;
 };
 
+type PersistedTask = Omit<Task, "completed"> & {
+  completed?: boolean;
+};
+
 const MUST_LIMIT_MESSAGE =
   "You have a lot marked as Must. Consider moving one to Should.";
 const MUST_TASK_LIMIT = 3;
@@ -26,7 +30,11 @@ const sortTasksByOrder = (items: Task[]) => {
 
 const countActiveMustTasks = (items: Task[]) => {
   return items.filter(
-    (task) => task.status === "todo" && task.priority === "must",
+    (task) =>
+      task.status === "todo" &&
+      !task.completed &&
+      !task.archivedAt &&
+      task.priority === "must",
   ).length;
 };
 
@@ -46,6 +54,19 @@ type UpdateTaskPayload = {
   id: string;
   changes: Partial<Omit<Task, "id" | "createdAt">>;
   maxMustDoLimit?: number;
+};
+
+const normalizeTask = (task: PersistedTask, index = 0): Task => {
+  const completed = task.completed ?? task.status === "done";
+
+  return {
+    ...task,
+    status: completed ? "done" : "todo",
+    completed,
+    order: typeof task.order === "number" ? task.order : index + 1,
+    timeSlot: task.timeSlot ?? "anytime",
+    planningBucket: task.planningBucket ?? "today",
+  };
 };
 
 const tasksSlice = createSlice({
@@ -89,6 +110,7 @@ const tasksSlice = createSlice({
             id: nanoid(),
             content,
             status: "todo" as const,
+            completed: false,
             priority,
             order: -Date.now(),
             createdAt: new Date().toISOString(),
@@ -102,13 +124,10 @@ const tasksSlice = createSlice({
       },
     },
 
-    setTasks(state, action: PayloadAction<Task[]>) {
-      state.items = action.payload.map((task, index) => ({
-        ...task,
-        order: typeof task.order === "number" ? task.order : index + 1,
-        timeSlot: task.timeSlot ?? "anytime",
-        planningBucket: task.planningBucket ?? "today",
-      }));
+    setTasks(state, action: PayloadAction<PersistedTask[]>) {
+      state.items = action.payload.map((task, index) =>
+        normalizeTask(task, index),
+      );
 
       sortTasksByOrder(state.items);
       state.message = undefined;
@@ -125,6 +144,8 @@ const tasksSlice = createSlice({
 
       const isMovingTodoIntoMust =
         task.status === "todo" &&
+        !task.completed &&
+        !task.archivedAt &&
         task.priority !== "must" &&
         nextPriority === "must";
 
@@ -138,6 +159,18 @@ const tasksSlice = createSlice({
       }
 
       Object.assign(task, action.payload.changes);
+
+      if (action.payload.changes.completed !== undefined) {
+        task.status = action.payload.changes.completed ? "done" : "todo";
+        if (action.payload.changes.completed) {
+          task.completedAt = task.completedAt ?? new Date().toISOString();
+        } else {
+          delete task.completedAt;
+        }
+      } else if (action.payload.changes.status) {
+        task.completed = action.payload.changes.status === "done";
+      }
+
       state.message = undefined;
     },
 
@@ -149,6 +182,7 @@ const tasksSlice = createSlice({
       }
 
       task.status = "done";
+      task.completed = true;
       task.completedAt = new Date().toISOString();
     },
 
@@ -160,6 +194,7 @@ const tasksSlice = createSlice({
       }
 
       task.status = "todo";
+      task.completed = false;
       delete task.completedAt;
     },
 
@@ -176,11 +211,8 @@ const tasksSlice = createSlice({
         return;
       }
 
-      const restoredTask: Task = {
-        ...action.payload.task,
-        timeSlot: action.payload.task.timeSlot ?? "anytime",
-        planningBucket: action.payload.task.planningBucket ?? "today",
-      };
+      const { archivedAt: _archivedAt, ...task } = action.payload.task;
+      const restoredTask: Task = normalizeTask(task);
 
       const insertAt = action.payload.index ?? state.items.length;
       state.items.splice(insertAt, 0, restoredTask);
@@ -203,6 +235,8 @@ const tasksSlice = createSlice({
 
       const isMovingTodoIntoMust =
         task.status === "todo" &&
+        !task.completed &&
+        !task.archivedAt &&
         task.priority !== "must" &&
         action.payload.priority === "must";
 

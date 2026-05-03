@@ -22,18 +22,20 @@ import {
 } from "@features/preferences";
 import {
   addCapture,
+  archiveCapture,
+  processCapture,
   quickCaptureReducer,
   removeCapture,
   restoreCapture,
+  softDeleteCapture,
 } from "@features/quickCapture";
 import {
   addRoutine,
-  completeRoutineForDate,
+  completeRoutineForPeriod,
   deactivateRoutine,
   deleteRoutine,
-  getTodayDateKey,
   routinesReducer,
-  toggleRoutineChecklistItemForDate,
+  toggleRoutineChecklistItemForPeriod,
   updateRoutine,
 } from "@features/routines";
 import {
@@ -49,6 +51,7 @@ import {
 } from "@features/tasks";
 import { baseApi } from "@services/api/baseApi";
 import { authReducer, setUser as setAuthUser } from "@features/auth";
+import { timeReducer } from "@features/time/timeSlice";
 
 export const resetUserOwnedData = createAction("app/resetUserOwnedData");
 
@@ -59,6 +62,7 @@ const appReducer = combineReducers({
   quickCapture: quickCaptureReducer,
   routines: routinesReducer,
   tasks: tasksReducer,
+  time: timeReducer,
   auth: authReducer,
   [baseApi.reducerPath]: baseApi.reducer,
 });
@@ -191,18 +195,51 @@ startAppListening({
 startAppListening({
   actionCreator: restoreCapture,
   effect: async (action) => {
-    const userId = getAuthenticatedUserId();
+    await saveCurrentCapture(action.payload.item.id);
+  },
+});
 
-    if (!userId) {
-      return;
-    }
+const saveCurrentCapture = async (captureId: string) => {
+  const userId = getAuthenticatedUserId();
 
-    try {
-      const { saveCapture } = await import("@services/firebase/captureService");
-      await saveCapture(userId, action.payload.item);
-    } catch (error) {
-      console.error("Failed to save capture.", error);
-    }
+  if (!userId) {
+    return;
+  }
+
+  const capture = store
+    .getState()
+    .quickCapture.items.find((item) => item.id === captureId);
+
+  if (!capture) {
+    return;
+  }
+
+  try {
+    const { saveCapture } = await import("@services/firebase/captureService");
+    await saveCapture(userId, capture);
+  } catch (error) {
+    console.error("Failed to save capture.", error);
+  }
+};
+
+startAppListening({
+  actionCreator: processCapture,
+  effect: async (action) => {
+    await saveCurrentCapture(action.payload);
+  },
+});
+
+startAppListening({
+  actionCreator: archiveCapture,
+  effect: async (action) => {
+    await saveCurrentCapture(action.payload);
+  },
+});
+
+startAppListening({
+  actionCreator: softDeleteCapture,
+  effect: async (action) => {
+    await saveCurrentCapture(action.payload);
   },
 });
 
@@ -352,7 +389,7 @@ const saveCurrentRoutine = async (routineId: string) => {
 
 const saveCurrentRoutineCompletion = async (
   routineId: string,
-  date: string,
+  periodKey?: string,
 ) => {
   const userId = getAuthenticatedUserId();
 
@@ -363,7 +400,9 @@ const saveCurrentRoutineCompletion = async (
   const completion = store
     .getState()
     .routines.completions.find(
-      (item) => item.routineId === routineId && item.date === date,
+      (item) =>
+        item.routineId === routineId &&
+        (!periodKey || item.periodKey === periodKey),
     );
 
   if (!completion) {
@@ -420,11 +459,7 @@ startAppListening({
       await deleteFirebaseRoutine(userId, action.payload);
       await Promise.all(
         originalCompletions.map((completion) =>
-          deleteRoutineCompletion(
-            userId,
-            completion.routineId,
-            completion.date,
-          ),
+          deleteRoutineCompletion(userId, completion.id),
         ),
       );
     } catch (error) {
@@ -434,21 +469,21 @@ startAppListening({
 });
 
 startAppListening({
-  actionCreator: toggleRoutineChecklistItemForDate,
+  actionCreator: toggleRoutineChecklistItemForPeriod,
   effect: async (action) => {
     await saveCurrentRoutineCompletion(
       action.payload.routineId,
-      action.payload.date ?? getTodayDateKey(),
+      action.payload.periodKey ?? action.payload.date,
     );
   },
 });
 
 startAppListening({
-  actionCreator: completeRoutineForDate,
+  actionCreator: completeRoutineForPeriod,
   effect: async (action) => {
     await saveCurrentRoutineCompletion(
       action.payload.routineId,
-      action.payload.date ?? getTodayDateKey(),
+      action.payload.periodKey ?? action.payload.date,
     );
   },
 });

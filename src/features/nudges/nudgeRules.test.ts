@@ -9,6 +9,7 @@ const now = new Date("2026-05-02T13:00:00");
 const buildCapture = (id: string): CaptureItem => ({
   id,
   content: `Capture ${id}`,
+  processed: false,
   createdAt: "2026-05-02T08:00:00.000Z",
 });
 
@@ -22,6 +23,7 @@ const buildTask = (
   content: `Task ${id}`,
   priority,
   status,
+  completed: status === "done",
   createdAt: "2026-05-02T08:00:00.000Z",
   completedAt,
 });
@@ -125,10 +127,13 @@ describe("generateNudges", () => {
       routines: [routine],
       routineCompletions: [
         {
+          id: `${routine.id}_2026-05-02`,
           routineId: routine.id,
-          date: "2026-05-02",
+          periodKey: "2026-05-02",
           completedChecklistItems: routine.checklist,
           completedAt: "2026-05-02T12:30:00.000Z",
+          createdAt: "2026-05-02T12:30:00.000Z",
+          updatedAt: "2026-05-02T12:30:00.000Z",
         },
       ],
       now,

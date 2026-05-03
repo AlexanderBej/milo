@@ -13,6 +13,7 @@ import {
 } from "@features/quickCapture";
 import { preferencesReducer } from "@features/preferences";
 import { routinesReducer } from "@features/routines";
+import { timeReducer } from "@features/time/timeSlice";
 import { addTask, tasksReducer } from "@features/tasks";
 import { baseApi } from "@services/api/baseApi";
 import { HomePage } from "./HomePage";
@@ -48,6 +49,7 @@ function createStore() {
       quickCapture: quickCaptureReducer,
       routines: routinesReducer,
       tasks: tasksReducer,
+      time: timeReducer,
       auth: authReducer,
       [baseApi.reducerPath]: baseApi.reducer,
     },
@@ -62,9 +64,7 @@ describe("HomePage", () => {
   it("renders the calm focus empty state", () => {
     const { store } = renderHomePage();
 
-    expect(
-      screen.getByRole("heading", { name: /good morning, james/i }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /james/i })).toBeInTheDocument();
     expect(
       screen.getByRole("heading", {
         name: /nothing needs your focus right now/i,

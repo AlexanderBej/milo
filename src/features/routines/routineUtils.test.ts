@@ -1,6 +1,8 @@
 import {
   doesRoutineApplyToday,
+  getRoutinePeriodKey,
   getTodayDateKey,
+  getWeeklyPeriodKey,
   isCurrentTimeInsideWindow,
 } from "./routineUtils";
 import type { Routine } from "./types";
@@ -22,12 +24,20 @@ describe("routineUtils", () => {
 
   it("matches simple routine schedules", () => {
     const sunday = new Date("2026-05-03T12:00:00");
-    const monday = new Date("2026-05-04T12:00:00");
 
     expect(doesRoutineApplyToday(buildRoutine("daily"), sunday)).toBe(true);
-    expect(doesRoutineApplyToday(buildRoutine("weekends"), sunday)).toBe(true);
-    expect(doesRoutineApplyToday(buildRoutine("weekends"), monday)).toBe(false);
-    expect(doesRoutineApplyToday(buildRoutine("weekdays"), monday)).toBe(true);
+    expect(doesRoutineApplyToday(buildRoutine("weekly"), sunday)).toBe(true);
+  });
+
+  it("creates daily and weekly period keys", () => {
+    const sunday = new Date("2026-05-03T12:00:00");
+    const monday = new Date("2026-05-04T12:00:00");
+
+    expect(getRoutinePeriodKey(buildRoutine("daily"), sunday)).toBe(
+      "2026-05-03",
+    );
+    expect(getWeeklyPeriodKey(sunday)).toBe("2026-W18");
+    expect(getWeeklyPeriodKey(monday)).toBe("2026-W19");
   });
 
   it("handles same-day and overnight time windows", () => {

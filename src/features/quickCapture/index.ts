@@ -1,4 +1,5 @@
 export {
+  selectActiveInboxCaptures,
   selectCaptureById,
   selectCaptureCount,
   selectCaptureItems,
@@ -9,9 +10,12 @@ export {
 } from "./quickCaptureSelectors";
 export {
   addCapture,
+  archiveCapture,
+  processCapture,
   quickCaptureReducer,
   removeCapture,
   restoreCapture,
   setCaptures,
+  softDeleteCapture,
 } from "./quickCaptureSlice";
 export type { CaptureItem } from "@shared/types";

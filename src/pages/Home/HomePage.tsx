@@ -19,7 +19,10 @@ import { Card } from "@shared/components/Card";
 import styles from "./HomePage.module.scss";
 import { useAppDispatch, useAppSelector } from "@app/hooks";
 import { selectBoardNotes } from "@features/board";
-import { selectCaptureCount, selectCaptureItems } from "@features/quickCapture";
+import {
+  selectActiveInboxCaptures,
+  selectCaptureCount,
+} from "@features/quickCapture";
 import {
   completeTask,
   selectDoneTasks,
@@ -38,7 +41,7 @@ import {
   swapFocusTask,
 } from "@features/focus";
 import { NudgeCard as HomeNudgeCard } from "@features/nudges";
-import { formatTimeAgo } from "@shared/utils";
+import { formatRelativeTime, getGreetingForTime, useNow } from "@features/time";
 import { getTaskPlanningSection } from "@shared/utils/planning";
 
 const priorityLabels: Record<Task["priority"], string> = {
@@ -108,13 +111,16 @@ const NudgePanel = () => {
 
 const HomeHeader = () => {
   const displayName = useAppSelector(selectDisplayName);
+  const now = useNow();
   const greetingName = displayName.trim() || "James";
 
   return (
     <header className={styles.header}>
       <div>
         <p className={styles.eyebrow}>Home</p>
-        <h1>Good morning, {greetingName}</h1>
+        <h1>
+          {getGreetingForTime(now)}, {greetingName}
+        </h1>
         <p>Let&apos;s focus on what matters today.</p>
       </div>
     </header>
@@ -379,8 +385,9 @@ const BoardCard = () => {
 
 const InboxCard = () => {
   const captureCount = useAppSelector(selectCaptureCount);
-  const captures = useAppSelector(selectCaptureItems);
+  const captures = useAppSelector(selectActiveInboxCaptures);
   const tasks = useAppSelector(selectTasks);
+  const now = useNow();
   const visibleCaptures = captures.slice(0, 2);
 
   return (
@@ -403,7 +410,7 @@ const InboxCard = () => {
           <ul className={styles.boardPreviewList}>
             {visibleCaptures.map((capture) => (
               <li key={capture.id}>
-                {capture.content} · {formatTimeAgo(capture.createdAt)}
+                {capture.content} · {formatRelativeTime(capture.createdAt, now)}
               </li>
             ))}
           </ul>

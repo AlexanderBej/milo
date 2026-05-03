@@ -23,13 +23,19 @@ export const getCaptures = async (userId: string): Promise<CaptureItem[]> => {
     collection(ensureDb(), getCapturesPath(userId)),
   );
 
-  return snapshot.docs.map((captureDoc) => {
+  return snapshot.docs.map((captureDoc): CaptureItem => {
     const data = normalizeDateFields(captureDoc.data());
 
     return {
       ...data,
       id: typeof data.id === "string" ? data.id : captureDoc.id,
-    } as CaptureItem;
+      content: typeof data.content === "string" ? data.content : "",
+      createdAt:
+        typeof data.createdAt === "string"
+          ? data.createdAt
+          : new Date().toISOString(),
+      processed: Boolean(data.processed ?? data.processedAt),
+    };
   });
 };
 

@@ -27,6 +27,7 @@ export const getTasks = async (userId: string): Promise<Task[]> => {
     return {
       ...data,
       id: typeof data.id === "string" ? data.id : taskDoc.id,
+      completed: Boolean(data.completed ?? data.status === "done"),
     } as Task;
   });
 };

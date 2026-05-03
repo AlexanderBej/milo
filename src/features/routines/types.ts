@@ -1,4 +1,4 @@
-export type RoutineSchedule = "daily" | "weekdays" | "weekends";
+export type RoutineSchedule = "daily" | "weekly";
 
 export type Routine = {
   id: string;
@@ -15,8 +15,11 @@ export type Routine = {
 };
 
 export type RoutineCompletion = {
+  id: string;
   routineId: string;
-  date: string;
+  periodKey: string;
   completedChecklistItems: string[];
   completedAt?: string;
+  createdAt: string;
+  updatedAt: string;
 };

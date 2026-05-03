@@ -10,6 +10,10 @@ import {
   deleteTask,
   moveTask,
   restoreTask,
+  selectActiveLaterTasks,
+  selectActiveSomedayTasks,
+  selectActiveSoonTasks,
+  selectActiveTodayTasks,
   selectDoneTasks,
   selectTasks,
   selectTaskMessage,
@@ -20,15 +24,14 @@ import {
   updateTask,
 } from "@features/tasks";
 import { selectMustDoLimit } from "@features/preferences";
+import { useNow } from "@features/time";
 import {
-  completeRoutineForDate,
-  getTodayDateKey,
+  completeRoutineForPeriod,
   selectTodayRoutineProgress,
-  toggleRoutineChecklistItemForDate,
+  toggleRoutineChecklistItemForPeriod,
 } from "@features/routines";
 import { TaskSection } from "../../features/tasks/components";
 import {
-  getTaskPlanningSection,
   getTodayDateString,
   getTomorrowDateString,
   type PlanningChoice,
@@ -105,6 +108,10 @@ const resolvePlanningChoice = (choice: PlanningChoice) => {
 export const DailyPlanPage = () => {
   const dispatch = useAppDispatch();
   const tasks = useAppSelector(selectTasks);
+  const todayTasks = useAppSelector(selectActiveTodayTasks);
+  const soonTasks = useAppSelector(selectActiveSoonTasks);
+  const laterTasks = useAppSelector(selectActiveLaterTasks);
+  const somedayTasks = useAppSelector(selectActiveSomedayTasks);
   const doneTasks = useAppSelector(selectDoneTasks);
   const message = useAppSelector(selectTaskMessage);
   const mustDoLimit = useAppSelector(selectMustDoLimit);
@@ -115,24 +122,15 @@ export const DailyPlanPage = () => {
   const [timeSlot, setTimeSlot] = useState<TaskTimeSlot>("anytime");
   const [toast, setToast] = useState<PlanToast | null>(null);
 
-  const todoTasks = tasks.filter((task) => task.status === "todo");
-
-  const todayTasks = todoTasks.filter(
-    (task) => getTaskPlanningSection(task) === "today",
-  );
-  const soonTasks = todoTasks.filter(
-    (task) => getTaskPlanningSection(task) === "soon",
-  );
-  const laterTasks = todoTasks.filter(
-    (task) => getTaskPlanningSection(task) === "later",
-  );
-  const somedayTasks = todoTasks.filter(
-    (task) => getTaskPlanningSection(task) === "someday",
-  );
+  const activeTaskCount =
+    todayTasks.length +
+    soonTasks.length +
+    laterTasks.length +
+    somedayTasks.length;
 
   const mustTasks = todayTasks.filter((task) => task.priority === "must");
   const hasTasks = tasks.length > 0;
-  const allTasksDone = hasTasks && todoTasks.length === 0;
+  const allTasksDone = hasTasks && activeTaskCount === 0;
 
   useEffect(() => {
     if (!message && !toast) return;
@@ -435,7 +433,7 @@ export const DailyPlanPage = () => {
 const TodayRoutinesSection = () => {
   const dispatch = useAppDispatch();
   const routineProgress = useAppSelector(selectTodayRoutineProgress);
-  const today = getTodayDateKey();
+  const now = useNow();
 
   if (routineProgress.length === 0) {
     return null;
@@ -452,7 +450,14 @@ const TodayRoutinesSection = () => {
 
       <div className={styles.routineGrid}>
         {routineProgress.map(
-          ({ completedCount, completion, isComplete, routine, totalCount }) => (
+          ({
+            completedCount,
+            completion,
+            isComplete,
+            periodKey,
+            routine,
+            totalCount,
+          }) => (
             <article className={styles.routineCard} key={routine.id}>
               <div className={styles.routineCardHeader}>
                 <div>
@@ -479,9 +484,10 @@ const TodayRoutinesSection = () => {
                           checked={isChecked}
                           onChange={() => {
                             dispatch(
-                              toggleRoutineChecklistItemForDate({
+                              toggleRoutineChecklistItemForPeriod({
                                 routineId: routine.id,
-                                date: today,
+                                periodKey,
+                                now: now.toISOString(),
                                 item,
                               }),
                             );
@@ -499,9 +505,10 @@ const TodayRoutinesSection = () => {
                 disabled={isComplete}
                 onClick={() => {
                   dispatch(
-                    completeRoutineForDate({
+                    completeRoutineForPeriod({
                       routineId: routine.id,
-                      date: today,
+                      periodKey,
+                      now: now.toISOString(),
                     }),
                   );
                 }}

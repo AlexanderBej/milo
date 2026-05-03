@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { clsx } from "clsx";
 import { Coffee, X } from "phosphor-react";
@@ -43,21 +43,10 @@ const writeHiddenNudgeIds = (ids: string[]) => {
 
 export const NudgeCard = () => {
   const navigate = useNavigate();
-  const [now, setNow] = useState(() => new Date());
-  const nudges = useAppSelector((state) => selectNudges(state, now));
+  const nudges = useAppSelector(selectNudges);
   const [hiddenIds, setHiddenIds] = useState<string[]>(readHiddenNudgeIds);
   const hiddenIdSet = useMemo(() => new Set(hiddenIds), [hiddenIds]);
   const nudge = nudges.find((item) => !hiddenIdSet.has(item.id));
-
-  useEffect(() => {
-    const timer = window.setInterval(() => {
-      setNow(new Date());
-    }, 60_000);
-
-    return () => {
-      window.clearInterval(timer);
-    };
-  }, []);
 
   const hideNudge = () => {
     if (!nudge) {
