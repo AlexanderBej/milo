@@ -3,239 +3,245 @@
   grid-template-rows: auto minmax(0, 1fr);
   gap: var(--space-4);
   min-height: 0;
-}
 
-.toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-4);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-card);
-  background: color-mix(in srgb, var(--color-bg-card) 78%, transparent);
-  box-shadow: var(--shadow-soft);
-  padding: var(--space-4);
-}
+  .toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-card);
+    background: color-mix(in srgb, var(--color-bg-card) 78%, transparent);
+    box-shadow: var(--shadow-soft);
+    padding: var(--space-4);
 
-.toolbarActions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: flex-end;
-  gap: var(--space-3);
-}
+    h2,
+    p {
+      margin: 0;
+    }
 
-.zoomControls {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  min-height: 2.75rem;
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-button);
-  background: color-mix(in srgb, var(--color-bg-elevated) 78%, transparent);
-  padding: var(--space-1);
-}
+    h2 {
+      margin-top: var(--space-1);
+      color: var(--color-text-primary);
+      font-size: var(--font-size-xl);
+      line-height: var(--line-height-tight);
+    }
+  }
 
-.zoomControls button,
-.zoomControls span {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 2.35rem;
-  min-height: 2.25rem;
-  border: 1px solid transparent;
-  border-radius: calc(var(--radius-button) - 0.25rem);
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
-}
+  .kicker {
+    color: var(--color-primary);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: 0;
+    text-transform: uppercase;
+  }
 
-.zoomControls button {
-  background: transparent;
-  cursor: pointer;
-}
+  .toolbarActions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--space-3);
+  }
 
-.zoomControls button:hover:not(:disabled) {
-  border-color: var(--color-border-subtle);
-  background: var(--color-bg-card);
-  color: var(--color-text-primary);
-}
+  .zoomControls {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    min-height: 2.75rem;
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-button);
+    background: color-mix(in srgb, var(--color-bg-elevated) 78%, transparent);
+    padding: var(--space-1);
 
-.zoomControls button:focus-visible {
-  outline: none;
-  box-shadow: var(--shadow-focus);
-}
+    button,
+    span {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 2.35rem;
+      min-height: 2.25rem;
+      border: 1px solid transparent;
+      border-radius: calc(var(--radius-button) - 0.25rem);
+      color: var(--color-text-secondary);
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-semibold);
+    }
 
-.zoomControls button:disabled {
-  cursor: not-allowed;
-  opacity: 0.44;
-}
+    button {
+      background: transparent;
+      cursor: pointer;
 
-.zoomControls span {
-  min-width: 3.5rem;
-  color: var(--color-text-primary);
-}
+      &:hover:not(:disabled) {
+        border-color: var(--color-border-subtle);
+        background: var(--color-bg-card);
+        color: var(--color-text-primary);
+      }
 
-.toolbar h2,
-.toolbar p {
-  margin: 0;
-}
+      &:focus-visible {
+        outline: none;
+        box-shadow: var(--shadow-focus);
+      }
 
-.toolbar h2 {
-  margin-top: var(--space-1);
-  color: var(--color-text-primary);
-  font-size: var(--font-size-xl);
-  line-height: var(--line-height-tight);
-}
+      &:disabled {
+        cursor: not-allowed;
+        opacity: 0.44;
+      }
+    }
 
-.kicker {
-  color: var(--color-primary);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-bold);
-  letter-spacing: 0;
-  text-transform: uppercase;
-}
+    span {
+      min-width: 3.5rem;
+      color: var(--color-text-primary);
+    }
+  }
 
-.viewport,
-.viewportPanning {
-  position: relative;
-  overflow: hidden;
-  min-height: 0;
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-card);
-  background:
-    linear-gradient(var(--color-border-subtle) 1px, transparent 1px),
-    linear-gradient(90deg, var(--color-border-subtle) 1px, transparent 1px),
-    var(--color-bg-surface);
-  background-size: 4rem 4rem;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02), var(--shadow-soft);
-  cursor: grab;
-  touch-action: none;
-  user-select: none;
-}
+  .viewport,
+  .viewportPanning {
+    position: relative;
+    overflow: hidden;
+    min-height: 0;
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-card);
+    background:
+      linear-gradient(var(--color-border-subtle) 1px, transparent 1px),
+      linear-gradient(90deg, var(--color-border-subtle) 1px, transparent 1px),
+      var(--color-bg-surface);
+    background-size: 4rem 4rem;
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 255, 255, 0.02),
+      var(--shadow-soft);
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+  }
 
-.viewportPanning {
-  cursor: grabbing;
-}
+  .viewportPanning {
+    cursor: grabbing;
+  }
 
-.horizontalScrollbar,
-.verticalScrollbar {
-  position: absolute;
-  z-index: 6;
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-pill);
-  background: color-mix(in srgb, var(--color-bg-base) 72%, transparent);
-  pointer-events: none;
-}
+  .horizontalScrollbar,
+  .verticalScrollbar {
+    position: absolute;
+    z-index: 6;
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-pill);
+    background: color-mix(in srgb, var(--color-bg-base) 72%, transparent);
+    pointer-events: none;
 
-.horizontalScrollbar span,
-.verticalScrollbar span {
-  position: absolute;
-  display: block;
-  border-radius: inherit;
-  background: color-mix(in srgb, var(--color-primary-hover) 58%, transparent);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-primary) 18%, transparent);
-}
+    span {
+      position: absolute;
+      display: block;
+      border-radius: inherit;
+      background: color-mix(
+        in srgb,
+        var(--color-primary-hover) 58%,
+        transparent
+      );
+      box-shadow: 0 0 0 1px
+        color-mix(in srgb, var(--color-primary) 18%, transparent);
+    }
+  }
 
-.horizontalScrollbar {
-  right: var(--space-5);
-  bottom: var(--space-3);
-  left: var(--space-5);
-  height: 0.65rem;
-}
+  .horizontalScrollbar {
+    right: var(--space-5);
+    bottom: var(--space-3);
+    left: var(--space-5);
+    height: 0.65rem;
 
-.horizontalScrollbar span {
-  top: 1px;
-  bottom: 1px;
-}
+    span {
+      top: 1px;
+      bottom: 1px;
+    }
+  }
 
-.verticalScrollbar {
-  top: var(--space-5);
-  right: var(--space-3);
-  bottom: var(--space-5);
-  width: 0.65rem;
-}
+  .verticalScrollbar {
+    top: var(--space-5);
+    right: var(--space-3);
+    bottom: var(--space-5);
+    width: 0.65rem;
 
-.verticalScrollbar span {
-  right: 1px;
-  left: 1px;
-}
+    span {
+      right: 1px;
+      left: 1px;
+    }
+  }
 
-.canvas {
-  position: relative;
-  width: 2400px;
-  height: 1600px;
-  background:
-    radial-gradient(
-      circle at 24rem 18rem,
-      color-mix(in srgb, var(--color-accent-teal) 6%, transparent),
-      transparent 24rem
-    ),
-    transparent;
-}
+  .transformLayer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 2400px;
+    height: 1600px;
+    transform-origin: 0 0;
+    will-change: transform;
+  }
 
-.transformLayer {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 2400px;
-  height: 1600px;
-  transform-origin: 0 0;
-  will-change: transform;
-}
+  .canvas {
+    position: relative;
+    width: 2400px;
+    height: 1600px;
+    background:
+      radial-gradient(
+        circle at 24rem 18rem,
+        color-mix(in srgb, var(--color-accent-teal) 6%, transparent),
+        transparent 24rem
+      ),
+      transparent;
+  }
 
-.emptyMessage {
-  position: absolute;
-  z-index: 4;
-  top: 50%;
-  left: 50%;
-  display: grid;
-  justify-items: center;
-  gap: var(--space-3);
-  width: min(32rem, calc(100vw - 4rem));
-  transform: translate(-50%, -50%);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-card);
-  background: color-mix(in srgb, var(--color-bg-card) 86%, transparent);
-  box-shadow: var(--shadow-soft);
-  padding: var(--space-5);
-  text-align: center;
-}
+  .emptyMessage {
+    position: absolute;
+    z-index: 4;
+    top: 50%;
+    left: 50%;
+    display: grid;
+    justify-items: center;
+    gap: var(--space-3);
+    width: min(32rem, calc(100vw - 4rem));
+    transform: translate(-50%, -50%);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-card);
+    background: color-mix(in srgb, var(--color-bg-card) 86%, transparent);
+    box-shadow: var(--shadow-soft);
+    padding: var(--space-5);
+    text-align: center;
 
-.emptyMessage h3,
-.emptyMessage p {
-  margin: 0;
-}
+    h3,
+    p {
+      margin: 0;
+    }
 
-.emptyMessage h3 {
-  color: var(--color-text-primary);
-  font-size: var(--font-size-lg);
-  line-height: var(--line-height-tight);
-}
+    h3 {
+      color: var(--color-text-primary);
+      font-size: var(--font-size-lg);
+      line-height: var(--line-height-tight);
+    }
 
-.emptyMessage p {
-  color: var(--color-text-muted);
-  font-size: var(--font-size-sm);
+    p {
+      color: var(--color-text-muted);
+      font-size: var(--font-size-sm);
+    }
+  }
 }
 
 @media (max-width: 640px) {
   .boardShell {
     min-height: auto;
-  }
 
-  .toolbar {
-    align-items: stretch;
-    flex-direction: column;
-  }
+    .toolbar {
+      align-items: stretch;
+      flex-direction: column;
+    }
 
-  .toolbarActions,
-  .toolbarActions > button {
-    width: 100%;
-  }
+    .toolbarActions,
+    .toolbarActions > button {
+      width: 100%;
+    }
 
-  .zoomControls {
-    display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    width: 100%;
+    .zoomControls {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      width: 100%;
+    }
   }
 }

@@ -39,6 +39,7 @@ const boardSlice = createSlice({
       }
 
       note.content = action.payload.content;
+      note.updatedAt = new Date().toISOString();
     },
     moveNote(
       state,
@@ -52,6 +53,7 @@ const boardSlice = createSlice({
 
       note.x = action.payload.x;
       note.y = action.payload.y;
+      note.updatedAt = new Date().toISOString();
     },
     deleteNote(state, action: PayloadAction<string>) {
       state.notes = state.notes.filter((note) => note.id !== action.payload);

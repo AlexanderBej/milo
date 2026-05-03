@@ -6,4 +6,5 @@ export type CaptureItem = {
   processedAt?: string;
   archivedAt?: string;
   deletedAt?: string;
+  source?: string;
 };

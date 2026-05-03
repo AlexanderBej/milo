@@ -12,6 +12,7 @@ export type Routine = {
   };
   active: boolean;
   createdAt: string;
+  updatedAt?: string;
 };
 
 export type RoutineCompletion = {

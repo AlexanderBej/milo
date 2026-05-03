@@ -8,7 +8,7 @@ import {
 import type { Task } from "@features/tasks";
 import { db } from "./firebaseClient";
 import { getTasksPath } from "./paths";
-import { normalizeDateFields } from "./serializers";
+import { normalizeDateFields, removeUndefinedFields } from "./serializers";
 
 const ensureDb = () => {
   if (!db) {
@@ -33,7 +33,10 @@ export const getTasks = async (userId: string): Promise<Task[]> => {
 };
 
 export const saveTask = async (userId: string, task: Task): Promise<void> => {
-  await setDoc(doc(ensureDb(), getTasksPath(userId), task.id), task);
+  await setDoc(
+    doc(ensureDb(), getTasksPath(userId), task.id),
+    removeUndefinedFields(task),
+  );
 };
 
 export const deleteTask = async (

@@ -9,6 +9,7 @@ export {
   defaultPreferences,
   preferencesReducer,
   resetPreferences,
+  setPreferences,
   updatePreferences,
 } from "./preferencesSlice";
 export type {

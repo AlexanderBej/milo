@@ -90,6 +90,7 @@ const tasksSlice = createSlice({
       },
       prepare({
         content,
+        description,
         maxMustDoLimit,
         priority = "should",
         source = "manual",
@@ -98,6 +99,7 @@ const tasksSlice = createSlice({
         planningBucket = "today",
       }: {
         content: string;
+        description?: string;
         maxMustDoLimit?: number;
         priority?: TaskPriority;
         source?: TaskSource;
@@ -109,6 +111,7 @@ const tasksSlice = createSlice({
           payload: {
             id: nanoid(),
             content,
+            description,
             status: "todo" as const,
             completed: false,
             priority,

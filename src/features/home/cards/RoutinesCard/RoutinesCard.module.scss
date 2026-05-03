@@ -1,0 +1,72 @@
+.routineCardActive {
+  border-color: color-mix(
+    in srgb,
+    var(--color-accent-amber) 42%,
+    var(--color-border-subtle)
+  );
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-accent-amber) 7%, transparent),
+      transparent 54%
+    ),
+    var(--color-bg-card);
+}
+
+.routineCallout {
+  display: grid;
+  gap: var(--space-2);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-card);
+  background: color-mix(in srgb, var(--color-bg-elevated) 64%, transparent);
+  padding: var(--space-3);
+
+  h3,
+  p {
+    margin: 0;
+  }
+
+  h3 {
+    color: var(--color-text-primary);
+    font-size: var(--font-size-lg);
+    line-height: var(--line-height-tight);
+  }
+
+  p {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+  }
+
+  .routineStatus {
+    color: var(--color-accent-amber);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: 0;
+    text-transform: uppercase;
+  }
+
+  .routineActionLink {
+    justify-self: start;
+    color: var(--color-primary-hover);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    text-decoration: none;
+
+    &:hover {
+      color: var(--color-text-primary);
+    }
+  }
+}
+
+.routineCalloutActive {
+  border-color: color-mix(
+    in srgb,
+    var(--color-accent-amber) 36%,
+    var(--color-border-subtle)
+  );
+  background: color-mix(
+    in srgb,
+    var(--color-accent-amber) 10%,
+    var(--color-bg-elevated)
+  );
+}

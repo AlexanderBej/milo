@@ -6,9 +6,8 @@ export type PlanningChoice =
   | "today"
   | "tomorrow"
   | "thisWeek"
-  | "nextWeek"
-  | "nextMonth"
-  | "nextQuarter"
+  | "thisMonth"
+  | "thisQuarter"
   | "someday";
 
 export function getTodayDateString() {

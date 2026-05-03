@@ -35,10 +35,25 @@ const clampMustDoLimit = (value: number) => {
   return Math.min(5, Math.max(1, Math.round(value)));
 };
 
+const normalizePreferences = (
+  preferences: Partial<PreferencesState>,
+): PreferencesState => ({
+  ...defaultPreferences,
+  ...preferences,
+  displayName: preferences.displayName?.trimStart() ?? "",
+  mustDoLimit:
+    typeof preferences.mustDoLimit === "number"
+      ? clampMustDoLimit(preferences.mustDoLimit)
+      : defaultPreferences.mustDoLimit,
+});
+
 const preferencesSlice = createSlice({
   name: "preferences",
   initialState: defaultPreferences,
   reducers: {
+    setPreferences(_state, action: PayloadAction<Partial<PreferencesState>>) {
+      return normalizePreferences(action.payload);
+    },
     updatePreferences(state, action: PayloadAction<Partial<PreferencesState>>) {
       Object.assign(state, action.payload);
       state.displayName = state.displayName.trimStart();
@@ -50,5 +65,6 @@ const preferencesSlice = createSlice({
   },
 });
 
-export const { resetPreferences, updatePreferences } = preferencesSlice.actions;
+export const { resetPreferences, setPreferences, updatePreferences } =
+  preferencesSlice.actions;
 export const preferencesReducer = preferencesSlice.reducer;

@@ -128,6 +128,8 @@ const routinesSlice = createSlice({
         state.routines.unshift(action.payload);
       },
       prepare(payload: AddRoutinePayload) {
+        const nowIso = new Date().toISOString();
+
         return {
           payload: {
             id: nanoid(),
@@ -137,7 +139,8 @@ const routinesSlice = createSlice({
             schedule: normalizeSchedule(payload.schedule),
             timeWindow: payload.timeWindow,
             active: payload.active ?? true,
-            createdAt: new Date().toISOString(),
+            createdAt: nowIso,
+            updatedAt: nowIso,
           },
         };
       },
@@ -178,6 +181,7 @@ const routinesSlice = createSlice({
         schedule: action.payload.changes.schedule
           ? normalizeSchedule(action.payload.changes.schedule)
           : routine.schedule,
+        updatedAt: new Date().toISOString(),
       });
     },
 
@@ -186,6 +190,7 @@ const routinesSlice = createSlice({
 
       if (routine) {
         routine.active = false;
+        routine.updatedAt = new Date().toISOString();
       }
     },
 

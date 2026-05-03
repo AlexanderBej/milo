@@ -1,0 +1,71 @@
+.appShell {
+  display: grid;
+  grid-template-columns: minmax(15rem, 17.5rem) minmax(0, 1fr);
+  min-height: 100vh;
+  background: var(--color-bg-base);
+
+  .contentShell {
+    display: grid;
+    align-content: start;
+    min-width: 0;
+  }
+
+  .syncBanner,
+  .syncBannerWarning {
+    justify-self: center;
+    width: min(calc(100% - var(--space-8)), 82rem);
+    margin: var(--space-4) var(--space-4) 0;
+    border: 1px solid
+      color-mix(in srgb, var(--color-accent-teal) 28%, transparent);
+    border-radius: var(--radius-card);
+    background: color-mix(in srgb, var(--color-bg-card) 86%, transparent);
+    color: var(--color-text-secondary);
+    padding: var(--space-3) var(--space-4);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .syncBannerWarning {
+    border-color: color-mix(
+      in srgb,
+      var(--color-accent-amber) 34%,
+      transparent
+    );
+    background: color-mix(in srgb, var(--color-accent-amber) 10%, transparent);
+    color: var(--color-text-primary);
+  }
+
+  .toast {
+    position: fixed;
+    right: var(--space-8);
+    bottom: var(--space-8);
+    z-index: 30;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 2.75rem;
+    border: 1px solid
+      color-mix(in srgb, var(--color-accent-green) 34%, transparent);
+    border-radius: var(--radius-pill);
+    background: var(--color-bg-elevated);
+    box-shadow: var(--shadow-soft);
+    color: var(--color-text-primary);
+    padding: 0 var(--space-4);
+    font-weight: var(--font-weight-semibold);
+
+    svg {
+      color: var(--color-accent-green);
+    }
+  }
+}
+
+@media (max-width: 58rem) {
+  .appShell {
+    grid-template-columns: 1fr;
+
+    .syncBanner,
+    .syncBannerWarning {
+      width: calc(100% - var(--space-8));
+    }
+  }
+}

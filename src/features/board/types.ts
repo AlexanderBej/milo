@@ -4,6 +4,7 @@ export type BoardNote = {
   x: number;
   y: number;
   createdAt?: string;
+  updatedAt?: string;
 };
 
 export type BoardState = {

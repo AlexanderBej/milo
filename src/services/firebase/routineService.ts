@@ -8,7 +8,7 @@ import {
 import type { Routine, RoutineCompletion } from "@features/routines";
 import { db } from "./firebaseClient";
 import { getRoutineCompletionsPath, getRoutinesPath } from "./paths";
-import { normalizeDateFields } from "./serializers";
+import { normalizeDateFields, removeUndefinedFields } from "./serializers";
 
 const ensureDb = () => {
   if (!db) {
@@ -53,7 +53,10 @@ export const saveRoutine = async (
   userId: string,
   routine: Routine,
 ): Promise<void> => {
-  await setDoc(doc(ensureDb(), getRoutinesPath(userId), routine.id), routine);
+  await setDoc(
+    doc(ensureDb(), getRoutinesPath(userId), routine.id),
+    removeUndefinedFields(routine),
+  );
 };
 
 export const deleteRoutine = async (
@@ -102,7 +105,7 @@ export const saveRoutineCompletion = async (
 ): Promise<void> => {
   await setDoc(
     doc(ensureDb(), getRoutineCompletionsPath(userId), completion.id),
-    completion,
+    removeUndefinedFields(completion),
   );
 };
 

@@ -1,0 +1,221 @@
+.focusCard {
+  position: relative;
+  display: grid;
+  gap: var(--space-6);
+  overflow: hidden;
+  border: 1px solid
+    color-mix(in srgb, var(--color-primary) 25%, var(--color-border-subtle));
+  border-radius: calc(var(--radius-card) + var(--space-1));
+  background:
+    radial-gradient(
+      circle at 82% 38%,
+      color-mix(in srgb, var(--color-primary) 26%, transparent),
+      transparent 16rem
+    ),
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--color-primary) 18%, var(--color-bg-card)),
+      var(--color-bg-card)
+    );
+  box-shadow: var(--shadow-soft);
+  padding: var(--space-8);
+
+  .focusArt {
+    position: absolute;
+    top: 50%;
+    right: clamp(24px, 8vw, 96px);
+    transform: translateY(-50%);
+  }
+
+  .focusHeader {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+
+    .focusHeaderBox {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+
+      .focusHeaderTitle {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+
+        .icon {
+          display: inline-flex;
+          flex: 0 0 auto;
+          align-items: center;
+          justify-content: center;
+          width: 2rem;
+          height: 2rem;
+          border-radius: var(--radius-button);
+          background: rgba(129, 140, 248, 0.12);
+          color: var(--color-primary);
+
+          svg {
+            width: 1.15rem;
+            height: 1.15rem;
+          }
+        }
+
+        .focusLabel {
+          font-size: var(--font-size-lg);
+          font-weight: var(--font-weight-semibold);
+          color: var(--color-primary);
+        }
+      }
+    }
+  }
+
+  .focusLabel,
+  .focusContent p,
+  .focusEmpty p {
+    margin: 0;
+  }
+
+  .focusHint {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+  }
+
+  .focusContent,
+  .focusEmpty {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    justify-items: start;
+    min-height: 13rem;
+
+    h2 {
+      max-width: 18ch;
+      margin: var(--space-1) 0 var(--space-2);
+      color: var(--color-text-primary);
+      font-size: clamp(var(--font-size-2xl), 4vw, 3.25rem);
+      line-height: var(--line-height-tight);
+    }
+
+    p {
+      color: var(--color-text-secondary);
+      font-size: var(--font-size-lg);
+    }
+  }
+
+  .focusContent {
+    max-width: 54rem;
+  }
+
+  .priorityBadge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2rem;
+    border: 1px solid
+      color-mix(
+        in srgb,
+        var(--color-accent-teal) 34%,
+        var(--color-border-subtle)
+      );
+    border-radius: var(--radius-pill);
+    background: color-mix(in srgb, var(--color-bg-elevated) 82%, transparent);
+    color: var(--color-text-primary);
+    padding: 0 var(--space-3);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: 0;
+    text-transform: uppercase;
+  }
+
+  .focusActions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: var(--space-6);
+  }
+
+  .inlineToast {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-self: start;
+    gap: var(--space-2);
+    min-height: 2.5rem;
+    border: 1px solid
+      color-mix(in srgb, var(--color-accent-green) 28%, transparent);
+    border-radius: var(--radius-pill);
+    background: color-mix(in srgb, var(--color-bg-elevated) 86%, transparent);
+    color: var(--color-text-primary);
+    padding: 0 var(--space-3);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+
+    svg {
+      color: var(--color-accent-green);
+    }
+
+    button {
+      border: 0;
+      background: transparent;
+      color: var(--color-primary-hover);
+      cursor: pointer;
+      font: inherit;
+      font-weight: var(--font-weight-bold);
+    }
+  }
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .focusCard {
+    animation: homeEnter var(--duration-slow) var(--ease-standard);
+  }
+}
+
+@keyframes homeEnter {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 980px) {
+  .focusCard {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .focusArt {
+    opacity: 0.35;
+    right: -72px;
+  }
+}
+
+@media (max-width: 640px) {
+  .focusCard {
+    gap: var(--space-5);
+    padding: var(--space-5);
+
+    .focusContent,
+    .focusEmpty {
+      min-height: auto;
+
+      h2 {
+        max-width: 14ch;
+      }
+    }
+
+    .focusActions,
+    .focusActions > button {
+      width: 100%;
+    }
+  }
+}

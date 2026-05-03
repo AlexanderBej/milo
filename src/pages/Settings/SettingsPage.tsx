@@ -27,6 +27,7 @@ import { setTasks } from "@features/tasks";
 import { auth } from "@services/firebase/firebaseAuth";
 import { Button } from "@shared/components/Button";
 import { Card } from "@shared/components/Card";
+import { Select } from "@shared/components/Select";
 import styles from "./SettingsPage.module.scss";
 
 const startScreenOptions: Array<{ label: string; value: StartScreen }> = [
@@ -162,10 +163,10 @@ export const SettingsPage = () => {
               />
             </label>
 
-            <label className={styles.field}>
+            <label className={styles.field} htmlFor="default-start-screen">
               <span>Where should MILO open first?</span>
-              <select
-                className={styles.select}
+              <Select
+                id="default-start-screen"
                 onChange={(event) => {
                   dispatch(
                     updatePreferences({
@@ -180,7 +181,7 @@ export const SettingsPage = () => {
                     {option.label}
                   </option>
                 ))}
-              </select>
+              </Select>
             </label>
           </div>
         </Card>
@@ -190,10 +191,10 @@ export const SettingsPage = () => {
             <p className={styles.infoText}>
               MILO uses a calm dark theme for now.
             </p>
-            <label className={styles.field}>
+            <label className={styles.field} htmlFor="layout-density">
               <span>Layout density</span>
-              <select
-                className={styles.select}
+              <Select
+                id="layout-density"
                 onChange={(event) => {
                   dispatch(
                     updatePreferences({
@@ -205,17 +206,17 @@ export const SettingsPage = () => {
               >
                 <option value="comfortable">Comfortable</option>
                 <option value="compact">Compact</option>
-              </select>
+              </Select>
             </label>
           </div>
         </Card>
 
         <Card icon={<Sliders weight="duotone" />} title="Planning">
           <div className={styles.fieldStack}>
-            <label className={styles.field}>
+            <label className={styles.field} htmlFor="must-do-limit">
               <span>Must Do limit</span>
-              <select
-                className={styles.select}
+              <Select
+                id="must-do-limit"
                 onChange={(event) => {
                   dispatch(
                     updatePreferences({
@@ -230,13 +231,13 @@ export const SettingsPage = () => {
                     {limit}
                   </option>
                 ))}
-              </select>
+              </Select>
             </label>
 
-            <label className={styles.field}>
+            <label className={styles.field} htmlFor="default-inbox-priority">
               <span>Default task priority from Inbox</span>
-              <select
-                className={styles.select}
+              <Select
+                id="default-inbox-priority"
                 onChange={(event) => {
                   dispatch(
                     updatePreferences({
@@ -252,7 +253,7 @@ export const SettingsPage = () => {
                     {option.label}
                   </option>
                 ))}
-              </select>
+              </Select>
             </label>
           </div>
         </Card>
@@ -274,10 +275,10 @@ export const SettingsPage = () => {
             <p className={styles.infoText}>
               Nudges should feel supportive, not pushy.
             </p>
-            <label className={styles.field}>
+            <label className={styles.field} htmlFor="nudge-snooze-minutes">
               <span>Snooze duration</span>
-              <select
-                className={styles.select}
+              <Select
+                id="nudge-snooze-minutes"
                 onChange={(event) => {
                   dispatch(
                     updatePreferences({
@@ -292,7 +293,7 @@ export const SettingsPage = () => {
                     {minutes} min
                   </option>
                 ))}
-              </select>
+              </Select>
             </label>
           </div>
         </Card>

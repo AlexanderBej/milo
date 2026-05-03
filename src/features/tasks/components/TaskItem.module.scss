@@ -1,93 +1,172 @@
 .item {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: var(--space-3);
-  align-items: start;
+  gap: var(--space-4);
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-card);
   background: color-mix(in srgb, var(--color-bg-elevated) 72%, transparent);
-  padding: var(--space-3);
+  padding: var(--space-4);
+  transition: var(--transition-surface);
+
+  &:hover {
+    border-color: color-mix(
+      in srgb,
+      var(--color-primary) 24%,
+      var(--color-border-subtle)
+    );
+    background: color-mix(in srgb, var(--color-bg-elevated) 84%, transparent);
+  }
 }
 
-.done {
-  opacity: 0.72;
-}
-
-.contentWrap {
+.header {
   display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: var(--space-3);
+  align-items: start;
+}
+
+.textBlock {
+  display: grid;
+  gap: var(--space-2);
   min-width: 0;
 }
 
-.content {
-  overflow-wrap: anywhere;
-  margin: 0;
+.titleButton {
+  display: inline;
+  width: fit-content;
+  max-width: 100%;
+  border: 0;
+  background: transparent;
   color: var(--color-text-primary);
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+  transition: var(--transition-colors);
+}
+
+.titleButton,
+.content {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.titleButton:hover {
+  color: var(--color-primary-hover);
+  text-decoration: underline;
+  text-decoration-color: color-mix(
+    in srgb,
+    var(--color-primary-hover) 42%,
+    transparent
+  );
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+}
+
+.titleButton:focus-visible {
+  outline: none;
+  border-radius: var(--radius-input);
+  box-shadow: var(--shadow-focus);
+}
+
+.details {
+  overflow: hidden;
+}
+
+.detailsInner {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.description {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
   line-height: var(--line-height-base);
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
 }
 
 .meta {
-  margin: calc(var(--space-2) * -1) 0 0;
+  margin: 0;
   color: var(--color-text-muted);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
 }
 
-.metaSelect {
-  min-height: 2rem;
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-pill);
-  background: var(--color-bg-card);
-  color: var(--color-text-secondary);
-  padding: 0 var(--space-3);
-  font: inherit;
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-semibold);
-}
-
-.metaSelect:focus-visible {
-  outline: none;
-  box-shadow: var(--shadow-focus);
-}
-
-.done .content {
-  color: var(--color-text-secondary);
-  text-decoration: line-through;
+.controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  border-top: 1px solid
+    color-mix(in srgb, var(--color-border-subtle) 72%, transparent);
+  padding-top: var(--space-3);
 }
 
 .priorityControls,
 .actions {
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
   gap: var(--space-2);
 }
 
+.priorityControls {
+  flex-wrap: wrap;
+}
+
+.actions {
+  flex-wrap: nowrap;
+}
+
 .priorityButton {
-  min-height: 2rem;
+  min-height: 2.25rem;
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-pill);
   background: var(--color-bg-card);
   color: var(--color-text-muted);
-  cursor: pointer;
-  padding: 0 var(--space-3);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
   transition: var(--transition-surface);
 }
 
-.priorityButton:hover,
+.priorityButton {
+  cursor: pointer;
+  padding: 0 var(--space-4);
+
+  &:hover,
+  &:focus-visible {
+    border-color: color-mix(in srgb, var(--color-primary) 42%, transparent);
+    background: color-mix(
+      in srgb,
+      var(--color-primary) 14%,
+      var(--color-bg-card)
+    );
+    color: var(--color-text-primary);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--shadow-focus);
+  }
+}
+
 .priorityButtonActive {
   border-color: color-mix(in srgb, var(--color-primary) 42%, transparent);
   background: color-mix(
     in srgb,
-    var(--color-primary) 14%,
+    var(--color-primary) 18%,
     var(--color-bg-card)
   );
   color: var(--color-text-primary);
 }
 
-.actions {
-  flex-wrap: nowrap;
+.planningSelect {
+  min-width: 9.5rem;
 }
 
 .iconButton,
@@ -95,14 +174,19 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2.25rem;
-  height: 2.25rem;
+  width: 2.375rem;
+  height: 2.375rem;
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-button);
   background: var(--color-bg-card);
   color: var(--color-text-secondary);
   cursor: pointer;
   transition: var(--transition-surface);
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--shadow-focus);
+  }
 }
 
 .iconButton:hover {
@@ -113,22 +197,44 @@
 
 .iconButtonDanger {
   color: color-mix(in srgb, #ff6b6b 82%, var(--color-text-primary));
+
+  &:hover {
+    border-color: color-mix(in srgb, #ff6b6b 34%, transparent);
+    background: color-mix(in srgb, #ff6b6b 12%, var(--color-bg-card));
+  }
 }
 
-.iconButtonDanger:hover {
-  border-color: color-mix(in srgb, #ff6b6b 34%, transparent);
-  background: color-mix(in srgb, #ff6b6b 12%, var(--color-bg-card));
-}
+.done {
+  opacity: 0.72;
 
-.priorityButton:focus-visible,
-.iconButton:focus-visible,
-.iconButtonDanger:focus-visible {
-  outline: none;
-  box-shadow: var(--shadow-focus);
+  .titleButton,
+  .content {
+    color: var(--color-text-secondary);
+    text-decoration: line-through;
+  }
+
+  .description,
+  .meta {
+    color: var(--color-text-muted);
+  }
 }
 
 @media (max-width: 36rem) {
-  .item {
+  .header {
     grid-template-columns: 1fr;
+  }
+
+  .actions {
+    order: -1;
+    justify-content: flex-end;
+  }
+
+  .controls {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .planningSelect {
+    width: 100%;
   }
 }

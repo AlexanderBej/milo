@@ -8,7 +8,7 @@ import {
 import type { BoardNote } from "@features/board";
 import { db } from "./firebaseClient";
 import { getBoardNotesPath } from "./paths";
-import { normalizeDateFields } from "./serializers";
+import { normalizeDateFields, removeUndefinedFields } from "./serializers";
 
 const ensureDb = () => {
   if (!db) {
@@ -39,7 +39,7 @@ export const saveBoardNote = async (
 ): Promise<void> => {
   await setDoc(
     doc(ensureDb(), getBoardNotesPath(userId), boardNote.id),
-    boardNote,
+    removeUndefinedFields(boardNote),
   );
 };
 

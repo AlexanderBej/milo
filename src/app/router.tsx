@@ -1,7 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 
-import { AuthLoadingScreen, ProtectedApp } from "./ProtectedApp";
-import { AppLayout } from "./AppLayout";
+import { AuthLoadingScreen, ProtectedApp } from "./ProtectedApp/ProtectedApp";
+import { AppLayout } from "./AppLayout/AppLayout";
 import { useAppSelector } from "./hooks";
 
 import { BoardPage } from "../pages/Board/BoardPage";
@@ -14,8 +14,6 @@ import { AuthPage } from "../pages/Auth/AuthPage";
 
 const AuthRoute = () => {
   const { loading, user } = useAppSelector((state) => state.auth);
-
-  console.log("auth", user);
 
   if (loading) {
     return <AuthLoadingScreen />;

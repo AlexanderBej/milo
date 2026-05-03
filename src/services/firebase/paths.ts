@@ -23,3 +23,9 @@ export const getRoutinesPath = (userId: string) =>
 
 export const getRoutineCompletionsPath = (userId: string) =>
   `${getUserPath(userId)}/routineCompletions`;
+
+export const getPreferencesPath = (userId: string) =>
+  `${getUserPath(userId)}/preferences`;
+
+export const getMainPreferencesPath = (userId: string) =>
+  `${getPreferencesPath(userId)}/main`;

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@app/hooks";
 import { setBoardNotes } from "@features/board";
+import { setPreferences } from "@features/preferences";
 import { setCaptures } from "@features/quickCapture";
 import { setRoutineCompletions, setRoutines } from "@features/routines";
 import { setTasks } from "@features/tasks";
@@ -61,30 +62,39 @@ export const useFirebaseHydration = () => {
 
     const hydrate = async () => {
       try {
-        const [captures, tasks, boardNotes, routines, routineCompletions] =
-          await withTimeout(
-            Promise.all([
-              import("@services/firebase/boardNoteService"),
-              import("@services/firebase/captureService"),
-              import("@services/firebase/routineService"),
-              import("@services/firebase/taskService"),
-            ]).then(
-              ([
-                { getBoardNotes },
-                { getCaptures },
-                { getRoutineCompletions, getRoutines },
-                { getTasks },
-              ]) =>
-                Promise.all([
-                  getCaptures(userId),
-                  getTasks(userId),
-                  getBoardNotes(userId),
-                  getRoutines(userId),
-                  getRoutineCompletions(userId),
-                ]),
-            ),
-            6000,
-          );
+        const [
+          captures,
+          tasks,
+          boardNotes,
+          routines,
+          routineCompletions,
+          preferences,
+        ] = await withTimeout(
+          Promise.all([
+            import("@services/firebase/boardNoteService"),
+            import("@services/firebase/captureService"),
+            import("@services/firebase/preferenceService"),
+            import("@services/firebase/routineService"),
+            import("@services/firebase/taskService"),
+          ]).then(
+            ([
+              { getBoardNotes },
+              { getCaptures },
+              { getPreferences },
+              { getRoutineCompletions, getRoutines },
+              { getTasks },
+            ]) =>
+              Promise.all([
+                getCaptures(userId),
+                getTasks(userId),
+                getBoardNotes(userId),
+                getRoutines(userId),
+                getRoutineCompletions(userId),
+                getPreferences(userId),
+              ]),
+          ),
+          6000,
+        );
 
         if (!isActive) {
           return;
@@ -95,6 +105,9 @@ export const useFirebaseHydration = () => {
         dispatch(setBoardNotes(boardNotes));
         dispatch(setRoutines(routines));
         dispatch(setRoutineCompletions(routineCompletions));
+        if (preferences) {
+          dispatch(setPreferences(preferences));
+        }
         setError(null);
       } catch (caughtError) {
         const nextError =
@@ -118,6 +131,7 @@ export const useFirebaseHydration = () => {
 
     return () => {
       isActive = false;
+      hydratedUserIds.delete(userId);
       window.clearTimeout(safetyTimer);
     };
   }, [authLoading, dispatch, userId]);

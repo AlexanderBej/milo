@@ -14,6 +14,7 @@ const config: Config = {
     "^@shared/(.*)$": "<rootDir>/src/shared/$1",
     "^@features/(.*)$": "<rootDir>/src/features/$1",
     "^@services/(.*)$": "<rootDir>/src/services/$1",
+    "\\.svg$": "<rootDir>/src/test/fileMock.ts",
     "\\.(css|less|scss|sass)$": "identity-obj-proxy",
   },
   testPathIgnorePatterns: ["/node_modules/", "/dist/"],

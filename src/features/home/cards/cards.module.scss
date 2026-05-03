@@ -1,0 +1,118 @@
+.messageStack {
+  display: grid;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+
+  h3,
+  p {
+    margin: 0;
+  }
+
+  h3 {
+    color: var(--color-text-primary);
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--line-height-tight);
+  }
+
+  p {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+  }
+}
+
+.cardTextLink {
+  color: var(--color-primary-hover);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  text-decoration: none;
+
+  &:hover {
+    color: var(--color-text-primary);
+  }
+}
+
+.planSummary,
+.boardPreview {
+  display: grid;
+  gap: var(--space-3);
+
+  h3,
+  p,
+  ul {
+    margin: 0;
+  }
+
+  h3 {
+    color: var(--color-text-primary);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--line-height-tight);
+  }
+
+  p {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+  }
+
+  .planProgress {
+    color: var(--color-text-secondary);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .cardMeta {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+  }
+}
+
+.planPreviewList,
+.boardPreviewList {
+  display: grid;
+  gap: var(--space-2);
+  padding: 0;
+  list-style: none;
+}
+
+.planPreviewList {
+  .planPreviewItem {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--space-2);
+    align-items: center;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+
+    span:last-child {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  .checkCircle {
+    width: 0.85rem;
+    height: 0.85rem;
+    border: 1px solid
+      color-mix(in srgb, var(--color-primary) 48%, var(--color-border-strong));
+    border-radius: var(--radius-pill);
+  }
+}
+
+.boardPreviewList {
+  li {
+    overflow: hidden;
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-button);
+    background: color-mix(
+      in srgb,
+      var(--color-accent-amber) 9%,
+      var(--color-bg-elevated)
+    );
+    color: var(--color-text-secondary);
+    padding: var(--space-2) var(--space-3);
+    font-size: var(--font-size-sm);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}

@@ -62,3 +62,23 @@ export const normalizeDateFields = <T extends Record<string, unknown>>(
 
   return normalized as T;
 };
+
+export const removeUndefinedFields = <T>(value: T): T => {
+  if (Array.isArray(value)) {
+    return value
+      .filter((entry) => entry !== undefined)
+      .map(removeUndefinedFields) as T;
+  }
+
+  if (!value || typeof value !== "object" || value instanceof Date) {
+    return value;
+  }
+
+  const entries = Object.entries(value).flatMap(([key, entryValue]) =>
+    entryValue === undefined
+      ? []
+      : [[key, removeUndefinedFields(entryValue)] as const],
+  );
+
+  return Object.fromEntries(entries) as T;
+};

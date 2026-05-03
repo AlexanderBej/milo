@@ -7,6 +7,7 @@ export type TaskPlanningBucket = "today" | "soon" | "later" | "someday";
 export type Task = {
   id: string;
   content: string;
+  description?: string;
   status: TaskStatus;
   completed: boolean;
   priority: TaskPriority;

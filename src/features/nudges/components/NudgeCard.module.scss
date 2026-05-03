@@ -1,6 +1,38 @@
 .nudgeBody {
   display: grid;
   gap: var(--space-4);
+
+  .messageStack {
+    display: grid;
+    gap: var(--space-2);
+  }
+
+  .message,
+  .context {
+    margin: 0;
+  }
+
+  .message {
+    display: -webkit-box;
+    overflow: hidden;
+    color: var(--color-text-primary);
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--line-height-tight);
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .context {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
 }
 
 .routineNudge {
@@ -9,36 +41,4 @@
   border-radius: var(--radius-card);
   background: color-mix(in srgb, var(--color-accent-amber) 7%, transparent);
   padding: var(--space-3);
-}
-
-.messageStack {
-  display: grid;
-  gap: var(--space-2);
-}
-
-.message,
-.context {
-  margin: 0;
-}
-
-.message {
-  display: -webkit-box;
-  overflow: hidden;
-  color: var(--color-text-primary);
-  font-size: var(--font-size-lg);
-  font-weight: var(--font-weight-semibold);
-  line-height: var(--line-height-tight);
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-}
-
-.context {
-  color: var(--color-text-muted);
-  font-size: var(--font-size-sm);
-}
-
-.actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
 }

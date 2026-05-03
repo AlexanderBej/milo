@@ -76,7 +76,11 @@ export const NudgeCard = () => {
 
   if (!nudge) {
     return (
-      <Card icon={<Coffee weight="duotone" />} title="Nudges">
+      <Card
+        icon={<Coffee weight="duotone" />}
+        title="Nudges"
+        color="--color-accent-teal"
+      >
         <div className={styles.nudgeBody}>
           <div className={styles.messageStack}>
             <h3 className={styles.message}>No nudges right now.</h3>
@@ -90,7 +94,11 @@ export const NudgeCard = () => {
   }
 
   return (
-    <Card icon={<Coffee weight="duotone" />} title="Nudges">
+    <Card
+      icon={<Coffee weight="duotone" />}
+      title="Nudges"
+      color="--color-accent-teal"
+    >
       <div
         className={clsx(
           styles.nudgeBody,

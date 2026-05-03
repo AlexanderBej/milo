@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { configureStore } from "@reduxjs/toolkit";
 import { Provider } from "react-redux";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
-import { AppLayout } from "@app/AppLayout";
+import { AppLayout } from "@app/AppLayout/AppLayout";
 import { authReducer, setUser } from "@features/auth";
 import { boardReducer } from "@features/board";
 import { focusReducer } from "@features/focus";

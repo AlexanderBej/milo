@@ -16,9 +16,9 @@ import {
 } from "@features/board";
 import { focusReducer } from "@features/focus";
 import {
-  defaultPreferences,
   preferencesReducer,
-  type PreferencesState,
+  resetPreferences,
+  updatePreferences,
 } from "@features/preferences";
 import {
   addCapture,
@@ -78,7 +78,6 @@ const reducer = (
       ? {
           ...resetState,
           auth: state.auth,
-          preferences: state.preferences,
         }
       : resetState;
   }
@@ -86,65 +85,10 @@ const reducer = (
   return appReducer(state, action);
 };
 
-const STORAGE_KEY = "milo:state:v1";
-
-type PersistedState = {
-  preferences?: Partial<PreferencesState>;
-};
-
-const readPersistedState = (): PersistedState | undefined => {
-  if (typeof window === "undefined") {
-    return undefined;
-  }
-
-  try {
-    const storedValue = window.localStorage.getItem(STORAGE_KEY);
-
-    if (!storedValue) {
-      return undefined;
-    }
-
-    const parsedValue: unknown = JSON.parse(storedValue);
-
-    if (!parsedValue || typeof parsedValue !== "object") {
-      return undefined;
-    }
-
-    return parsedValue;
-  } catch {
-    return undefined;
-  }
-};
-
-const buildPreloadedState = () => {
-  const initialAppState = appReducer(undefined, { type: "@@milo/init" });
-  const persistedState = readPersistedState();
-
-  if (!persistedState) {
-    return initialAppState;
-  }
-  const preferences = persistedState.preferences
-    ? {
-        ...defaultPreferences,
-        ...persistedState.preferences,
-        mustDoLimit:
-          typeof persistedState.preferences.mustDoLimit === "number"
-            ? Math.min(5, Math.max(1, persistedState.preferences.mustDoLimit))
-            : defaultPreferences.mustDoLimit,
-      }
-    : defaultPreferences;
-
-  return {
-    ...initialAppState,
-    preferences,
-  };
-};
-
 const persistenceMiddleware = createListenerMiddleware();
 
 export const store = configureStore({
   reducer,
-  preloadedState: buildPreloadedState(),
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(
       baseApi.middleware,
@@ -171,6 +115,36 @@ startAppListening({
     if (!nextUserId || previousUserId !== nextUserId) {
       listenerApi.dispatch(resetUserOwnedData());
     }
+  },
+});
+
+const saveCurrentPreferences = async () => {
+  const userId = getAuthenticatedUserId();
+
+  if (!userId) {
+    return;
+  }
+
+  try {
+    const { savePreferences } =
+      await import("@services/firebase/preferenceService");
+    await savePreferences(userId, store.getState().preferences);
+  } catch (error) {
+    console.error("Failed to save preferences.", error);
+  }
+};
+
+startAppListening({
+  actionCreator: updatePreferences,
+  effect: async () => {
+    await saveCurrentPreferences();
+  },
+});
+
+startAppListening({
+  actionCreator: resetPreferences,
+  effect: async () => {
+    await saveCurrentPreferences();
   },
 });
 
@@ -556,16 +530,3 @@ startAppListening({
     }
   },
 });
-
-if (typeof window !== "undefined") {
-  store.subscribe(() => {
-    const state = store.getState();
-
-    window.localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({
-        preferences: state.preferences,
-      }),
-    );
-  });
-}

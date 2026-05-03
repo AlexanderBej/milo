@@ -8,7 +8,7 @@ import {
 import type { CaptureItem } from "@shared/types";
 import { db } from "./firebaseClient";
 import { getCapturesPath } from "./paths";
-import { normalizeDateFields } from "./serializers";
+import { normalizeDateFields, removeUndefinedFields } from "./serializers";
 
 const ensureDb = () => {
   if (!db) {
@@ -43,7 +43,10 @@ export const saveCapture = async (
   userId: string,
   capture: CaptureItem,
 ): Promise<void> => {
-  await setDoc(doc(ensureDb(), getCapturesPath(userId), capture.id), capture);
+  await setDoc(
+    doc(ensureDb(), getCapturesPath(userId), capture.id),
+    removeUndefinedFields(capture),
+  );
 };
 
 export const deleteCapture = async (
