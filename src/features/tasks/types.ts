@@ -1,6 +1,8 @@
 export type TaskStatus = "todo" | "done";
 export type TaskPriority = "must" | "should" | "could";
 export type TaskSource = "manual" | "capture" | "inbox" | "board";
+export type TaskTimeSlot = "morning" | "afternoon" | "evening" | "anytime";
+export type TaskPlanningBucket = "today" | "soon" | "later" | "someday";
 
 export type Task = {
   id: string;
@@ -11,4 +13,7 @@ export type Task = {
   createdAt: string;
   completedAt?: string;
   source?: TaskSource;
+  dueDate?: string;
+  timeSlot?: TaskTimeSlot;
+  planningBucket?: TaskPlanningBucket;
 };

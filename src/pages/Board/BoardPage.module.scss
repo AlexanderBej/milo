@@ -65,6 +65,15 @@
   color: var(--color-accent-green);
 }
 
+.toast button {
+  border: 0;
+  background: transparent;
+  color: var(--color-primary-hover);
+  cursor: pointer;
+  font: inherit;
+  font-weight: var(--font-weight-bold);
+}
+
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
   .toast {
     animation: toastIn var(--duration-base) var(--ease-standard);

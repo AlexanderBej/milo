@@ -2,35 +2,87 @@ import { useEffect, useState } from "react";
 import { useAppDispatch } from "@app/hooks";
 import { setBoardNotes } from "@features/board";
 import { setCaptures } from "@features/quickCapture";
+import { setRoutineCompletions, setRoutines } from "@features/routines";
 import { setTasks } from "@features/tasks";
-import { getBoardNotes } from "@services/firebase/boardNoteService";
-import { getCaptures } from "@services/firebase/captureService";
-import { getTasks } from "@services/firebase/taskService";
 
 export const FIREBASE_USER_ID = "demo-user";
 
 let hasHydrated = false;
 
+const isTestEnvironment =
+  typeof process !== "undefined" && process.env.NODE_ENV === "test";
+
+const withTimeout = async <T>(promise: Promise<T>, timeoutMs: number) => {
+  let timeoutId: number | undefined;
+
+  const timeout = new Promise<never>((_, reject) => {
+    timeoutId = window.setTimeout(() => {
+      reject(new Error("Firebase sync took longer than expected."));
+    }, timeoutMs);
+  });
+
+  try {
+    return await Promise.race([promise, timeout]);
+  } finally {
+    if (timeoutId) {
+      window.clearTimeout(timeoutId);
+    }
+  }
+};
+
 export const useFirebaseHydration = () => {
   const dispatch = useAppDispatch();
-  const [isLoading, setIsLoading] = useState(!hasHydrated);
+  const [isLoading, setIsLoading] = useState(
+    !hasHydrated && !isTestEnvironment,
+  );
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
+    if (isTestEnvironment) {
+      return;
+    }
+
     if (hasHydrated) {
       return;
     }
 
     let isActive = true;
     hasHydrated = true;
+    const safetyTimer = window.setTimeout(() => {
+      if (!isActive) {
+        return;
+      }
+
+      setError(new Error("Firebase sync took longer than expected."));
+      setIsLoading(false);
+    }, 6500);
 
     const hydrate = async () => {
       try {
-        const [captures, tasks, boardNotes] = await Promise.all([
-          getCaptures(FIREBASE_USER_ID),
-          getTasks(FIREBASE_USER_ID),
-          getBoardNotes(FIREBASE_USER_ID),
-        ]);
+        const [captures, tasks, boardNotes, routines, routineCompletions] =
+          await withTimeout(
+            Promise.all([
+              import("@services/firebase/boardNoteService"),
+              import("@services/firebase/captureService"),
+              import("@services/firebase/routineService"),
+              import("@services/firebase/taskService"),
+            ]).then(
+              ([
+                { getBoardNotes },
+                { getCaptures },
+                { getRoutineCompletions, getRoutines },
+                { getTasks },
+              ]) =>
+                Promise.all([
+                  getCaptures(FIREBASE_USER_ID),
+                  getTasks(FIREBASE_USER_ID),
+                  getBoardNotes(FIREBASE_USER_ID),
+                  getRoutines(FIREBASE_USER_ID),
+                  getRoutineCompletions(FIREBASE_USER_ID),
+                ]),
+            ),
+            6000,
+          );
 
         if (!isActive) {
           return;
@@ -39,6 +91,8 @@ export const useFirebaseHydration = () => {
         dispatch(setCaptures(captures));
         dispatch(setTasks(tasks));
         dispatch(setBoardNotes(boardNotes));
+        dispatch(setRoutines(routines));
+        dispatch(setRoutineCompletions(routineCompletions));
         setError(null);
       } catch (caughtError) {
         const nextError =
@@ -53,6 +107,7 @@ export const useFirebaseHydration = () => {
         }
       } finally {
         if (isActive) {
+          window.clearTimeout(safetyTimer);
           setIsLoading(false);
         }
       }
@@ -62,6 +117,7 @@ export const useFirebaseHydration = () => {
 
     return () => {
       isActive = false;
+      window.clearTimeout(safetyTimer);
     };
   }, [dispatch]);
 

@@ -1,5 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { clsx } from "clsx";
 import { Coffee, X } from "phosphor-react";
 
 import { useAppSelector } from "@app/hooks";
@@ -42,10 +43,21 @@ const writeHiddenNudgeIds = (ids: string[]) => {
 
 export const NudgeCard = () => {
   const navigate = useNavigate();
-  const nudges = useAppSelector((state) => selectNudges(state));
+  const [now, setNow] = useState(() => new Date());
+  const nudges = useAppSelector((state) => selectNudges(state, now));
   const [hiddenIds, setHiddenIds] = useState<string[]>(readHiddenNudgeIds);
   const hiddenIdSet = useMemo(() => new Set(hiddenIds), [hiddenIds]);
   const nudge = nudges.find((item) => !hiddenIdSet.has(item.id));
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setNow(new Date());
+    }, 60_000);
+
+    return () => {
+      window.clearInterval(timer);
+    };
+  }, []);
 
   const hideNudge = () => {
     if (!nudge) {
@@ -65,12 +77,28 @@ export const NudgeCard = () => {
   };
 
   if (!nudge) {
-    return null;
+    return (
+      <Card icon={<Coffee weight="duotone" />} title="Nudges">
+        <div className={styles.nudgeBody}>
+          <div className={styles.messageStack}>
+            <h3 className={styles.message}>No nudges right now.</h3>
+            <p className={styles.context}>
+              MILO will speak up when something useful is waiting.
+            </p>
+          </div>
+        </div>
+      </Card>
+    );
   }
 
   return (
-    <Card icon={<Coffee weight="duotone" />} title="Gentle nudge">
-      <div className={styles.nudgeBody}>
+    <Card icon={<Coffee weight="duotone" />} title="Nudges">
+      <div
+        className={clsx(
+          styles.nudgeBody,
+          nudge.type === "routine" && styles.routineNudge,
+        )}
+      >
         <div className={styles.messageStack}>
           <h3 className={styles.message}>{nudge.message}</h3>
           {nudge.context ? (

@@ -1,4 +1,5 @@
 import type { FocusState } from "@features/focus";
+import type { Routine } from "@features/routines";
 import type { Task } from "@features/tasks";
 import type { CaptureItem } from "@shared/types";
 import { generateNudges, generateTopNudge } from "./nudgeRules";
@@ -30,6 +31,16 @@ const focus: FocusState = {
   skippedTaskIds: [],
   startedAt: null,
 };
+
+const buildRoutine = (id: string): Routine => ({
+  id,
+  title: "Morning routine",
+  checklist: ["Water", "Meds"],
+  schedule: "daily",
+  timeWindow: { start: "12:00", end: "14:00" },
+  active: true,
+  createdAt: "2026-05-02T08:00:00.000Z",
+});
 
 describe("generateNudges", () => {
   it("returns the inbox nudge for 5 unprocessed inbox items", () => {
@@ -82,6 +93,48 @@ describe("generateNudges", () => {
     expect(nudge).toEqual(
       expect.objectContaining({ id: "small-win-after-midday" }),
     );
+  });
+
+  it("returns a routine nudge when an active routine window is open", () => {
+    const nudge = generateTopNudge({
+      captures: [],
+      tasks: [buildTask("task-1")],
+      focus,
+      routines: [buildRoutine("routine-1")],
+      routineCompletions: [],
+      now,
+    });
+
+    expect(nudge).toEqual(
+      expect.objectContaining({
+        id: "routine-window-open-routine-1-2026-05-02",
+        primaryAction: {
+          label: "Start routine",
+          route: "/plan",
+        },
+      }),
+    );
+  });
+
+  it("does not nudge for a completed routine", () => {
+    const routine = buildRoutine("routine-1");
+    const nudges = generateNudges({
+      captures: [],
+      tasks: [buildTask("task-1", "should", "todo", now.toISOString())],
+      focus,
+      routines: [routine],
+      routineCompletions: [
+        {
+          routineId: routine.id,
+          date: "2026-05-02",
+          completedChecklistItems: routine.checklist,
+          completedAt: "2026-05-02T12:30:00.000Z",
+        },
+      ],
+      now,
+    });
+
+    expect(nudges.some((nudge) => nudge.type === "routine")).toBe(false);
   });
 
   it("returns the lighter focus nudge after multiple focus skips", () => {

@@ -2,6 +2,7 @@ import { createSelector } from "@reduxjs/toolkit";
 import type { RootState } from "@app/store";
 import { selectTasks } from "@features/tasks";
 import type { Task, TaskPriority } from "@features/tasks";
+import { getTaskPlanningSection } from "@shared/utils/planning";
 
 const priorityOrder: TaskPriority[] = ["must", "should", "could"];
 
@@ -28,7 +29,11 @@ export const selectFocusStartedAt = createSelector(
 );
 
 const isAvailableFocusTask = (task: Task, skippedTaskIds: string[]) => {
-  return task.status === "todo" && !skippedTaskIds.includes(task.id);
+  return (
+    task.status === "todo" &&
+    getTaskPlanningSection(task) === "today" &&
+    !skippedTaskIds.includes(task.id)
+  );
 };
 
 export const selectRecommendedFocusTask = createSelector(

@@ -1,4 +1,9 @@
-export type NudgeType = "action" | "planning" | "awareness" | "recovery";
+export type NudgeType =
+  | "action"
+  | "planning"
+  | "awareness"
+  | "recovery"
+  | "routine";
 
 export type Nudge = {
   id: string;

@@ -44,7 +44,10 @@ const snoozeOptions = [15, 30, 60, 120];
 export const SettingsPage = () => {
   const dispatch = useAppDispatch();
   const preferences = useAppSelector(selectPreferences);
-  const state = useAppSelector((appState) => appState);
+  const boardState = useAppSelector((appState) => appState.board);
+  const focusState = useAppSelector((appState) => appState.focus);
+  const quickCaptureState = useAppSelector((appState) => appState.quickCapture);
+  const tasksState = useAppSelector((appState) => appState.tasks);
   const hasMounted = useRef(false);
   const [saveMessage, setSaveMessage] = useState("Saved automatically");
 
@@ -71,11 +74,11 @@ export const SettingsPage = () => {
 
   const exportJson = () => {
     const exportState = {
-      board: state.board,
-      focus: state.focus,
-      preferences: state.preferences,
-      quickCapture: state.quickCapture,
-      tasks: state.tasks,
+      board: boardState,
+      focus: focusState,
+      preferences,
+      quickCapture: quickCaptureState,
+      tasks: tasksState,
     };
     const blob = new Blob([JSON.stringify(exportState, null, 2)], {
       type: "application/json",

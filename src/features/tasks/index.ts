@@ -19,6 +19,13 @@ export {
   setTasks,
   tasksReducer,
   undoCompleteTask,
+  updateTask,
   updateTaskPriority,
 } from "./tasksSlice";
-export type { Task, TaskPriority, TaskSource, TaskStatus } from "./types";
+export type {
+  Task,
+  TaskPriority,
+  TaskSource,
+  TaskStatus,
+  TaskTimeSlot,
+} from "./types";

@@ -10,18 +10,29 @@ import {
   deleteTask,
   moveTask,
   restoreTask,
-  selectCouldTasks,
   selectDoneTasks,
-  selectMustTasks,
-  selectShouldTasks,
   selectTasks,
   selectTaskMessage,
   undoCompleteTask,
   updateTaskPriority,
   type TaskPriority,
+  type TaskTimeSlot,
+  updateTask,
 } from "@features/tasks";
 import { selectMustDoLimit } from "@features/preferences";
+import {
+  completeRoutineForDate,
+  getTodayDateKey,
+  selectTodayRoutineProgress,
+  toggleRoutineChecklistItemForDate,
+} from "@features/routines";
 import { TaskSection } from "../../features/tasks/components";
+import {
+  getTaskPlanningSection,
+  getTodayDateString,
+  getTomorrowDateString,
+  type PlanningChoice,
+} from "@shared/utils/planning";
 import styles from "./DailyPlanPage.module.scss";
 
 const priorityOptions: Array<{ label: string; value: TaskPriority }> = [
@@ -30,31 +41,101 @@ const priorityOptions: Array<{ label: string; value: TaskPriority }> = [
   { label: "Could", value: "could" },
 ];
 
+const timeSlotOptions: Array<{ label: string; value: TaskTimeSlot }> = [
+  { label: "Anytime", value: "anytime" },
+  { label: "Morning", value: "morning" },
+  { label: "Afternoon", value: "afternoon" },
+  { label: "Evening", value: "evening" },
+];
+
+const planningOptions: Array<{ label: string; value: PlanningChoice }> = [
+  { label: "Today", value: "today" },
+  { label: "Tomorrow", value: "tomorrow" },
+  { label: "This week", value: "thisWeek" },
+  { label: "Next week", value: "nextWeek" },
+  { label: "Next month", value: "nextMonth" },
+  { label: "Next quarter", value: "nextQuarter" },
+  { label: "Someday", value: "someday" },
+];
+
 type PlanToast = {
   message: string;
   undo?: () => void;
 };
 
+const resolvePlanningChoice = (choice: PlanningChoice) => {
+  if (choice === "today") {
+    return {
+      dueDate: getTodayDateString(),
+      planningBucket: "today" as const,
+    };
+  }
+
+  if (choice === "tomorrow") {
+    return {
+      dueDate: getTomorrowDateString(),
+      planningBucket: "soon" as const,
+    };
+  }
+
+  if (choice === "thisWeek") {
+    return {
+      dueDate: undefined,
+      planningBucket: "soon" as const,
+    };
+  }
+
+  if (
+    choice === "nextWeek" ||
+    choice === "nextMonth" ||
+    choice === "nextQuarter"
+  ) {
+    return {
+      dueDate: undefined,
+      planningBucket: "later" as const,
+    };
+  }
+
+  return {
+    dueDate: undefined,
+    planningBucket: "someday" as const,
+  };
+};
+
 export const DailyPlanPage = () => {
   const dispatch = useAppDispatch();
   const tasks = useAppSelector(selectTasks);
-  const mustTasks = useAppSelector(selectMustTasks);
-  const shouldTasks = useAppSelector(selectShouldTasks);
-  const couldTasks = useAppSelector(selectCouldTasks);
   const doneTasks = useAppSelector(selectDoneTasks);
   const message = useAppSelector(selectTaskMessage);
   const mustDoLimit = useAppSelector(selectMustDoLimit);
+
   const [content, setContent] = useState("");
   const [priority, setPriority] = useState<TaskPriority>("should");
+  const [planningChoice, setPlanningChoice] = useState<PlanningChoice>("today");
+  const [timeSlot, setTimeSlot] = useState<TaskTimeSlot>("anytime");
   const [toast, setToast] = useState<PlanToast | null>(null);
-  const todoCount = mustTasks.length + shouldTasks.length + couldTasks.length;
+
+  const todoTasks = tasks.filter((task) => task.status === "todo");
+
+  const todayTasks = todoTasks.filter(
+    (task) => getTaskPlanningSection(task) === "today",
+  );
+  const soonTasks = todoTasks.filter(
+    (task) => getTaskPlanningSection(task) === "soon",
+  );
+  const laterTasks = todoTasks.filter(
+    (task) => getTaskPlanningSection(task) === "later",
+  );
+  const somedayTasks = todoTasks.filter(
+    (task) => getTaskPlanningSection(task) === "someday",
+  );
+
+  const mustTasks = todayTasks.filter((task) => task.priority === "must");
   const hasTasks = tasks.length > 0;
-  const allTasksDone = hasTasks && todoCount === 0;
+  const allTasksDone = hasTasks && todoTasks.length === 0;
 
   useEffect(() => {
-    if (!message && !toast) {
-      return;
-    }
+    if (!message && !toast) return;
 
     const timer = window.setTimeout(() => {
       dispatch(clearTaskMessage());
@@ -71,10 +152,9 @@ export const DailyPlanPage = () => {
 
     const trimmedContent = content.trim();
 
-    if (!trimmedContent) {
-      return;
-    }
+    if (!trimmedContent) return;
 
+    const planning = resolvePlanningChoice(planningChoice);
     const canAddTask = priority !== "must" || mustTasks.length < mustDoLimit;
 
     dispatch(
@@ -82,12 +162,15 @@ export const DailyPlanPage = () => {
         content: trimmedContent,
         maxMustDoLimit: mustDoLimit,
         priority,
+        timeSlot,
+        ...planning,
       }),
     );
+
     setContent("");
 
     if (canAddTask) {
-      setToast({ message: "Task added to today." });
+      setToast({ message: "Task added to plan." });
     }
   };
 
@@ -124,9 +207,7 @@ export const DailyPlanPage = () => {
 
     dispatch(deleteTask(taskId));
 
-    if (!snapshot) {
-      return;
-    }
+    if (!snapshot) return;
 
     setToast({
       message: "Removed. Undo?",
@@ -137,13 +218,29 @@ export const DailyPlanPage = () => {
     });
   };
 
+  const handlePlanningChange = (
+    taskId: string,
+    planningBucket: "today" | "soon" | "later" | "someday",
+  ) => {
+    dispatch(
+      updateTask({
+        id: taskId,
+        changes: {
+          planningBucket,
+          dueDate:
+            planningBucket === "today" ? getTodayDateString() : undefined,
+        },
+      }),
+    );
+  };
+
   return (
     <main className={styles.page}>
       <header className={styles.header}>
         <div>
           <p className={styles.eyebrow}>Plan</p>
-          <h1>Daily Plan</h1>
-          <p>Choose what matters today. Keep it doable.</p>
+          <h1>Agenda</h1>
+          <p>Plan today, park later, and keep life out of your head.</p>
         </div>
       </header>
 
@@ -155,9 +252,7 @@ export const DailyPlanPage = () => {
             {toast?.undo ? (
               <button
                 className={styles.undoButton}
-                onClick={() => {
-                  toast.undo?.();
-                }}
+                onClick={() => toast.undo?.()}
                 type="button"
               >
                 Undo
@@ -175,6 +270,7 @@ export const DailyPlanPage = () => {
             </button>
           </div>
         ) : null}
+
         <form className={styles.form} onSubmit={handleSubmit}>
           <label className={styles.inputLabel} htmlFor="task-content">
             Task
@@ -185,10 +281,11 @@ export const DailyPlanPage = () => {
             onChange={(event) => {
               setContent(event.target.value);
             }}
-            placeholder="Add something to today’s plan..."
+            placeholder="Add something to your plan..."
             type="text"
             value={content}
           />
+
           <div className={styles.priorityGroup} aria-label="New task priority">
             {priorityOptions.map((option) => (
               <button
@@ -208,6 +305,37 @@ export const DailyPlanPage = () => {
               </button>
             ))}
           </div>
+
+          <select
+            className={styles.select}
+            value={planningChoice}
+            onChange={(event) => {
+              setPlanningChoice(event.target.value as PlanningChoice);
+            }}
+            aria-label="When to plan this task"
+          >
+            {planningOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+
+          <select
+            className={styles.select}
+            value={timeSlot}
+            onChange={(event) => {
+              setTimeSlot(event.target.value as TaskTimeSlot);
+            }}
+            aria-label="Time slot"
+          >
+            {timeSlotOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+
           <Button icon={<PlusCircle weight="fill" />} type="submit">
             Add task
           </Button>
@@ -220,46 +348,67 @@ export const DailyPlanPage = () => {
         </section>
       ) : allTasksDone ? (
         <section className={styles.emptyPanel} aria-live="polite">
-          <h2>You’re done for today. Nice work.</h2>
+          <h2>You’re done for now. Nice work.</h2>
         </section>
       ) : null}
 
+      <TodayRoutinesSection />
+
       <section className={styles.grid} aria-label="Planning sections">
         <TaskSection
-          emptyText="No Must tasks waiting."
-          helper={`Up to ${mustDoLimit} things that make today a win.`}
+          emptyText="Nothing planned for today."
+          helper={`Today’s focus. Keep Must tasks around ${mustDoLimit.toString()}.`}
           onComplete={handleComplete}
           onDelete={handleDelete}
           onMove={(taskId, direction) => {
             dispatch(moveTask({ id: taskId, direction }));
           }}
+          onPlanningChange={handlePlanningChange}
           onPriorityChange={handlePriorityChange}
-          tasks={mustTasks}
-          title="Must Do"
+          tasks={todayTasks}
+          title="Today"
         />
+
         <TaskSection
-          emptyText="No Should tasks waiting."
-          helper="Helpful next steps if you have room."
+          emptyText="Nothing coming soon."
+          helper="Tomorrow and this week."
           onComplete={handleComplete}
           onDelete={handleDelete}
           onMove={(taskId, direction) => {
             dispatch(moveTask({ id: taskId, direction }));
           }}
+          onPlanningChange={handlePlanningChange}
           onPriorityChange={handlePriorityChange}
-          tasks={shouldTasks}
-          title="Should Do"
+          tasks={soonTasks}
+          title="Soon"
         />
+
         <TaskSection
-          emptyText="No Could tasks waiting."
-          helper="Low-pressure extras."
+          emptyText="Nothing parked for later."
+          helper="Next week, next month, or next quarter."
           onComplete={handleComplete}
           onDelete={handleDelete}
           onMove={(taskId, direction) => {
             dispatch(moveTask({ id: taskId, direction }));
           }}
+          onPlanningChange={handlePlanningChange}
           onPriorityChange={handlePriorityChange}
-          tasks={couldTasks}
-          title="Could Do"
+          tasks={laterTasks}
+          title="Later"
+        />
+
+        <TaskSection
+          emptyText="No someday tasks."
+          helper="Ideas without pressure."
+          onComplete={handleComplete}
+          onDelete={handleDelete}
+          onMove={(taskId, direction) => {
+            dispatch(moveTask({ id: taskId, direction }));
+          }}
+          onPlanningChange={handlePlanningChange}
+          onPriorityChange={handlePriorityChange}
+          tasks={somedayTasks}
+          title="Someday"
         />
       </section>
 
@@ -274,10 +423,97 @@ export const DailyPlanPage = () => {
             dispatch(undoCompleteTask(taskId));
             setToast({ message: "Task restored." });
           }}
+          onPlanningChange={handlePlanningChange}
           tasks={doneTasks}
           title="Done"
         />
       </section>
     </main>
+  );
+};
+
+const TodayRoutinesSection = () => {
+  const dispatch = useAppDispatch();
+  const routineProgress = useAppSelector(selectTodayRoutineProgress);
+  const today = getTodayDateKey();
+
+  if (routineProgress.length === 0) {
+    return null;
+  }
+
+  return (
+    <section className={styles.routinesPanel} aria-label="Today routines">
+      <div className={styles.routinesHeader}>
+        <div>
+          <p className={styles.eyebrow}>Today routines</p>
+          <h2>Repeatable rhythms</h2>
+        </div>
+      </div>
+
+      <div className={styles.routineGrid}>
+        {routineProgress.map(
+          ({ completedCount, completion, isComplete, routine, totalCount }) => (
+            <article className={styles.routineCard} key={routine.id}>
+              <div className={styles.routineCardHeader}>
+                <div>
+                  <h3>{routine.title}</h3>
+                  <p>
+                    {routine.timeWindow.start}-{routine.timeWindow.end} ·{" "}
+                    {completedCount}/{totalCount}
+                  </p>
+                </div>
+                {isComplete ? (
+                  <span className={styles.routineDoneBadge}>Done</span>
+                ) : null}
+              </div>
+
+              <ul className={styles.routineChecklist}>
+                {routine.checklist.map((item) => {
+                  const isChecked =
+                    completion?.completedChecklistItems.includes(item) ?? false;
+
+                  return (
+                    <li key={item}>
+                      <label>
+                        <input
+                          checked={isChecked}
+                          onChange={() => {
+                            dispatch(
+                              toggleRoutineChecklistItemForDate({
+                                routineId: routine.id,
+                                date: today,
+                                item,
+                              }),
+                            );
+                          }}
+                          type="checkbox"
+                        />
+                        <span>{item}</span>
+                      </label>
+                    </li>
+                  );
+                })}
+              </ul>
+
+              <Button
+                disabled={isComplete}
+                onClick={() => {
+                  dispatch(
+                    completeRoutineForDate({
+                      routineId: routine.id,
+                      date: today,
+                    }),
+                  );
+                }}
+                size="sm"
+                variant={isComplete ? "ghost" : "secondary"}
+              >
+                {isComplete ? "Routine complete" : "Complete routine"}
+              </Button>
+            </article>
+          ),
+        )}
+      </div>
+    </section>
   );
 };

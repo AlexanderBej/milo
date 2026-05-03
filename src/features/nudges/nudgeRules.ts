@@ -1,4 +1,13 @@
 import type { FocusState } from "@features/focus";
+import {
+  doesRoutineApplyToday,
+  getRoutineCompletionForDate,
+  getTodayDateKey,
+  isCurrentTimeInsideWindow,
+  isRoutineCompleteForDate,
+  type Routine,
+  type RoutineCompletion,
+} from "@features/routines";
 import type { Task } from "@features/tasks";
 import type { CaptureItem } from "@shared/types";
 import type { Nudge } from "./types";
@@ -7,6 +16,8 @@ export type NudgeRuleInput = {
   captures: CaptureItem[];
   tasks: Task[];
   focus: FocusState;
+  routines?: Routine[];
+  routineCompletions?: RoutineCompletion[];
   now?: Date;
 };
 
@@ -28,6 +39,8 @@ export const generateNudges = ({
   captures,
   tasks,
   focus,
+  routines = [],
+  routineCompletions = [],
   now = new Date(),
 }: NudgeRuleInput): Nudge[] => {
   const activeTasks = tasks.filter((task) => task.status === "todo");
@@ -38,6 +51,35 @@ export const generateNudges = ({
     (task) => task.completedAt && isSameLocalDate(task.completedAt, now),
   );
   const nudges: Nudge[] = [];
+  const today = getTodayDateKey(now);
+  const openRoutine = routines.find((routine) => {
+    const completion = getRoutineCompletionForDate(
+      routineCompletions,
+      routine.id,
+      today,
+    );
+
+    return (
+      routine.active &&
+      doesRoutineApplyToday(routine, now) &&
+      isCurrentTimeInsideWindow(routine.timeWindow, now) &&
+      !isRoutineCompleteForDate(routine, completion)
+    );
+  });
+
+  if (openRoutine) {
+    nudges.push({
+      id: `routine-window-open-${openRoutine.id}-${today}`,
+      type: "routine",
+      message: `${openRoutine.title} window is open.`,
+      context: "A few repeatable steps can lower the lift.",
+      priority: 88,
+      primaryAction: {
+        label: "Start routine",
+        route: "/plan",
+      },
+    });
+  }
 
   if (captures.length >= 5) {
     nudges.push({
@@ -61,7 +103,7 @@ export const generateNudges = ({
       context: "Consider moving one to Should so today stays doable.",
       priority: 85,
       primaryAction: {
-        label: "Open plan",
+        label: "Open Agenda",
         route: "/plan",
       },
     });
@@ -75,7 +117,7 @@ export const generateNudges = ({
       context: "One clear next step is enough.",
       priority: 80,
       primaryAction: {
-        label: "Open plan",
+        label: "Open Agenda",
         route: "/plan",
       },
     });

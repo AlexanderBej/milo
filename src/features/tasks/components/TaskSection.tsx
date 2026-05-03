@@ -15,6 +15,10 @@ type TaskSectionProps = {
   onMove?: (taskId: string, direction: "up" | "down") => void;
   onPriorityChange: (taskId: string, priority: TaskPriority) => void;
   onUndo?: (taskId: string) => void;
+  onPlanningChange: (
+    taskId: string,
+    bucket: NonNullable<Task["planningBucket"]>,
+  ) => void;
 };
 
 export const TaskSection = ({
@@ -26,6 +30,7 @@ export const TaskSection = ({
   onDelete,
   onMove,
   onPriorityChange,
+  onPlanningChange,
   onUndo,
 }: TaskSectionProps) => {
   return (
@@ -40,6 +45,7 @@ export const TaskSection = ({
                 onDelete={onDelete}
                 onMove={onMove}
                 onPriorityChange={onPriorityChange}
+                onPlanningChange={onPlanningChange}
                 onUndo={onUndo}
                 task={task}
               />

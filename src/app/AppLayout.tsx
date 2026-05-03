@@ -4,16 +4,15 @@ import {
   CalendarBlank,
   Chalkboard,
   CheckCircle,
-  CheckSquare,
-  ForkKnife,
   GearSix,
   House,
+  ListChecks,
   PlusCircle,
-  Sun,
+  Tray,
   UserCircle,
-  Wallet,
 } from "phosphor-react";
 
+import { useFirebaseHydration } from "@features/persistence/useFirebaseHydration";
 import { QuickCaptureModal } from "@features/quickCapture/components";
 import { selectDisplayName } from "@features/preferences";
 import { Button } from "@shared/components/Button";
@@ -22,19 +21,19 @@ import styles from "./AppLayout.module.scss";
 
 const navItems = [
   { label: "Home", icon: House, path: "/" },
-  { label: "Plan", icon: CalendarBlank, path: "/plan" },
-  { label: "Today", icon: Sun },
-  { label: "Tasks", icon: CheckSquare },
-  { label: "Food", icon: ForkKnife },
-  { label: "Money", icon: Wallet },
+  { label: "Agenda", icon: CalendarBlank, path: "/plan" },
+  { label: "Inbox", icon: Tray, path: "/inbox" },
   { label: "Board", icon: Chalkboard, path: "/board" },
+  { label: "Routines", icon: ListChecks, path: "/routines" },
   { label: "Settings", icon: GearSix, path: "/settings" },
 ];
 
 export const AppLayout = () => {
   const location = useLocation();
   const displayName = useAppSelector(selectDisplayName);
+  const { error: syncError, isLoading: isSyncLoading } = useFirebaseHydration();
   const [isCaptureOpen, setIsCaptureOpen] = useState(false);
+  const [showSyncCheck, setShowSyncCheck] = useState(true);
   const [showCapturedToast, setShowCapturedToast] = useState(false);
 
   const openCapture = useCallback(() => {
@@ -62,6 +61,16 @@ export const AppLayout = () => {
       window.clearTimeout(toastTimer);
     };
   }, [showCapturedToast]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setShowSyncCheck(false);
+    }, 1600);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, []);
 
   return (
     <div className={styles.appShell}>
@@ -126,16 +135,20 @@ export const AppLayout = () => {
         </div>
       </aside>
 
-      <Outlet />
+      <div className={styles.contentShell}>
+        {isSyncLoading && showSyncCheck ? (
+          <div className={styles.syncBanner} role="status">
+            Syncing your latest MILO data...
+          </div>
+        ) : null}
+        {syncError ? (
+          <div className={styles.syncBannerWarning} role="status">
+            Sync is paused. Your local changes are still saved here.
+          </div>
+        ) : null}
+        <Outlet />
+      </div>
 
-      <button
-        aria-label="Open quick capture"
-        className={styles.floatingCaptureButton}
-        onClick={openCapture}
-        type="button"
-      >
-        <PlusCircle aria-hidden size={30} weight="fill" />
-      </button>
       <QuickCaptureModal
         isOpen={isCaptureOpen}
         onCaptured={showCapturedFeedback}

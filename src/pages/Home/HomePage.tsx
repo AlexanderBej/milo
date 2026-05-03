@@ -3,19 +3,14 @@ import { Link } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowsClockwise,
-  CalendarBlank,
   Chalkboard,
-  Check,
   CheckCircle,
   CheckSquare,
-  DotsThreeVertical,
-  ForkKnife,
   Lightning,
+  ListChecks,
   Play,
   Target,
-  Trash,
   Tray,
-  Wallet,
   X,
 } from "phosphor-react";
 
@@ -23,35 +18,18 @@ import { Button } from "@shared/components/Button";
 import { Card } from "@shared/components/Card";
 import styles from "./HomePage.module.scss";
 import { useAppDispatch, useAppSelector } from "@app/hooks";
+import { selectBoardNotes } from "@features/board";
+import { selectCaptureCount, selectCaptureItems } from "@features/quickCapture";
 import {
-  addNote,
-  deleteNote as deleteBoardNote,
-  selectBoardNotes,
-} from "@features/board";
-import {
-  removeCapture,
-  restoreCapture,
-  selectCaptureCount,
-  selectCaptureItems,
-} from "@features/quickCapture";
-import {
-  addTask,
   completeTask,
-  deleteTask,
   selectDoneTasks,
-  selectCouldTasks,
-  selectMustTasks,
-  selectShouldTasks,
   selectTasks,
   selectTodoTasks,
   undoCompleteTask,
 } from "@features/tasks";
 import type { Task } from "@features/tasks";
-import {
-  selectDefaultInboxPriority,
-  selectDisplayName,
-  selectMustDoLimit,
-} from "@features/preferences";
+import { selectDisplayName, selectNudgesEnabled } from "@features/preferences";
+import { selectTodayRoutineProgress } from "@features/routines";
 import {
   clearFocus,
   selectRecommendedFocusTask,
@@ -61,19 +39,8 @@ import {
 } from "@features/focus";
 import { NudgeCard as HomeNudgeCard } from "@features/nudges";
 import { formatTimeAgo } from "@shared/utils";
+import { getTaskPlanningSection } from "@shared/utils/planning";
 
-const events = [
-  { time: "10:00 AM", title: "Team stand-up", duration: "45 min" },
-  { time: "1:00 PM", title: "Client call", duration: "60 min" },
-  { time: "3:30 PM", title: "Design review", duration: "30 min" },
-];
-
-const recentExpenses = [
-  { label: "Coffee", amount: "-$4.50" },
-  { label: "Lunch", amount: "-$20.00" },
-];
-
-const MAX_PLAN_PREVIEW_ITEMS = 4;
 const priorityLabels: Record<Task["priority"], string> = {
   must: "Must Do",
   should: "Should Do",
@@ -110,17 +77,32 @@ export const HomePage = () => {
       <section className={styles.supportingGrid} aria-label="Today overview">
         <div className={styles.leftColumn}>
           <DailyPlanCard />
-          <TodayCard />
         </div>
         <div className={styles.rightColumn}>
-          <HomeNudgeCard />
+          <NudgePanel />
           <BoardCard />
           <InboxCard />
-          <FoodCard />
-          <MoneyCard />
+          <RoutinesCard />
         </div>
       </section>
     </main>
+  );
+};
+
+const NudgePanel = () => {
+  const nudgesEnabled = useAppSelector(selectNudgesEnabled);
+
+  if (nudgesEnabled) {
+    return <HomeNudgeCard />;
+  }
+
+  return (
+    <Card icon={<Lightning weight="duotone" />} title="Nudges">
+      <div className={styles.messageStack}>
+        <h3>Nudges are quiet right now.</h3>
+        <p>You can turn them back on in Settings.</p>
+      </div>
+    </Card>
   );
 };
 
@@ -135,9 +117,6 @@ const HomeHeader = () => {
         <h1>Good morning, {greetingName}</h1>
         <p>Let&apos;s focus on what matters today.</p>
       </div>
-      <Button icon={<Lightning weight="fill" />} variant="secondary">
-        Focus Mode
-      </Button>
     </header>
   );
 };
@@ -307,65 +286,61 @@ const FocusCard = () => {
 };
 
 const DailyPlanCard = () => {
-  const mustTasks = useAppSelector(selectMustTasks);
-  const shouldTasks = useAppSelector(selectShouldTasks);
-  const couldTasks = useAppSelector(selectCouldTasks);
   const doneTasks = useAppSelector(selectDoneTasks);
   const todoTasks = useAppSelector(selectTodoTasks);
-  const totalTasks = todoTasks.length + doneTasks.length;
-  const sections = [
-    { title: "Must Do", tasks: mustTasks },
-    { title: "Should Do", tasks: shouldTasks },
-    { title: "Could Do", tasks: couldTasks },
-  ];
+
+  const todayTasks = todoTasks.filter(
+    (task) => getTaskPlanningSection(task) === "today",
+  );
+
+  const soonTasks = todoTasks.filter(
+    (task) => getTaskPlanningSection(task) === "soon",
+  );
+
+  const previewTasks = todayTasks.slice(0, 3);
+  const soonPreviewTask = todayTasks.length < 2 ? soonTasks[0] : undefined;
 
   return (
     <Card
       actions={
         <Link className={styles.cardTextLink} to="/plan">
-          Open Plan
+          Open Agenda
         </Link>
       }
       icon={<CheckSquare weight="duotone" />}
-      title="Today’s Plan"
+      title="Agenda"
     >
       <div className={styles.planSummary}>
-        {totalTasks > 0 ? (
+        {todayTasks.length > 0 ? (
           <p className={styles.planProgress}>
-            {doneTasks.length} of {totalTasks} done
+            {todayTasks.length} {todayTasks.length === 1 ? "thing" : "things"}{" "}
+            for today
           </p>
         ) : null}
-        {todoTasks.length > 0 ? (
-          <div className={styles.planPreviewSections}>
-            {sections.map((section) => (
-              <PlanPreviewSection
-                key={section.title}
-                tasks={section.tasks}
-                title={section.title}
-              />
+
+        {previewTasks.length > 0 ? (
+          <ul className={styles.planPreviewList}>
+            {previewTasks.map((task) => (
+              <li className={styles.planPreviewItem} key={task.id}>
+                <span className={styles.checkCircle} aria-hidden />
+                <span>{task.content}</span>
+              </li>
             ))}
-          </div>
+          </ul>
         ) : (
-          <>
-            <h3>
-              {totalTasks > 0
-                ? "You’re done for today. Nice work."
-                : "Your plan is clear. Add something small when you’re ready."}
-            </h3>
-          </>
+          <h3>
+            {doneTasks.length > 0
+              ? "You’re done for today. Nice work."
+              : "Nothing planned for today. Add one gentle next step."}
+          </h3>
         )}
+
+        {soonPreviewTask ? (
+          <p className={styles.cardHint}>Soon: {soonPreviewTask.content}</p>
+        ) : null}
       </div>
     </Card>
   );
-};
-
-const getBoardDropPosition = (noteCount: number) => {
-  const offset = noteCount % 7;
-
-  return {
-    x: 260 + offset * 36,
-    y: 220 + offset * 36,
-  };
 };
 
 const BoardCard = () => {
@@ -402,321 +377,36 @@ const BoardCard = () => {
   );
 };
 
-type PlanPreviewSectionProps = {
-  title: string;
-  tasks: Task[];
-};
-
-const PlanPreviewSection = ({ title, tasks }: PlanPreviewSectionProps) => {
-  const visibleTasks = tasks.slice(0, MAX_PLAN_PREVIEW_ITEMS);
-  const hiddenCount = tasks.length - visibleTasks.length;
-
-  return (
-    <section className={styles.planPreviewSection}>
-      <div className={styles.planPreviewHeader}>
-        <h3>{title}</h3>
-        <span>{tasks.length}</span>
-      </div>
-      {visibleTasks.length > 0 ? (
-        <ul className={styles.planPreviewList}>
-          {visibleTasks.map((task) => (
-            <li className={styles.planPreviewItem} key={task.id}>
-              <span className={styles.checkCircle} aria-hidden />
-              <span>{task.content}</span>
-            </li>
-          ))}
-          {hiddenCount > 0 ? (
-            <li className={styles.moreTasks}>+{hiddenCount} more</li>
-          ) : null}
-        </ul>
-      ) : (
-        <p className={styles.planPreviewEmpty}>Nothing here yet.</p>
-      )}
-    </section>
-  );
-};
-
-const TodayCard = () => {
-  return (
-    <Card icon={<CalendarBlank weight="duotone" />} title="Today">
-      <ol className={styles.timeline}>
-        {events.map((event) => (
-          <li
-            className={styles.timelineItem}
-            key={`${event.time}-${event.title}`}
-          >
-            <span className={styles.timelineTime}>{event.time}</span>
-            <span className={styles.timelineDot} aria-hidden />
-            <div className={styles.timelineBody}>
-              <p>{event.title}</p>
-              <span>{event.duration}</span>
-            </div>
-          </li>
-        ))}
-      </ol>
-      <Button className={styles.fullWidthButton} variant="ghost">
-        View full schedule
-      </Button>
-    </Card>
-  );
-};
-
 const InboxCard = () => {
-  const dispatch = useAppDispatch();
   const captureCount = useAppSelector(selectCaptureCount);
   const captures = useAppSelector(selectCaptureItems);
-  const boardNotes = useAppSelector(selectBoardNotes);
-  const defaultInboxPriority = useAppSelector(selectDefaultInboxPriority);
-  const mustDoLimit = useAppSelector(selectMustDoLimit);
   const tasks = useAppSelector(selectTasks);
-  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
-  const [toast, setToast] = useState<HomeToast | null>(null);
-
-  const buildHeader = (count: number) => {
-    return count && count > 0
-      ? `You have ${count.toString()} unsorted ${count === 1 ? "thought" : "thoughts"}`
-      : "No loose thoughts right now.";
-  };
-
-  const handleMarkDone = (captureId: string) => {
-    const index = captures.findIndex((item) => item.id === captureId);
-    const capture = captures.find((item) => item.id === captureId);
-
-    dispatch(removeCapture(captureId));
-    setOpenMenuId(null);
-
-    if (capture) {
-      setToast({
-        message: "Inbox item processed.",
-        undo: () => {
-          dispatch(restoreCapture({ item: capture, index }));
-          setToast({ message: "Restored to Inbox." });
-        },
-      });
-    }
-  };
-
-  const handleConvertToTask = (captureId: string) => {
-    const index = captures.findIndex((item) => item.id === captureId);
-    const capture = captures.find((item) => item.id === captureId);
-
-    if (!capture) {
-      return;
-    }
-
-    const taskAction = addTask({
-      content: capture.content,
-      maxMustDoLimit: mustDoLimit,
-      priority: defaultInboxPriority,
-      source: "inbox",
-    });
-
-    dispatch(taskAction);
-    dispatch(removeCapture(captureId));
-    setOpenMenuId(null);
-    setToast({
-      message: "Task added to today.",
-      undo: () => {
-        dispatch(deleteTask(taskAction.payload.id));
-        dispatch(restoreCapture({ item: capture, index }));
-        setToast({ message: "Restored to Inbox." });
-      },
-    });
-  };
-
-  const handleSendToBoard = (captureId: string) => {
-    const index = captures.findIndex((item) => item.id === captureId);
-    const capture = captures.find((item) => item.id === captureId);
-
-    if (!capture) {
-      return;
-    }
-
-    const boardAction = addNote({
-      content: capture.content,
-      ...getBoardDropPosition(boardNotes.length),
-    });
-
-    dispatch(boardAction);
-    dispatch(removeCapture(captureId));
-    setOpenMenuId(null);
-    setToast({
-      message: "Sent to Board.",
-      undo: () => {
-        dispatch(deleteBoardNote(boardAction.payload.id));
-        dispatch(restoreCapture({ item: capture, index }));
-        setToast({ message: "Restored to Inbox." });
-      },
-    });
-  };
-
-  const handleDelete = (captureId: string) => {
-    const index = captures.findIndex((item) => item.id === captureId);
-    const capture = captures.find((item) => item.id === captureId);
-
-    dispatch(removeCapture(captureId));
-    setOpenMenuId(null);
-
-    if (capture) {
-      setToast({
-        message: "Removed. Undo?",
-        undo: () => {
-          dispatch(restoreCapture({ item: capture, index }));
-          setToast({ message: "Restored to Inbox." });
-        },
-      });
-    }
-  };
-
-  useEffect(() => {
-    if (!toast) {
-      return;
-    }
-
-    const timer = window.setTimeout(() => {
-      setToast(null);
-    }, 6000);
-
-    return () => {
-      window.clearTimeout(timer);
-    };
-  }, [toast]);
-
-  useEffect(() => {
-    if (!openMenuId) {
-      return;
-    }
-
-    const handlePointerDown = (event: PointerEvent) => {
-      const target = event.target;
-
-      if (
-        target instanceof Element &&
-        !target.closest("[data-inbox-menu-root='true']")
-      ) {
-        setOpenMenuId(null);
-      }
-    };
-
-    window.addEventListener("pointerdown", handlePointerDown);
-
-    return () => {
-      window.removeEventListener("pointerdown", handlePointerDown);
-    };
-  }, [openMenuId]);
+  const visibleCaptures = captures.slice(0, 2);
 
   return (
     <Card
-      className={styles.inboxCard}
+      actions={
+        <Link className={styles.cardTextLink} to="/inbox">
+          Open Inbox
+        </Link>
+      }
       icon={<Tray weight="duotone" />}
       title="Inbox"
-      actions={[
-        <span className={styles.cardMeta} key="count">
-          {captureCount} waiting
-        </span>,
-      ]}
     >
       <div className={styles.messageStack}>
-        <h3>{buildHeader(captureCount)}</h3>
-        {captures.map((cap) => (
-          <div className={styles.inboxBox} key={cap.id}>
-            <div className={styles.columnFlex}>
-              <span>{cap.content}</span>
-              <span className={styles.timeAgo}>
-                Captured {formatTimeAgo(cap.createdAt)}
-              </span>
-            </div>
-            <div className={styles.inboxActions}>
-              <button
-                aria-label="Mark capture processed"
-                className={styles.inboxIconButton}
-                onClick={() => {
-                  handleMarkDone(cap.id);
-                }}
-                type="button"
-              >
-                <Check aria-hidden size={18} weight="bold" />
-              </button>
-              <div className={styles.inboxMenuWrap} data-inbox-menu-root="true">
-                <button
-                  aria-expanded={openMenuId === cap.id}
-                  aria-haspopup="menu"
-                  aria-label="Open capture actions"
-                  className={styles.inboxIconButton}
-                  onClick={() => {
-                    setOpenMenuId((currentId) =>
-                      currentId === cap.id ? null : cap.id,
-                    );
-                  }}
-                  type="button"
-                >
-                  <DotsThreeVertical aria-hidden size={20} weight="bold" />
-                </button>
-                {openMenuId === cap.id ? (
-                  <div className={styles.inboxMenu} role="menu">
-                    <button
-                      className={styles.inboxMenuItem}
-                      onClick={() => {
-                        handleConvertToTask(cap.id);
-                      }}
-                      role="menuitem"
-                      type="button"
-                    >
-                      <CheckSquare aria-hidden size={20} weight="duotone" />
-                      <span>
-                        <strong>Convert to Task</strong>
-                        <small>Add to your plan</small>
-                      </span>
-                    </button>
-                    <button
-                      className={styles.inboxMenuItem}
-                      onClick={() => {
-                        handleSendToBoard(cap.id);
-                      }}
-                      role="menuitem"
-                      type="button"
-                    >
-                      <Chalkboard aria-hidden size={20} weight="duotone" />
-                      <span>
-                        <strong>Send to Board</strong>
-                        <small>Place as a note</small>
-                      </span>
-                    </button>
-                    <button
-                      className={styles.inboxMenuItemDanger}
-                      onClick={() => {
-                        handleDelete(cap.id);
-                      }}
-                      role="menuitem"
-                      type="button"
-                    >
-                      <Trash aria-hidden size={20} weight="duotone" />
-                      <span>
-                        <strong>Delete</strong>
-                        <small>Remove from inbox</small>
-                      </span>
-                    </button>
-                  </div>
-                ) : null}
-              </div>
-            </div>
-          </div>
-        ))}
-        {toast ? (
-          <div className={styles.cardToast} role="status">
-            <CheckCircle aria-hidden size={18} weight="fill" />
-            <span>{toast.message}</span>
-            {toast.undo ? (
-              <button
-                onClick={() => {
-                  toast.undo?.();
-                }}
-                type="button"
-              >
-                Undo
-              </button>
-            ) : null}
-          </div>
+        <h3>
+          {captureCount > 0
+            ? `${captureCount.toString()} ${captureCount === 1 ? "thought is" : "thoughts are"} waiting.`
+            : "No loose thoughts right now."}
+        </h3>
+        {visibleCaptures.length > 0 ? (
+          <ul className={styles.boardPreviewList}>
+            {visibleCaptures.map((capture) => (
+              <li key={capture.id}>
+                {capture.content} · {formatTimeAgo(capture.createdAt)}
+              </li>
+            ))}
+          </ul>
         ) : null}
       </div>
       {tasks.length === 0 && captureCount === 0 ? (
@@ -728,42 +418,43 @@ const InboxCard = () => {
   );
 };
 
-const FoodCard = () => {
-  return (
-    <Card icon={<ForkKnife weight="duotone" />} title="Food">
-      <div className={styles.messageStack}>
-        <h3>It&apos;s been a while since you ate.</h3>
-        <p>How about a healthy lunch?</p>
-      </div>
-      <Button className={styles.fullWidthButton} size="sm" variant="secondary">
-        Log a meal
-      </Button>
-    </Card>
-  );
-};
+const RoutinesCard = () => {
+  const todayProgress = useAppSelector(selectTodayRoutineProgress);
+  const visibleRoutines = todayProgress.slice(0, 2);
+  const completedCount = todayProgress.filter((item) => item.isComplete).length;
 
-const MoneyCard = () => {
   return (
-    <Card icon={<Wallet weight="duotone" />} title="Money">
-      <div className={styles.spendHeader}>
-        <span>Today&apos;s spend</span>
-        <strong>$24.50 of $80</strong>
+    <Card
+      actions={
+        <Link className={styles.cardTextLink} to="/routines">
+          Open Routines
+        </Link>
+      }
+      icon={<ListChecks weight="duotone" />}
+      title="Routines"
+    >
+      <div className={styles.messageStack}>
+        <h3>
+          {todayProgress.length > 0
+            ? `${completedCount.toString()} of ${todayProgress.length.toString()} routines cleared today.`
+            : "No routines waiting today."}
+        </h3>
+        {visibleRoutines.length > 0 ? (
+          <ul className={styles.planPreviewList}>
+            {visibleRoutines.map(({ routine, isComplete }) => (
+              <li className={styles.planPreviewItem} key={routine.id}>
+                <span className={styles.checkCircle} aria-hidden />
+                <span>
+                  {routine.title}
+                  {isComplete ? " · done" : ""}
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p>Routines stay tucked away until you need them.</p>
+        )}
       </div>
-      <div className={styles.progressTrack} aria-label="Today's spend progress">
-        <span className={styles.progressFill} />
-      </div>
-      <div className={styles.recentList}>
-        <p>Recent</p>
-        {recentExpenses.map((expense) => (
-          <div className={styles.expenseRow} key={expense.label}>
-            <span>{expense.label}</span>
-            <strong>{expense.amount}</strong>
-          </div>
-        ))}
-      </div>
-      <Button className={styles.fullWidthButton} size="sm" variant="secondary">
-        Log expense
-      </Button>
     </Card>
   );
 };

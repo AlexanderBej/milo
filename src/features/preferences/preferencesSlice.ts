@@ -39,10 +39,7 @@ const preferencesSlice = createSlice({
   name: "preferences",
   initialState: defaultPreferences,
   reducers: {
-    updatePreferences(
-      state,
-      action: PayloadAction<Partial<PreferencesState>>,
-    ) {
+    updatePreferences(state, action: PayloadAction<Partial<PreferencesState>>) {
       Object.assign(state, action.payload);
       state.displayName = state.displayName.trimStart();
       state.mustDoLimit = clampMustDoLimit(state.mustDoLimit);

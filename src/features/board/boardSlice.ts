@@ -56,9 +56,30 @@ const boardSlice = createSlice({
     deleteNote(state, action: PayloadAction<string>) {
       state.notes = state.notes.filter((note) => note.id !== action.payload);
     },
+    restoreNote(
+      state,
+      action: PayloadAction<{ note: BoardNote; index?: number }>,
+    ) {
+      const exists = state.notes.some(
+        (note) => note.id === action.payload.note.id,
+      );
+
+      if (exists) {
+        return;
+      }
+
+      const insertAt = action.payload.index ?? state.notes.length;
+      state.notes.splice(insertAt, 0, action.payload.note);
+    },
   },
 });
 
-export const { addNote, deleteNote, moveNote, setBoardNotes, updateNote } =
-  boardSlice.actions;
+export const {
+  addNote,
+  deleteNote,
+  moveNote,
+  restoreNote,
+  setBoardNotes,
+  updateNote,
+} = boardSlice.actions;
 export const boardReducer = boardSlice.reducer;

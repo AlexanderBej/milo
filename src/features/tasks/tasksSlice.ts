@@ -1,5 +1,11 @@
 import { createSlice, nanoid, type PayloadAction } from "@reduxjs/toolkit";
-import type { Task, TaskPriority, TaskSource } from "./types";
+import type {
+  Task,
+  TaskPlanningBucket,
+  TaskPriority,
+  TaskSource,
+  TaskTimeSlot,
+} from "./types";
 
 export type TasksState = {
   items: Task[];
@@ -36,6 +42,12 @@ type AddTaskPayload = Task & {
   maxMustDoLimit?: number;
 };
 
+type UpdateTaskPayload = {
+  id: string;
+  changes: Partial<Omit<Task, "id" | "createdAt">>;
+  maxMustDoLimit?: number;
+};
+
 const tasksSlice = createSlice({
   name: "tasks",
   initialState,
@@ -60,11 +72,17 @@ const tasksSlice = createSlice({
         maxMustDoLimit,
         priority = "should",
         source = "manual",
+        dueDate,
+        timeSlot = "anytime",
+        planningBucket = "today",
       }: {
         content: string;
         maxMustDoLimit?: number;
         priority?: TaskPriority;
         source?: TaskSource;
+        dueDate?: string;
+        timeSlot?: TaskTimeSlot;
+        planningBucket?: TaskPlanningBucket;
       }) {
         return {
           payload: {
@@ -75,16 +93,54 @@ const tasksSlice = createSlice({
             order: -Date.now(),
             createdAt: new Date().toISOString(),
             source,
+            dueDate,
+            timeSlot,
+            planningBucket,
             maxMustDoLimit,
           },
         };
       },
     },
+
     setTasks(state, action: PayloadAction<Task[]>) {
-      state.items = action.payload;
+      state.items = action.payload.map((task, index) => ({
+        ...task,
+        order: typeof task.order === "number" ? task.order : index + 1,
+        timeSlot: task.timeSlot ?? "anytime",
+        planningBucket: task.planningBucket ?? "today",
+      }));
+
       sortTasksByOrder(state.items);
       state.message = undefined;
     },
+
+    updateTask(state, action: PayloadAction<UpdateTaskPayload>) {
+      const task = state.items.find((item) => item.id === action.payload.id);
+
+      if (!task) {
+        return;
+      }
+
+      const nextPriority = action.payload.changes.priority;
+
+      const isMovingTodoIntoMust =
+        task.status === "todo" &&
+        task.priority !== "must" &&
+        nextPriority === "must";
+
+      if (
+        isMovingTodoIntoMust &&
+        countActiveMustTasks(state.items) >=
+          getMustTaskLimit(action.payload.maxMustDoLimit)
+      ) {
+        state.message = MUST_LIMIT_MESSAGE;
+        return;
+      }
+
+      Object.assign(task, action.payload.changes);
+      state.message = undefined;
+    },
+
     completeTask(state, action: PayloadAction<string>) {
       const task = state.items.find((item) => item.id === action.payload);
 
@@ -95,6 +151,7 @@ const tasksSlice = createSlice({
       task.status = "done";
       task.completedAt = new Date().toISOString();
     },
+
     undoCompleteTask(state, action: PayloadAction<string>) {
       const task = state.items.find((item) => item.id === action.payload);
 
@@ -105,9 +162,11 @@ const tasksSlice = createSlice({
       task.status = "todo";
       delete task.completedAt;
     },
+
     deleteTask(state, action: PayloadAction<string>) {
       state.items = state.items.filter((task) => task.id !== action.payload);
     },
+
     restoreTask(state, action: PayloadAction<{ task: Task; index?: number }>) {
       const exists = state.items.some(
         (task) => task.id === action.payload.task.id,
@@ -117,10 +176,17 @@ const tasksSlice = createSlice({
         return;
       }
 
+      const restoredTask: Task = {
+        ...action.payload.task,
+        timeSlot: action.payload.task.timeSlot ?? "anytime",
+        planningBucket: action.payload.task.planningBucket ?? "today",
+      };
+
       const insertAt = action.payload.index ?? state.items.length;
-      state.items.splice(insertAt, 0, action.payload.task);
+      state.items.splice(insertAt, 0, restoredTask);
       sortTasksByOrder(state.items);
     },
+
     updateTaskPriority(
       state,
       action: PayloadAction<{
@@ -152,6 +218,7 @@ const tasksSlice = createSlice({
       task.priority = action.payload.priority;
       state.message = undefined;
     },
+
     moveTask(
       state,
       action: PayloadAction<{ id: string; direction: "up" | "down" }>,
@@ -168,6 +235,7 @@ const tasksSlice = createSlice({
         (item) =>
           item.status === task.status && item.priority === task.priority,
       );
+
       const laneIndex = sameLaneTasks.findIndex((item) => item.id === task.id);
       const targetLaneIndex =
         action.payload.direction === "up" ? laneIndex - 1 : laneIndex + 1;
@@ -182,6 +250,7 @@ const tasksSlice = createSlice({
       targetTask.order = currentOrder;
       sortTasksByOrder(state.items);
     },
+
     clearTaskMessage(state) {
       state.message = undefined;
     },
@@ -197,6 +266,8 @@ export const {
   restoreTask,
   setTasks,
   undoCompleteTask,
+  updateTask,
   updateTaskPriority,
 } = tasksSlice.actions;
+
 export const tasksReducer = tasksSlice.reducer;

@@ -4,6 +4,10 @@ import { clsx } from "clsx";
 
 import type { Task, TaskPriority } from "../types";
 import styles from "./TaskItem.module.scss";
+import {
+  getTodayDateString,
+  getTomorrowDateString,
+} from "@shared/utils/planning";
 
 const priorities: Array<{ label: string; value: TaskPriority }> = [
   { label: "Must", value: "must" },
@@ -11,12 +15,48 @@ const priorities: Array<{ label: string; value: TaskPriority }> = [
   { label: "Could", value: "could" },
 ];
 
+const timeSlotLabels: Record<string, string> = {
+  anytime: "Anytime",
+  morning: "Morning",
+  afternoon: "Afternoon",
+  evening: "Evening",
+};
+
+const planningBucketLabels: Record<string, string> = {
+  today: "Today",
+  soon: "Soon",
+  later: "Later",
+  someday: "Someday",
+};
+
+const getTaskDateLabel = (task: Task) => {
+  if (task.dueDate === getTodayDateString()) return "Today";
+  if (task.dueDate === getTomorrowDateString()) return "Tomorrow";
+
+  return task.planningBucket
+    ? planningBucketLabels[task.planningBucket]
+    : "Today";
+};
+
+const getTaskMetaLabel = (task: Task) => {
+  const dateLabel = getTaskDateLabel(task);
+  const timeSlotLabel = task.timeSlot
+    ? timeSlotLabels[task.timeSlot]
+    : undefined;
+
+  return [dateLabel, timeSlotLabel].filter(Boolean).join(" • ");
+};
+
 type TaskItemProps = {
   task: Task;
   onComplete: (taskId: string) => void;
   onDelete: (taskId: string) => void;
   onMove?: (taskId: string, direction: "up" | "down") => void;
   onPriorityChange: (taskId: string, priority: TaskPriority) => void;
+  onPlanningChange: (
+    taskId: string,
+    bucket: NonNullable<Task["planningBucket"]>,
+  ) => void;
   onUndo?: (taskId: string) => void;
 };
 
@@ -26,9 +66,11 @@ export const TaskItem = ({
   onDelete,
   onMove,
   onPriorityChange,
+  onPlanningChange,
   onUndo,
 }: TaskItemProps) => {
   const isDone = task.status === "done";
+  const metaLabel = getTaskMetaLabel(task);
 
   return (
     <motion.li
@@ -41,6 +83,7 @@ export const TaskItem = ({
     >
       <div className={styles.contentWrap}>
         <p className={styles.content}>{task.content}</p>
+        <p className={styles.meta}>{metaLabel}</p>
         {!isDone ? (
           <div className={styles.priorityControls} aria-label="Task priority">
             {priorities.map((priority) => (
@@ -62,6 +105,22 @@ export const TaskItem = ({
             ))}
           </div>
         ) : null}
+        <select
+          className={styles.metaSelect}
+          value={task.planningBucket ?? "today"}
+          onChange={(event) => {
+            onPlanningChange(
+              task.id,
+              event.target.value as NonNullable<Task["planningBucket"]>,
+            );
+          }}
+          aria-label="Move task to planning section"
+        >
+          <option value="today">Today</option>
+          <option value="soon">Soon</option>
+          <option value="later">Later</option>
+          <option value="someday">Someday</option>
+        </select>
       </div>
       <div className={styles.actions}>
         {!isDone && onMove ? (

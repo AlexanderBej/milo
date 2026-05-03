@@ -11,6 +11,7 @@ import {
   selectCaptureItems,
 } from "@features/quickCapture";
 import { preferencesReducer } from "@features/preferences";
+import { routinesReducer } from "@features/routines";
 import { addTask, tasksReducer } from "@features/tasks";
 import { baseApi } from "@services/api/baseApi";
 import { HomePage } from "./HomePage";
@@ -44,6 +45,7 @@ function createStore() {
       focus: focusReducer,
       preferences: preferencesReducer,
       quickCapture: quickCaptureReducer,
+      routines: routinesReducer,
       tasks: tasksReducer,
       [baseApi.reducerPath]: baseApi.reducer,
     },
@@ -67,8 +69,15 @@ describe("HomePage", () => {
       }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: /today.s plan/i }),
+      screen.getByRole("heading", { name: /^agenda$/i }),
     ).toBeInTheDocument();
+    expect(screen.getAllByRole("link", { name: /inbox/i })[0]).toHaveAttribute(
+      "href",
+      "/inbox",
+    );
+    expect(screen.queryByRole("button", { name: /focus mode/i })).toBeNull();
+    expect(screen.queryByText(/^food$/i)).toBeNull();
+    expect(screen.queryByText(/^money$/i)).toBeNull();
     expect(selectCaptureItems(store.getState())).toHaveLength(0);
   });
 
@@ -93,14 +102,12 @@ describe("HomePage", () => {
     });
   });
 
-  it("captures a quick thought from the floating action button", async () => {
+  it("captures a quick thought from the sidebar quick capture button", async () => {
     const user = userEvent.setup();
 
     const { store } = renderHomePage();
 
-    await user.click(
-      screen.getByRole("button", { name: /open quick capture/i }),
-    );
+    await user.click(screen.getByRole("button", { name: /quick capture/i }));
 
     const textarea = screen.getByRole("textbox", { name: /capture thought/i });
     expect(textarea).toHaveFocus();

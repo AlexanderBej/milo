@@ -202,6 +202,29 @@ export const BoardNote = ({
     }
   };
 
+  const handleDragHandleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    const movementByKey: Partial<Record<string, { x: number; y: number }>> = {
+      ArrowDown: { x: 0, y: 24 },
+      ArrowLeft: { x: -24, y: 0 },
+      ArrowRight: { x: 24, y: 0 },
+      ArrowUp: { x: 0, y: -24 },
+    };
+    const movement = movementByKey[event.key];
+
+    if (!movement) {
+      return;
+    }
+
+    event.preventDefault();
+
+    const nextX = clampPosition(note.x + movement.x, 2088);
+    const nextY = clampPosition(note.y + movement.y, 1368);
+
+    positionRef.current = { x: nextX, y: nextY };
+    setPosition(positionRef.current);
+    onMove(note.id, nextX, nextY);
+  };
+
   return (
     <motion.article
       animate={{
@@ -230,8 +253,9 @@ export const BoardNote = ({
         onPointerDown={handleHeaderPointerDown}
         onPointerMove={handleHeaderPointerMove}
         onPointerUp={finishDrag}
+        onKeyDown={handleDragHandleKeyDown}
         role="button"
-        tabIndex={-1}
+        tabIndex={0}
       >
         <DotsSixVertical aria-hidden size={22} weight="bold" />
         <span>{isEditing ? "Editing" : "Drag"}</span>

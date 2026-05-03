@@ -8,6 +8,7 @@ export {
   boardReducer,
   deleteNote,
   moveNote,
+  restoreNote,
   setBoardNotes,
   updateNote,
 } from "./boardSlice";

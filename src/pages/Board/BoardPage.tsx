@@ -6,21 +6,30 @@ import {
   addNote,
   deleteNote,
   moveNote,
+  restoreNote,
   selectBoardNotes,
   updateNote,
   type BoardNote,
 } from "@features/board";
 import { BoardCanvas } from "@features/board/components";
 import { addTask } from "@features/tasks";
+import { selectMustDoLimit } from "@features/preferences";
+import { getTodayDateString } from "@shared/utils/planning";
 import styles from "./BoardPage.module.scss";
+
+type BoardToast = {
+  message: string;
+  undo?: () => void;
+};
 
 export const BoardPage = () => {
   const dispatch = useAppDispatch();
   const notes = useAppSelector(selectBoardNotes);
+  const mustDoLimit = useAppSelector(selectMustDoLimit);
   const [highlightedNoteId, setHighlightedNoteId] = useState<string | null>(
     null,
   );
-  const [toast, setToast] = useState<string | null>(null);
+  const [toast, setToast] = useState<BoardToast | null>(null);
 
   useEffect(() => {
     if (!toast) {
@@ -55,7 +64,7 @@ export const BoardPage = () => {
 
     dispatch(action);
     setHighlightedNoteId(action.payload.id);
-    setToast("Note added.");
+    setToast({ message: "Note added." });
   };
 
   const handleConvertToTask = (note: BoardNote) => {
@@ -65,8 +74,18 @@ export const BoardPage = () => {
       return;
     }
 
-    dispatch(addTask({ content, priority: "could", source: "board" }));
-    setToast("Task created from note.");
+    dispatch(
+      addTask({
+        content,
+        maxMustDoLimit: mustDoLimit,
+        priority: "could",
+        source: "board",
+        planningBucket: "today",
+        dueDate: getTodayDateString(),
+        timeSlot: "anytime",
+      }),
+    );
+    setToast({ message: "Task added to Agenda." });
   };
 
   const handleDuplicateNote = (note: BoardNote) => {
@@ -78,7 +97,27 @@ export const BoardPage = () => {
 
     dispatch(action);
     setHighlightedNoteId(action.payload.id);
-    setToast("Note duplicated.");
+    setToast({ message: "Note duplicated." });
+  };
+
+  const handleDeleteNote = (noteId: string) => {
+    const index = notes.findIndex((note) => note.id === noteId);
+    const note = notes.find((item) => item.id === noteId);
+
+    dispatch(deleteNote(noteId));
+
+    if (!note) {
+      setToast({ message: "Note deleted." });
+      return;
+    }
+
+    setToast({
+      message: "Note deleted. Undo?",
+      undo: () => {
+        dispatch(restoreNote({ note, index }));
+        setToast({ message: "Note restored." });
+      },
+    });
   };
 
   return (
@@ -97,10 +136,7 @@ export const BoardPage = () => {
         notes={notes}
         onAddNote={handleAddNote}
         onConvertToTask={handleConvertToTask}
-        onDeleteNote={(noteId) => {
-          dispatch(deleteNote(noteId));
-          setToast("Note deleted.");
-        }}
+        onDeleteNote={handleDeleteNote}
         onDuplicateNote={handleDuplicateNote}
         onMoveNote={(noteId, x, y) => {
           dispatch(moveNote({ id: noteId, x, y }));
@@ -112,7 +148,17 @@ export const BoardPage = () => {
       {toast ? (
         <div className={styles.toast} role="status">
           <CheckCircle aria-hidden size={18} weight="fill" />
-          <span>{toast}</span>
+          <span>{toast.message}</span>
+          {toast.undo ? (
+            <button
+              onClick={() => {
+                toast.undo?.();
+              }}
+              type="button"
+            >
+              Undo
+            </button>
+          ) : null}
         </div>
       ) : null}
     </main>
