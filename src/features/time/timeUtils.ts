@@ -34,6 +34,10 @@ export const getGreetingForTime = (now: Date | string | number) => {
     return "Good afternoon";
   }
 
+  if (slot === "night") {
+    return "Good night";
+  }
+
   return "Good evening";
 };
 

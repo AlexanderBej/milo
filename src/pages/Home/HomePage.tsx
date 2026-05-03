@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
+import { clsx } from "clsx";
 import {
   ArrowsClockwise,
   Chalkboard,
@@ -18,21 +19,28 @@ import { Button } from "@shared/components/Button";
 import { Card } from "@shared/components/Card";
 import styles from "./HomePage.module.scss";
 import { useAppDispatch, useAppSelector } from "@app/hooks";
+import { selectAuthDisplayName } from "@features/auth";
 import { selectBoardNotes } from "@features/board";
 import {
-  selectActiveInboxCaptures,
-  selectCaptureCount,
+  selectLatestUnprocessedCapture,
+  selectUnprocessedCaptureCount,
+  selectUnprocessedCaptures,
 } from "@features/quickCapture";
 import {
   completeTask,
   selectDoneTasks,
+  selectNextTodayTask,
   selectTasks,
-  selectTodoTasks,
+  selectTodayIncompleteTasks,
   undoCompleteTask,
 } from "@features/tasks";
 import type { Task } from "@features/tasks";
 import { selectDisplayName, selectNudgesEnabled } from "@features/preferences";
-import { selectTodayRoutineProgress } from "@features/routines";
+import {
+  selectActiveRoutineForNow,
+  selectTodayRoutineProgress,
+  selectUpcomingRoutineForNow,
+} from "@features/routines";
 import {
   clearFocus,
   selectRecommendedFocusTask,
@@ -41,13 +49,36 @@ import {
   swapFocusTask,
 } from "@features/focus";
 import { NudgeCard as HomeNudgeCard } from "@features/nudges";
-import { formatRelativeTime, getGreetingForTime, useNow } from "@features/time";
-import { getTaskPlanningSection } from "@shared/utils/planning";
+import {
+  formatRelativeTime,
+  getGreetingForTime,
+  getTimeSlot,
+  useNow,
+} from "@features/time";
 
 const priorityLabels: Record<Task["priority"], string> = {
   must: "Must Do",
   should: "Should Do",
   could: "Could Do",
+};
+
+const homeCopyByTimeSlot = {
+  morning: "Want to set the tone for today?",
+  afternoon: "Need a small win?",
+  evening: "Want to close the day gently?",
+  night: "Let’s keep this light.",
+} as const;
+
+const formatRoutineWindow = (start: string, end: string) => `${start}-${end}`;
+
+const isSameLocalDate = (dateValue: string, now: Date) => {
+  const date = new Date(dateValue);
+
+  return (
+    date.getFullYear() === now.getFullYear() &&
+    date.getMonth() === now.getMonth() &&
+    date.getDate() === now.getDate()
+  );
 };
 
 type HomeToast = {
@@ -110,18 +141,21 @@ const NudgePanel = () => {
 };
 
 const HomeHeader = () => {
-  const displayName = useAppSelector(selectDisplayName);
+  const authDisplayName = useAppSelector(selectAuthDisplayName);
+  const preferenceDisplayName = useAppSelector(selectDisplayName);
   const now = useNow();
-  const greetingName = displayName.trim() || "James";
+  const greetingName =
+    authDisplayName.trim() || preferenceDisplayName.trim() || null;
+  const greeting = greetingName
+    ? `${getGreetingForTime(now)}, ${greetingName}`
+    : getGreetingForTime(now);
 
   return (
     <header className={styles.header}>
       <div>
         <p className={styles.eyebrow}>Home</p>
-        <h1>
-          {getGreetingForTime(now)}, {greetingName}
-        </h1>
-        <p>Let&apos;s focus on what matters today.</p>
+        <h1>{greeting}</h1>
+        <p>{homeCopyByTimeSlot[getTimeSlot(now)]}</p>
       </div>
     </header>
   );
@@ -293,18 +327,13 @@ const FocusCard = () => {
 
 const DailyPlanCard = () => {
   const doneTasks = useAppSelector(selectDoneTasks);
-  const todoTasks = useAppSelector(selectTodoTasks);
-
-  const todayTasks = todoTasks.filter(
-    (task) => getTaskPlanningSection(task) === "today",
-  );
-
-  const soonTasks = todoTasks.filter(
-    (task) => getTaskPlanningSection(task) === "soon",
-  );
-
+  const todayTasks = useAppSelector(selectTodayIncompleteTasks);
+  const nextTodayTask = useAppSelector(selectNextTodayTask);
+  const now = useNow();
   const previewTasks = todayTasks.slice(0, 3);
-  const soonPreviewTask = todayTasks.length < 2 ? soonTasks[0] : undefined;
+  const completedTodayCount = doneTasks.filter(
+    (task) => task.completedAt && isSameLocalDate(task.completedAt, now),
+  ).length;
 
   return (
     <Card
@@ -325,25 +354,26 @@ const DailyPlanCard = () => {
         ) : null}
 
         {previewTasks.length > 0 ? (
-          <ul className={styles.planPreviewList}>
-            {previewTasks.map((task) => (
-              <li className={styles.planPreviewItem} key={task.id}>
-                <span className={styles.checkCircle} aria-hidden />
-                <span>{task.content}</span>
-              </li>
-            ))}
-          </ul>
+          <>
+            {nextTodayTask ? (
+              <p className={styles.cardMeta}>Next: {nextTodayTask.content}</p>
+            ) : null}
+            <ul className={styles.planPreviewList}>
+              {previewTasks.map((task) => (
+                <li className={styles.planPreviewItem} key={task.id}>
+                  <span className={styles.checkCircle} aria-hidden />
+                  <span>{task.content}</span>
+                </li>
+              ))}
+            </ul>
+          </>
         ) : (
           <h3>
-            {doneTasks.length > 0
+            {completedTodayCount > 0
               ? "You’re done for today. Nice work."
-              : "Nothing planned for today. Add one gentle next step."}
+              : "No planned tasks yet. You can add one when you’re ready."}
           </h3>
         )}
-
-        {soonPreviewTask ? (
-          <p className={styles.cardHint}>Soon: {soonPreviewTask.content}</p>
-        ) : null}
       </div>
     </Card>
   );
@@ -384,9 +414,9 @@ const BoardCard = () => {
 };
 
 const InboxCard = () => {
-  const captureCount = useAppSelector(selectCaptureCount);
-  const captures = useAppSelector(selectActiveInboxCaptures);
-  const tasks = useAppSelector(selectTasks);
+  const captureCount = useAppSelector(selectUnprocessedCaptureCount);
+  const captures = useAppSelector(selectUnprocessedCaptures);
+  const latestCapture = useAppSelector(selectLatestUnprocessedCapture);
   const now = useNow();
   const visibleCaptures = captures.slice(0, 2);
 
@@ -404,8 +434,15 @@ const InboxCard = () => {
         <h3>
           {captureCount > 0
             ? `${captureCount.toString()} ${captureCount === 1 ? "thought is" : "thoughts are"} waiting.`
-            : "No loose thoughts right now."}
+            : "Your inbox is clear for now."}
         </h3>
+        {latestCapture ? (
+          <p>
+            Latest capture {formatRelativeTime(latestCapture.createdAt, now)}.
+          </p>
+        ) : (
+          <p>Capture a thought whenever something starts waiting.</p>
+        )}
         {visibleCaptures.length > 0 ? (
           <ul className={styles.boardPreviewList}>
             {visibleCaptures.map((capture) => (
@@ -416,19 +453,18 @@ const InboxCard = () => {
           </ul>
         ) : null}
       </div>
-      {tasks.length === 0 && captureCount === 0 ? (
-        <p className={styles.cardHint}>
-          Capture a thought whenever something starts waiting.
-        </p>
-      ) : null}
     </Card>
   );
 };
 
 const RoutinesCard = () => {
   const todayProgress = useAppSelector(selectTodayRoutineProgress);
+  const activeRoutineProgress = useAppSelector(selectActiveRoutineForNow);
+  const upcomingRoutineProgress = useAppSelector(selectUpcomingRoutineForNow);
   const visibleRoutines = todayProgress.slice(0, 2);
   const completedCount = todayProgress.filter((item) => item.isComplete).length;
+  const featuredProgress = activeRoutineProgress ?? upcomingRoutineProgress;
+  const featuredRoutine = featuredProgress?.routine ?? null;
 
   return (
     <Card
@@ -437,16 +473,46 @@ const RoutinesCard = () => {
           Open Routines
         </Link>
       }
+      className={clsx(activeRoutineProgress && styles.routineCardActive)}
       icon={<ListChecks weight="duotone" />}
       title="Routines"
     >
       <div className={styles.messageStack}>
-        <h3>
-          {todayProgress.length > 0
-            ? `${completedCount.toString()} of ${todayProgress.length.toString()} routines cleared today.`
-            : "No routines waiting today."}
-        </h3>
-        {visibleRoutines.length > 0 ? (
+        {featuredRoutine ? (
+          <div
+            className={clsx(
+              styles.routineCallout,
+              activeRoutineProgress && styles.routineCalloutActive,
+            )}
+          >
+            <span className={styles.routineStatus}>
+              {activeRoutineProgress ? "Active now" : "Upcoming"}
+            </span>
+            <h3>{featuredRoutine.title}</h3>
+            <p>
+              {formatRoutineWindow(
+                featuredRoutine.timeWindow.start,
+                featuredRoutine.timeWindow.end,
+              )}{" "}
+              · {featuredRoutine.schedule}
+            </p>
+            {activeRoutineProgress ? (
+              <Link className={styles.routineActionLink} to="/routines">
+                Open Routines
+              </Link>
+            ) : null}
+          </div>
+        ) : (
+          <>
+            <h3>
+              {todayProgress.length > 0
+                ? `${completedCount.toString()} of ${todayProgress.length.toString()} routines cleared today.`
+                : "No active routine right now."}
+            </h3>
+            <p>Routines stay tucked away until you need them.</p>
+          </>
+        )}
+        {visibleRoutines.length > 0 && !activeRoutineProgress ? (
           <ul className={styles.planPreviewList}>
             {visibleRoutines.map(({ routine, isComplete }) => (
               <li className={styles.planPreviewItem} key={routine.id}>
@@ -458,9 +524,7 @@ const RoutinesCard = () => {
               </li>
             ))}
           </ul>
-        ) : (
-          <p>Routines stay tucked away until you need them.</p>
-        )}
+        ) : null}
       </div>
     </Card>
   );

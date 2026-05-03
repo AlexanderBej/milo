@@ -91,4 +91,15 @@ describe("tasksReducer", () => {
       status: "todo",
     });
   });
+
+  it("preserves completedAt when a completed task is completed again", () => {
+    let state = tasksReducer(undefined, addTask({ content: "Already done" }));
+    const taskId = state.items[0].id;
+
+    state = tasksReducer(state, completeTask(taskId));
+    const completedAt = state.items[0].completedAt;
+    state = tasksReducer(state, completeTask(taskId));
+
+    expect(state.items[0].completedAt).toBe(completedAt);
+  });
 });

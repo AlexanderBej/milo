@@ -80,7 +80,7 @@ export const generateNudges = ({
       priority: 88,
       primaryAction: {
         label: "Start routine",
-        route: "/plan",
+        route: "/routines",
       },
     });
   }
@@ -93,8 +93,8 @@ export const generateNudges = ({
       context: "A quick pass can clear some mental space.",
       priority: 90,
       primaryAction: {
-        label: "Open Home",
-        route: "/",
+        label: "Open Inbox",
+        route: "/inbox",
       },
     });
   }

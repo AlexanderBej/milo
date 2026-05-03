@@ -12,12 +12,15 @@ export {
 } from "./routineUtils";
 export {
   getTodayRoutineProgress,
+  selectActiveRoutineForNow,
   selectActiveRoutines,
   selectCurrentPeriodRoutineCompletion,
+  selectIncompleteRoutineForCurrentPeriod,
   selectRoutineCompletions,
   selectRoutines,
   selectRoutinesState,
   selectTodayRoutineProgress,
+  selectUpcomingRoutineForNow,
 } from "./selectors";
 export {
   addRoutine,

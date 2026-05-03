@@ -5,8 +5,10 @@ import {
   doesRoutineApplyToday,
   getRoutineCompletionForPeriod,
   getRoutinePeriodKey,
+  isCurrentTimeInsideWindow,
   isRoutineCompleteForPeriod,
 } from "./routineUtils";
+import type { Routine } from "./types";
 
 export const selectRoutinesState = (state: RootState) => state.routines;
 
@@ -53,6 +55,93 @@ export const selectTodayRoutineProgress = createSelector(
 );
 
 export const getTodayRoutineProgress = selectTodayRoutineProgress;
+
+const parseTimeToMinutes = (time: string) => {
+  const match = /^(\d{1,2}):(\d{2})$/.exec(time.trim());
+
+  if (!match) {
+    return null;
+  }
+
+  const hours = Number(match[1]);
+  const minutes = Number(match[2]);
+
+  if (
+    !Number.isInteger(hours) ||
+    !Number.isInteger(minutes) ||
+    hours < 0 ||
+    hours > 23 ||
+    minutes < 0 ||
+    minutes > 59
+  ) {
+    return null;
+  }
+
+  return hours * 60 + minutes;
+};
+
+const getMinutesUntilWindowStart = (
+  timeWindow: Routine["timeWindow"],
+  now: Date,
+) => {
+  const startMinutes = parseTimeToMinutes(timeWindow.start);
+
+  if (startMinutes === null) {
+    return null;
+  }
+
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  const diff = startMinutes - currentMinutes;
+
+  return diff >= 0 ? diff : null;
+};
+
+export const selectIncompleteRoutineForCurrentPeriod = createSelector(
+  [selectTodayRoutineProgress],
+  (progress) => progress.filter((item) => !item.isComplete),
+);
+
+export const selectActiveRoutineForNow = createSelector(
+  [selectIncompleteRoutineForCurrentPeriod, selectNowIso],
+  (progress, nowIso) => {
+    const now = new Date(nowIso);
+
+    return (
+      progress.find(({ routine }) =>
+        isCurrentTimeInsideWindow(routine.timeWindow, now),
+      ) ?? null
+    );
+  },
+);
+
+export const selectUpcomingRoutineForNow = createSelector(
+  [selectIncompleteRoutineForCurrentPeriod, selectNowIso],
+  (progress, nowIso) => {
+    const now = new Date(nowIso);
+    const upcoming = progress
+      .filter(
+        ({ routine }) => !isCurrentTimeInsideWindow(routine.timeWindow, now),
+      )
+      .map((item) => ({
+        item,
+        minutesUntilStart: getMinutesUntilWindowStart(
+          item.routine.timeWindow,
+          now,
+        ),
+      }))
+      .filter(
+        (
+          item,
+        ): item is {
+          item: (typeof progress)[number];
+          minutesUntilStart: number;
+        } => item.minutesUntilStart !== null,
+      )
+      .sort((a, b) => a.minutesUntilStart - b.minutesUntilStart);
+
+    return upcoming[0]?.item ?? null;
+  },
+);
 
 export const selectCurrentPeriodRoutineCompletion = createSelector(
   [

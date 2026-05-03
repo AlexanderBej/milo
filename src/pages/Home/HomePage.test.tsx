@@ -4,7 +4,7 @@ import { configureStore } from "@reduxjs/toolkit";
 import { Provider } from "react-redux";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { AppLayout } from "@app/AppLayout";
-import { authReducer } from "@features/auth";
+import { authReducer, setUser } from "@features/auth";
 import { boardReducer } from "@features/board";
 import { focusReducer } from "@features/focus";
 import {
@@ -64,7 +64,8 @@ describe("HomePage", () => {
   it("renders the calm focus empty state", () => {
     const { store } = renderHomePage();
 
-    expect(screen.getByRole("heading", { name: /james/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /good/i })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /james/i })).toBeNull();
     expect(
       screen.getByRole("heading", {
         name: /nothing needs your focus right now/i,
@@ -81,6 +82,21 @@ describe("HomePage", () => {
     expect(screen.queryByText(/^food$/i)).toBeNull();
     expect(screen.queryByText(/^money$/i)).toBeNull();
     expect(selectCaptureItems(store.getState())).toHaveLength(0);
+  });
+
+  it("uses the authenticated display name when one is available", () => {
+    renderHomePage((store) => {
+      store.dispatch(
+        setUser({
+          uid: "user-1",
+          displayName: "Sarah",
+          email: "sarah@example.com",
+          photoURL: null,
+        }),
+      );
+    });
+
+    expect(screen.getByRole("heading", { name: /sarah/i })).toBeInTheDocument();
   });
 
   it("renders and completes the recommended focus task", async () => {

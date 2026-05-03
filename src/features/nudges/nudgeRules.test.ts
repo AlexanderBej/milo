@@ -30,8 +30,13 @@ const buildTask = (
 
 const focus: FocusState = {
   currentTaskId: null,
+  lastSwappedTaskId: null,
   skippedTaskIds: [],
   startedAt: null,
+  isRunning: false,
+  mode: "focus",
+  durationSeconds: 25 * 60,
+  remainingSeconds: 25 * 60,
 };
 
 const buildRoutine = (id: string): Routine => ({
@@ -112,7 +117,7 @@ describe("generateNudges", () => {
         id: "routine-window-open-routine-1-2026-05-02",
         primaryAction: {
           label: "Start routine",
-          route: "/plan",
+          route: "/routines",
         },
       }),
     );
@@ -147,6 +152,7 @@ describe("generateNudges", () => {
       captures: [],
       tasks: [buildTask("task-1")],
       focus: {
+        ...focus,
         currentTaskId: null,
         skippedTaskIds: ["task-1", "task-2"],
         startedAt: null,
@@ -171,6 +177,7 @@ describe("generateNudges", () => {
         buildTask("must-4", "must"),
       ],
       focus: {
+        ...focus,
         currentTaskId: null,
         skippedTaskIds: ["task-1", "task-2"],
         startedAt: null,

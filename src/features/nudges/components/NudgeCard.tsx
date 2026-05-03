@@ -6,6 +6,7 @@ import { Coffee, X } from "phosphor-react";
 import { useAppSelector } from "@app/hooks";
 import { Button } from "@shared/components/Button";
 import { Card } from "@shared/components/Card";
+import { getTimeSlot, useNow } from "@features/time";
 import { selectNudges } from "../selectors";
 import styles from "./NudgeCard.module.scss";
 
@@ -41,8 +42,16 @@ const writeHiddenNudgeIds = (ids: string[]) => {
   window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
 };
 
+const quietContextByTimeSlot = {
+  morning: "MILO will speak up if something useful is waiting.",
+  afternoon: "A small next step will surface here when it helps.",
+  evening: "MILO will keep this gentle as the day winds down.",
+  night: "MILO will keep things light unless something needs attention.",
+} as const;
+
 export const NudgeCard = () => {
   const navigate = useNavigate();
+  const now = useNow();
   const nudges = useAppSelector(selectNudges);
   const [hiddenIds, setHiddenIds] = useState<string[]>(readHiddenNudgeIds);
   const hiddenIdSet = useMemo(() => new Set(hiddenIds), [hiddenIds]);
@@ -72,7 +81,7 @@ export const NudgeCard = () => {
           <div className={styles.messageStack}>
             <h3 className={styles.message}>No nudges right now.</h3>
             <p className={styles.context}>
-              MILO will speak up when something useful is waiting.
+              {quietContextByTimeSlot[getTimeSlot(now)]}
             </p>
           </div>
         </div>

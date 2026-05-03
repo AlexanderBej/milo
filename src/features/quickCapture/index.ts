@@ -5,8 +5,11 @@ export {
   selectCaptureItems,
   selectHasCaptures,
   selectLatestCapture,
+  selectLatestUnprocessedCapture,
   selectQuickCaptureState,
   selectRecentCaptures,
+  selectUnprocessedCaptureCount,
+  selectUnprocessedCaptures,
 } from "./quickCaptureSelectors";
 export {
   addCapture,

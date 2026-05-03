@@ -62,6 +62,13 @@ export const selectActiveTodayTasks = createSelector(
   },
 );
 
+export const selectTodayIncompleteTasks = selectActiveTodayTasks;
+
+export const selectNextTodayTask = createSelector(
+  [selectTodayIncompleteTasks],
+  (tasks) => tasks[0] ?? null,
+);
+
 export const selectActiveSoonTasks = createSelector(
   [selectActiveTasks, selectNowIso],
   (tasks, nowIso) => {

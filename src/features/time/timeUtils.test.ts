@@ -18,7 +18,7 @@ describe("timeUtils", () => {
       "Good evening",
     );
     expect(getGreetingForTime(new Date("2026-05-03T02:00:00"))).toBe(
-      "Good evening",
+      "Good night",
     );
   });
 

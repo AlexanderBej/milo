@@ -1,5 +1,15 @@
 import type { RootState } from "@app/store";
-import { focusReducer, skipFocusTask, startFocus, swapFocusTask } from ".";
+import {
+  focusReducer,
+  pauseFocus,
+  resetFocusTimer,
+  resumeFocus,
+  skipFocusTask,
+  startBreak,
+  startFocus,
+  swapFocusTask,
+  tickFocus,
+} from ".";
 import { selectRecommendedFocusTask } from "./selectors";
 
 const buildTask = (
@@ -24,12 +34,64 @@ const buildState = (
     focus,
   }) as RootState;
 
+const buildFocusState = (
+  focus: Partial<RootState["focus"]> = {},
+): RootState["focus"] => ({
+  currentTaskId: null,
+  lastSwappedTaskId: null,
+  skippedTaskIds: [],
+  startedAt: null,
+  isRunning: false,
+  mode: "focus",
+  durationSeconds: 25 * 60,
+  remainingSeconds: 25 * 60,
+  ...focus,
+});
+
 describe("focusReducer", () => {
   it("starts focus on a task with a timestamp", () => {
     const state = focusReducer(undefined, startFocus("task-1"));
 
     expect(state.currentTaskId).toBe("task-1");
     expect(state.startedAt).toEqual(expect.any(String));
+    expect(state.isRunning).toBe(true);
+    expect(state.remainingSeconds).toBe(25 * 60);
+  });
+
+  it("ticks, pauses, resumes, and resets the focus timer", () => {
+    let state = focusReducer(undefined, startFocus("task-1"));
+    state = focusReducer(state, tickFocus());
+
+    expect(state.remainingSeconds).toBe(25 * 60 - 1);
+
+    state = focusReducer(state, pauseFocus());
+    state = focusReducer(state, tickFocus());
+
+    expect(state.isRunning).toBe(false);
+    expect(state.remainingSeconds).toBe(25 * 60 - 1);
+
+    state = focusReducer(state, resumeFocus());
+    state = focusReducer(state, resetFocusTimer());
+
+    expect(state.isRunning).toBe(true);
+    expect(state.remainingSeconds).toBe(25 * 60);
+  });
+
+  it("starts and completes a 5 minute break without going below zero", () => {
+    let state = focusReducer(undefined, startFocus("task-1"));
+    state = { ...state, remainingSeconds: 1 };
+    state = focusReducer(state, tickFocus());
+    state = focusReducer(state, tickFocus());
+
+    expect(state.remainingSeconds).toBe(0);
+    expect(state.isRunning).toBe(false);
+
+    state = focusReducer(state, startBreak());
+
+    expect(state.mode).toBe("break");
+    expect(state.durationSeconds).toBe(5 * 60);
+    expect(state.remainingSeconds).toBe(5 * 60);
+    expect(state.isRunning).toBe(true);
   });
 
   it("skips and swaps tasks for the current session", () => {
@@ -58,9 +120,7 @@ describe("selectRecommendedFocusTask", () => {
 
     const selected = selectRecommendedFocusTask(
       buildState(tasks, {
-        currentTaskId: null,
-        skippedTaskIds: [],
-        startedAt: null,
+        ...buildFocusState(),
       }),
     );
 
@@ -75,9 +135,10 @@ describe("selectRecommendedFocusTask", () => {
 
     const selected = selectRecommendedFocusTask(
       buildState(tasks, {
-        currentTaskId: "should-1",
-        skippedTaskIds: [],
-        startedAt: "2026-05-02T08:00:00.000Z",
+        ...buildFocusState({
+          currentTaskId: "should-1",
+          startedAt: "2026-05-02T08:00:00.000Z",
+        }),
       }),
     );
 
@@ -93,9 +154,10 @@ describe("selectRecommendedFocusTask", () => {
 
     const selected = selectRecommendedFocusTask(
       buildState(tasks, {
-        currentTaskId: "must-2",
-        skippedTaskIds: ["must-2"],
-        startedAt: null,
+        ...buildFocusState({
+          currentTaskId: "must-2",
+          skippedTaskIds: ["must-2"],
+        }),
       }),
     );
 

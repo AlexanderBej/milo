@@ -183,7 +183,7 @@ const tasksSlice = createSlice({
 
       task.status = "done";
       task.completed = true;
-      task.completedAt = new Date().toISOString();
+      task.completedAt = task.completedAt ?? new Date().toISOString();
     },
 
     undoCompleteTask(state, action: PayloadAction<string>) {

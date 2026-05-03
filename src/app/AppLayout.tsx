@@ -13,6 +13,7 @@ import {
 } from "phosphor-react";
 
 import { useFirebaseHydration } from "@features/persistence/useFirebaseHydration";
+import { FocusMode } from "@features/focus/components";
 import { QuickCaptureModal } from "@features/quickCapture/components";
 import { selectDisplayName } from "@features/preferences";
 import { Button } from "@shared/components/Button";
@@ -35,6 +36,7 @@ export const AppLayout = () => {
   const [isCaptureOpen, setIsCaptureOpen] = useState(false);
   const [showSyncCheck, setShowSyncCheck] = useState(true);
   const [showCapturedToast, setShowCapturedToast] = useState(false);
+  const [showFocusCompleteToast, setShowFocusCompleteToast] = useState(false);
 
   const openCapture = useCallback(() => {
     setIsCaptureOpen(true);
@@ -46,6 +48,10 @@ export const AppLayout = () => {
 
   const showCapturedFeedback = useCallback(() => {
     setShowCapturedToast(true);
+  }, []);
+
+  const showFocusCompleteFeedback = useCallback(() => {
+    setShowFocusCompleteToast(true);
   }, []);
 
   useEffect(() => {
@@ -61,6 +67,20 @@ export const AppLayout = () => {
       window.clearTimeout(toastTimer);
     };
   }, [showCapturedToast]);
+
+  useEffect(() => {
+    if (!showFocusCompleteToast) {
+      return;
+    }
+
+    const toastTimer = window.setTimeout(() => {
+      setShowFocusCompleteToast(false);
+    }, 1800);
+
+    return () => {
+      window.clearTimeout(toastTimer);
+    };
+  }, [showFocusCompleteToast]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -154,10 +174,17 @@ export const AppLayout = () => {
         onCaptured={showCapturedFeedback}
         onClose={closeCapture}
       />
+      <FocusMode onComplete={showFocusCompleteFeedback} />
       {showCapturedToast ? (
         <div className={styles.toast} role="status">
           <CheckCircle aria-hidden size={20} weight="fill" />
           <span>Captured. It’s in your inbox.</span>
+        </div>
+      ) : null}
+      {showFocusCompleteToast ? (
+        <div className={styles.toast} role="status">
+          <CheckCircle aria-hidden size={20} weight="fill" />
+          <span>Nice. That task is done.</span>
         </div>
       ) : null}
     </div>

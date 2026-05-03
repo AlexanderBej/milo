@@ -16,10 +16,14 @@ export const selectActiveInboxCaptures = createSelector(
     ),
 );
 
+export const selectUnprocessedCaptures = selectActiveInboxCaptures;
+
 export const selectCaptureCount = createSelector(
   [selectActiveInboxCaptures],
   (items) => items.length,
 );
+
+export const selectUnprocessedCaptureCount = selectCaptureCount;
 
 export const selectHasCaptures = createSelector(
   [selectCaptureCount],
@@ -30,6 +34,8 @@ export const selectLatestCapture = createSelector(
   [selectActiveInboxCaptures],
   (items) => items[0] ?? null,
 );
+
+export const selectLatestUnprocessedCapture = selectLatestCapture;
 
 export const selectCaptureById = createSelector(
   [selectCaptureItems, (_state: RootState, captureId: string) => captureId],
