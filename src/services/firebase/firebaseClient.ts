@@ -23,15 +23,12 @@ const requiredConfigValues = [
   firebaseConfig.appId,
 ];
 
-const createFirestore = (): Firestore | null => {
-  if (requiredConfigValues.some((value) => !value)) {
-    console.warn("Firebase config is missing. Persistence is disabled.");
-    return null;
-  }
+export const app = requiredConfigValues.some((value) => !value)
+  ? null
+  : initializeApp(firebaseConfig);
 
-  const app = initializeApp(firebaseConfig);
+export const db: Firestore | null = app ? getFirestore(app) : null;
 
-  return getFirestore(app);
-};
-
-export const db = createFirestore();
+if (!app) {
+  console.warn("Firebase config is missing. Persistence is disabled.");
+}

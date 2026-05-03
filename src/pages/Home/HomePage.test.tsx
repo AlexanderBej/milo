@@ -4,6 +4,7 @@ import { configureStore } from "@reduxjs/toolkit";
 import { Provider } from "react-redux";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { AppLayout } from "@app/AppLayout";
+import { authReducer } from "@features/auth";
 import { boardReducer } from "@features/board";
 import { focusReducer } from "@features/focus";
 import {
@@ -47,6 +48,7 @@ function createStore() {
       quickCapture: quickCaptureReducer,
       routines: routinesReducer,
       tasks: tasksReducer,
+      auth: authReducer,
       [baseApi.reducerPath]: baseApi.reducer,
     },
     middleware: (getDefaultMiddleware) =>

@@ -1,4 +1,14 @@
-export const getUserPath = (userId: string) => `users/${userId}`;
+const ensureUserId = (userId: string) => {
+  const trimmedUserId = userId.trim();
+
+  if (!trimmedUserId) {
+    throw new Error("A Firebase user id is required for scoped data access.");
+  }
+
+  return trimmedUserId;
+};
+
+export const getUserPath = (userId: string) => `users/${ensureUserId(userId)}`;
 
 export const getCapturesPath = (userId: string) =>
   `${getUserPath(userId)}/captures`;

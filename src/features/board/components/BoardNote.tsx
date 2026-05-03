@@ -28,6 +28,7 @@ type BoardNoteProps = {
   onDuplicate: (note: BoardNoteType) => void;
   onMove: (noteId: string, x: number, y: number) => void;
   onUpdate: (noteId: string, content: string) => void;
+  zoom: number;
 };
 
 type DragState = {
@@ -50,6 +51,7 @@ export const BoardNote = ({
   onDuplicate,
   onMove,
   onUpdate,
+  zoom,
 }: BoardNoteProps) => {
   const dragState = useRef<DragState | null>(null);
   const positionRef = useRef({ x: note.x, y: note.y });
@@ -163,11 +165,11 @@ export const BoardNote = ({
     event.stopPropagation();
 
     const nextX = clampPosition(
-      currentDrag.startX + event.clientX - currentDrag.startPointerX,
+      currentDrag.startX + (event.clientX - currentDrag.startPointerX) / zoom,
       2088,
     );
     const nextY = clampPosition(
-      currentDrag.startY + event.clientY - currentDrag.startPointerY,
+      currentDrag.startY + (event.clientY - currentDrag.startPointerY) / zoom,
       1368,
     );
     const nextPosition = { x: nextX, y: nextY };

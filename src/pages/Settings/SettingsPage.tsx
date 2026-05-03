@@ -5,9 +5,11 @@ import {
   DownloadSimple,
   GearSix,
   PaintBrush,
+  SignOut,
   Sliders,
   Trash,
 } from "phosphor-react";
+import { signOut } from "firebase/auth";
 
 import { useAppDispatch, useAppSelector } from "@app/hooks";
 import { setBoardNotes } from "@features/board";
@@ -20,7 +22,9 @@ import {
   type StartScreen,
 } from "@features/preferences";
 import { setCaptures } from "@features/quickCapture";
+import { setRoutineCompletions, setRoutines } from "@features/routines";
 import { setTasks } from "@features/tasks";
+import { auth } from "@services/firebase/firebaseAuth";
 import { Button } from "@shared/components/Button";
 import { Card } from "@shared/components/Card";
 import styles from "./SettingsPage.module.scss";
@@ -50,6 +54,8 @@ export const SettingsPage = () => {
   const tasksState = useAppSelector((appState) => appState.tasks);
   const hasMounted = useRef(false);
   const [saveMessage, setSaveMessage] = useState("Saved automatically");
+  const [signOutError, setSignOutError] = useState<string | null>(null);
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   useEffect(() => {
     if (!hasMounted.current) {
@@ -104,9 +110,29 @@ export const SettingsPage = () => {
     dispatch(setCaptures([]));
     dispatch(setTasks([]));
     dispatch(setBoardNotes([]));
+    dispatch(setRoutines([]));
+    dispatch(setRoutineCompletions([]));
     dispatch(clearFocus());
     window.sessionStorage.removeItem("milo:nudges:hidden");
     setSaveMessage("Local data reset");
+  };
+
+  const handleSignOut = () => {
+    if (!auth || isSigningOut) {
+      return;
+    }
+
+    setSignOutError(null);
+    setIsSigningOut(true);
+
+    void signOut(auth)
+      .catch((error: unknown) => {
+        console.error("Failed to sign out.", error);
+        setSignOutError("Sign out failed. Please try again.");
+      })
+      .finally(() => {
+        setIsSigningOut(false);
+      });
   };
 
   return (
@@ -292,6 +318,29 @@ export const SettingsPage = () => {
                 Reset demo/local data
               </Button>
             </div>
+          </div>
+        </Card>
+
+        <Card icon={<SignOut weight="duotone" />} title="Account">
+          <div className={styles.fieldStack}>
+            <p className={styles.infoText}>
+              Sign out of this browser when you are done.
+            </p>
+            <div>
+              <Button
+                icon={<SignOut weight="bold" />}
+                onClick={handleSignOut}
+                variant="secondary"
+                disabled={!auth || isSigningOut}
+              >
+                {isSigningOut ? "Signing out..." : "Sign out"}
+              </Button>
+            </div>
+            {signOutError ? (
+              <p className={styles.errorText} role="alert">
+                {signOutError}
+              </p>
+            ) : null}
           </div>
         </Card>
       </section>

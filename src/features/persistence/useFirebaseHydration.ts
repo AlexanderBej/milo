@@ -1,13 +1,11 @@
 import { useEffect, useState } from "react";
-import { useAppDispatch } from "@app/hooks";
+import { useAppDispatch, useAppSelector } from "@app/hooks";
 import { setBoardNotes } from "@features/board";
 import { setCaptures } from "@features/quickCapture";
 import { setRoutineCompletions, setRoutines } from "@features/routines";
 import { setTasks } from "@features/tasks";
 
-export const FIREBASE_USER_ID = "demo-user";
-
-let hasHydrated = false;
+const hydratedUserIds = new Set<string>();
 
 const isTestEnvironment =
   typeof process !== "undefined" && process.env.NODE_ENV === "test";
@@ -32,29 +30,33 @@ const withTimeout = async <T>(promise: Promise<T>, timeoutMs: number) => {
 
 export const useFirebaseHydration = () => {
   const dispatch = useAppDispatch();
-  const [isLoading, setIsLoading] = useState(
-    !hasHydrated && !isTestEnvironment,
-  );
+  const { loading: authLoading, user } = useAppSelector((state) => state.auth);
+  const userId = user?.uid;
   const [error, setError] = useState<Error | null>(null);
+  const shouldHydrate =
+    !isTestEnvironment &&
+    !authLoading &&
+    Boolean(userId) &&
+    !hydratedUserIds.has(userId ?? "");
 
   useEffect(() => {
-    if (isTestEnvironment) {
+    if (isTestEnvironment || authLoading || !userId) {
       return;
     }
 
-    if (hasHydrated) {
+    if (hydratedUserIds.has(userId)) {
       return;
     }
 
     let isActive = true;
-    hasHydrated = true;
+    hydratedUserIds.add(userId);
+
     const safetyTimer = window.setTimeout(() => {
       if (!isActive) {
         return;
       }
 
       setError(new Error("Firebase sync took longer than expected."));
-      setIsLoading(false);
     }, 6500);
 
     const hydrate = async () => {
@@ -74,11 +76,11 @@ export const useFirebaseHydration = () => {
                 { getTasks },
               ]) =>
                 Promise.all([
-                  getCaptures(FIREBASE_USER_ID),
-                  getTasks(FIREBASE_USER_ID),
-                  getBoardNotes(FIREBASE_USER_ID),
-                  getRoutines(FIREBASE_USER_ID),
-                  getRoutineCompletions(FIREBASE_USER_ID),
+                  getCaptures(userId),
+                  getTasks(userId),
+                  getBoardNotes(userId),
+                  getRoutines(userId),
+                  getRoutineCompletions(userId),
                 ]),
             ),
             6000,
@@ -108,7 +110,6 @@ export const useFirebaseHydration = () => {
       } finally {
         if (isActive) {
           window.clearTimeout(safetyTimer);
-          setIsLoading(false);
         }
       }
     };
@@ -119,7 +120,7 @@ export const useFirebaseHydration = () => {
       isActive = false;
       window.clearTimeout(safetyTimer);
     };
-  }, [dispatch]);
+  }, [authLoading, dispatch, userId]);
 
-  return { error, isLoading };
+  return { error, isLoading: shouldHydrate };
 };

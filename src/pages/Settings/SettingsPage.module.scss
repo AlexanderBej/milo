@@ -43,9 +43,15 @@
 }
 
 .header p,
-.infoText {
+.infoText,
+.errorText {
   margin-top: var(--space-2);
   color: var(--color-text-muted);
+}
+
+.errorText {
+  color: var(--color-accent-amber);
+  font-size: var(--font-size-sm);
 }
 
 .saveStatus {

@@ -5,6 +5,9 @@ import "@shared/styles/tokens.scss";
 import "@shared/styles/motion.scss";
 import "@shared/styles/globals.scss";
 import App from "./App";
+import { initAuth } from "./bootstrap/initAuth";
+
+initAuth();
 
 const rootElement = document.getElementById("root");
 

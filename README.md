@@ -15,6 +15,12 @@ npm run test
 npm run preview
 ```
 
+## Firestore Security Rules
+
+MILO stores user-owned app data under `users/{uid}/...`. Deploy
+`firestore.rules` so each signed-in user can only read and write their own
+scoped documents.
+
 ## Project Structure
 
 ```txt

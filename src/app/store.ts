@@ -1,4 +1,11 @@
-import { configureStore, createListenerMiddleware } from "@reduxjs/toolkit";
+import {
+  combineReducers,
+  configureStore,
+  createAction,
+  createListenerMiddleware,
+  type UnknownAction,
+} from "@reduxjs/toolkit";
+
 import {
   addNote,
   boardReducer,
@@ -6,9 +13,8 @@ import {
   moveNote,
   restoreNote,
   updateNote,
-  type BoardNote,
 } from "@features/board";
-import { focusReducer, type FocusState } from "@features/focus";
+import { focusReducer } from "@features/focus";
 import {
   defaultPreferences,
   preferencesReducer,
@@ -29,8 +35,6 @@ import {
   routinesReducer,
   toggleRoutineChecklistItemForDate,
   updateRoutine,
-  type Routine,
-  type RoutineCompletion,
 } from "@features/routines";
 import {
   addTask,
@@ -42,40 +46,46 @@ import {
   undoCompleteTask,
   updateTaskPriority,
   updateTask,
-  type Task,
 } from "@features/tasks";
 import { baseApi } from "@services/api/baseApi";
-import { FIREBASE_USER_ID } from "@features/persistence/useFirebaseHydration";
-import type { CaptureItem } from "@shared/types";
+import { authReducer, setUser as setAuthUser } from "@features/auth";
 
-const reducer = {
+export const resetUserOwnedData = createAction("app/resetUserOwnedData");
+
+const appReducer = combineReducers({
   board: boardReducer,
   focus: focusReducer,
   preferences: preferencesReducer,
   quickCapture: quickCaptureReducer,
   routines: routinesReducer,
   tasks: tasksReducer,
+  auth: authReducer,
   [baseApi.reducerPath]: baseApi.reducer,
+});
+
+const reducer = (
+  state: ReturnType<typeof appReducer> | undefined,
+  action: UnknownAction,
+) => {
+  if (resetUserOwnedData.match(action)) {
+    const resetState = appReducer(undefined, action);
+
+    return state
+      ? {
+          ...resetState,
+          auth: state.auth,
+          preferences: state.preferences,
+        }
+      : resetState;
+  }
+
+  return appReducer(state, action);
 };
 
 const STORAGE_KEY = "milo:state:v1";
 
 type PersistedState = {
-  board?: {
-    notes?: BoardNote[];
-  };
-  focus?: Partial<FocusState>;
   preferences?: Partial<PreferencesState>;
-  quickCapture?: {
-    items?: CaptureItem[];
-  };
-  routines?: {
-    routines?: Routine[];
-    completions?: RoutineCompletion[];
-  };
-  tasks?: {
-    items?: Array<Omit<Task, "order"> & { order?: number }>;
-  };
 };
 
 const readPersistedState = (): PersistedState | undefined => {
@@ -103,31 +113,12 @@ const readPersistedState = (): PersistedState | undefined => {
 };
 
 const buildPreloadedState = () => {
+  const initialAppState = appReducer(undefined, { type: "@@milo/init" });
   const persistedState = readPersistedState();
 
   if (!persistedState) {
-    return undefined;
+    return initialAppState;
   }
-
-  const tasks = Array.isArray(persistedState.tasks?.items)
-    ? persistedState.tasks.items.map((task, index) => ({
-        ...task,
-        order: typeof task.order === "number" ? task.order : index + 1,
-      }))
-    : [];
-
-  const captures = Array.isArray(persistedState.quickCapture?.items)
-    ? persistedState.quickCapture.items
-    : [];
-  const boardNotes = Array.isArray(persistedState.board?.notes)
-    ? persistedState.board.notes.filter(
-        (note) =>
-          typeof note.id === "string" &&
-          typeof note.content === "string" &&
-          typeof note.x === "number" &&
-          typeof note.y === "number",
-      )
-    : [];
   const preferences = persistedState.preferences
     ? {
         ...defaultPreferences,
@@ -138,36 +129,10 @@ const buildPreloadedState = () => {
             : defaultPreferences.mustDoLimit,
       }
     : defaultPreferences;
-  const routines = Array.isArray(persistedState.routines?.routines)
-    ? persistedState.routines.routines
-    : [];
-  const completions = Array.isArray(persistedState.routines?.completions)
-    ? persistedState.routines.completions
-    : [];
 
   return {
-    board: {
-      notes: boardNotes,
-    },
-    focus: {
-      currentTaskId: persistedState.focus?.currentTaskId ?? null,
-      lastSwappedTaskId: persistedState.focus?.lastSwappedTaskId ?? null,
-      skippedTaskIds: Array.isArray(persistedState.focus?.skippedTaskIds)
-        ? persistedState.focus.skippedTaskIds
-        : [],
-      startedAt: persistedState.focus?.startedAt ?? null,
-    },
+    ...initialAppState,
     preferences,
-    quickCapture: {
-      items: captures,
-    },
-    routines: {
-      routines,
-      completions,
-    },
-    tasks: {
-      items: tasks,
-    },
   };
 };
 
@@ -191,12 +156,32 @@ const startAppListening = persistenceMiddleware.startListening.withTypes<
   AppDispatch
 >();
 
+const getAuthenticatedUserId = () => store.getState().auth.user?.uid ?? null;
+
+startAppListening({
+  actionCreator: setAuthUser,
+  effect: (action, listenerApi) => {
+    const previousUserId = listenerApi.getOriginalState().auth.user?.uid;
+    const nextUserId = action.payload?.uid;
+
+    if (!nextUserId || previousUserId !== nextUserId) {
+      listenerApi.dispatch(resetUserOwnedData());
+    }
+  },
+});
+
 startAppListening({
   actionCreator: addCapture,
   effect: async (action) => {
+    const userId = getAuthenticatedUserId();
+
+    if (!userId) {
+      return;
+    }
+
     try {
       const { saveCapture } = await import("@services/firebase/captureService");
-      await saveCapture(FIREBASE_USER_ID, action.payload);
+      await saveCapture(userId, action.payload);
     } catch (error) {
       console.error("Failed to save capture.", error);
     }
@@ -206,9 +191,15 @@ startAppListening({
 startAppListening({
   actionCreator: restoreCapture,
   effect: async (action) => {
+    const userId = getAuthenticatedUserId();
+
+    if (!userId) {
+      return;
+    }
+
     try {
       const { saveCapture } = await import("@services/firebase/captureService");
-      await saveCapture(FIREBASE_USER_ID, action.payload.item);
+      await saveCapture(userId, action.payload.item);
     } catch (error) {
       console.error("Failed to save capture.", error);
     }
@@ -218,10 +209,16 @@ startAppListening({
 startAppListening({
   actionCreator: removeCapture,
   effect: async (action) => {
+    const userId = getAuthenticatedUserId();
+
+    if (!userId) {
+      return;
+    }
+
     try {
       const { deleteCapture } =
         await import("@services/firebase/captureService");
-      await deleteCapture(FIREBASE_USER_ID, action.payload);
+      await deleteCapture(userId, action.payload);
     } catch (error) {
       console.error("Failed to delete capture.", error);
     }
@@ -229,6 +226,12 @@ startAppListening({
 });
 
 const saveCurrentTask = async (taskId: string) => {
+  const userId = getAuthenticatedUserId();
+
+  if (!userId) {
+    return;
+  }
+
   const task = store.getState().tasks.items.find((item) => item.id === taskId);
 
   if (!task) {
@@ -237,7 +240,7 @@ const saveCurrentTask = async (taskId: string) => {
 
   try {
     const { saveTask } = await import("@services/firebase/taskService");
-    await saveTask(FIREBASE_USER_ID, task);
+    await saveTask(userId, task);
   } catch (error) {
     console.error("Failed to save task.", error);
   }
@@ -288,11 +291,17 @@ startAppListening({
 startAppListening({
   actionCreator: moveTask,
   effect: async () => {
+    const userId = getAuthenticatedUserId();
+
+    if (!userId) {
+      return;
+    }
+
     const tasks = store.getState().tasks.items;
 
     try {
       const { saveTask } = await import("@services/firebase/taskService");
-      await Promise.all(tasks.map((task) => saveTask(FIREBASE_USER_ID, task)));
+      await Promise.all(tasks.map((task) => saveTask(userId, task)));
     } catch (error) {
       console.error("Failed to save task order.", error);
     }
@@ -302,10 +311,16 @@ startAppListening({
 startAppListening({
   actionCreator: deleteTask,
   effect: async (action) => {
+    const userId = getAuthenticatedUserId();
+
+    if (!userId) {
+      return;
+    }
+
     try {
       const { deleteTask: deleteFirebaseTask } =
         await import("@services/firebase/taskService");
-      await deleteFirebaseTask(FIREBASE_USER_ID, action.payload);
+      await deleteFirebaseTask(userId, action.payload);
     } catch (error) {
       console.error("Failed to delete task.", error);
     }
@@ -313,6 +328,12 @@ startAppListening({
 });
 
 const saveCurrentRoutine = async (routineId: string) => {
+  const userId = getAuthenticatedUserId();
+
+  if (!userId) {
+    return;
+  }
+
   const routine = store
     .getState()
     .routines.routines.find((item) => item.id === routineId);
@@ -323,7 +344,7 @@ const saveCurrentRoutine = async (routineId: string) => {
 
   try {
     const { saveRoutine } = await import("@services/firebase/routineService");
-    await saveRoutine(FIREBASE_USER_ID, routine);
+    await saveRoutine(userId, routine);
   } catch (error) {
     console.error("Failed to save routine.", error);
   }
@@ -333,6 +354,12 @@ const saveCurrentRoutineCompletion = async (
   routineId: string,
   date: string,
 ) => {
+  const userId = getAuthenticatedUserId();
+
+  if (!userId) {
+    return;
+  }
+
   const completion = store
     .getState()
     .routines.completions.find(
@@ -346,7 +373,7 @@ const saveCurrentRoutineCompletion = async (
   try {
     const { saveRoutineCompletion } =
       await import("@services/firebase/routineService");
-    await saveRoutineCompletion(FIREBASE_USER_ID, completion);
+    await saveRoutineCompletion(userId, completion);
   } catch (error) {
     console.error("Failed to save routine completion.", error);
   }
@@ -376,6 +403,12 @@ startAppListening({
 startAppListening({
   actionCreator: deleteRoutine,
   effect: async (action, listenerApi) => {
+    const userId = getAuthenticatedUserId();
+
+    if (!userId) {
+      return;
+    }
+
     const originalState = listenerApi.getOriginalState();
     const originalCompletions = originalState.routines.completions.filter(
       (completion) => completion.routineId === action.payload,
@@ -384,11 +417,11 @@ startAppListening({
     try {
       const { deleteRoutine: deleteFirebaseRoutine, deleteRoutineCompletion } =
         await import("@services/firebase/routineService");
-      await deleteFirebaseRoutine(FIREBASE_USER_ID, action.payload);
+      await deleteFirebaseRoutine(userId, action.payload);
       await Promise.all(
         originalCompletions.map((completion) =>
           deleteRoutineCompletion(
-            FIREBASE_USER_ID,
+            userId,
             completion.routineId,
             completion.date,
           ),
@@ -421,6 +454,12 @@ startAppListening({
 });
 
 const saveCurrentBoardNote = async (noteId: string) => {
+  const userId = getAuthenticatedUserId();
+
+  if (!userId) {
+    return;
+  }
+
   const note = store.getState().board.notes.find((item) => item.id === noteId);
 
   if (!note) {
@@ -430,7 +469,7 @@ const saveCurrentBoardNote = async (noteId: string) => {
   try {
     const { saveBoardNote } =
       await import("@services/firebase/boardNoteService");
-    await saveBoardNote(FIREBASE_USER_ID, note);
+    await saveBoardNote(userId, note);
   } catch (error) {
     console.error("Failed to save board note.", error);
   }
@@ -467,10 +506,16 @@ startAppListening({
 startAppListening({
   actionCreator: deleteNote,
   effect: async (action) => {
+    const userId = getAuthenticatedUserId();
+
+    if (!userId) {
+      return;
+    }
+
     try {
       const { deleteBoardNote } =
         await import("@services/firebase/boardNoteService");
-      await deleteBoardNote(FIREBASE_USER_ID, action.payload);
+      await deleteBoardNote(userId, action.payload);
     } catch (error) {
       console.error("Failed to delete board note.", error);
     }
@@ -484,12 +529,7 @@ if (typeof window !== "undefined") {
     window.localStorage.setItem(
       STORAGE_KEY,
       JSON.stringify({
-        focus: state.focus,
         preferences: state.preferences,
-        board: state.board,
-        quickCapture: state.quickCapture,
-        routines: state.routines,
-        tasks: state.tasks,
       }),
     );
   });
