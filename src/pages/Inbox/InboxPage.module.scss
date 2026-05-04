@@ -14,20 +14,11 @@
   gap: var(--space-5);
 }
 
-.eyebrow,
 .header h1,
 .header p,
 .messageStack h2,
 .messageStack p {
   margin: 0;
-}
-
-.eyebrow {
-  color: var(--color-primary);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-bold);
-  letter-spacing: 0;
-  text-transform: uppercase;
 }
 
 .header h1 {

@@ -77,13 +77,13 @@
 .planPreviewList {
   .planPreviewItem {
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-columns: auto minmax(0, 1fr) auto;
     gap: var(--space-2);
     align-items: center;
     color: var(--color-text-secondary);
     font-size: var(--font-size-sm);
 
-    span:last-child {
+    span:nth-child(2) {
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -96,6 +96,19 @@
     border: 1px solid
       color-mix(in srgb, var(--color-primary) 48%, var(--color-border-strong));
     border-radius: var(--radius-pill);
+  }
+
+  .overduePreviewChip {
+    display: inline-flex;
+    align-items: center;
+    min-height: 1.35rem;
+    border: 1px solid color-mix(in srgb, #f59e0b 30%, transparent);
+    border-radius: var(--radius-pill);
+    background: color-mix(in srgb, #f59e0b 9%, var(--color-bg-card));
+    color: color-mix(in srgb, #fbbf24 82%, var(--color-text-primary));
+    padding: 0 var(--space-2);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
   }
 }
 

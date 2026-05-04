@@ -21,6 +21,7 @@ import {
   type TaskPriority,
 } from "@features/tasks";
 import { selectMustDoLimit } from "@features/preferences";
+import { selectTodayKey } from "@features/time";
 import {
   getTodayDateString,
   getTomorrowDateString,
@@ -83,6 +84,7 @@ export const DailyPlanPage = () => {
   const doneTasks = useAppSelector(selectDoneTasks);
   const message = useAppSelector(selectTaskMessage);
   const mustDoLimit = useAppSelector(selectMustDoLimit);
+  const todayKey = useAppSelector(selectTodayKey);
 
   const [toast, setToast] = useState<PlanToast | null>(null);
 
@@ -201,7 +203,6 @@ export const DailyPlanPage = () => {
     <main className={styles.page}>
       <header className={styles.header}>
         <div>
-          <p className={styles.eyebrow}>Plan</p>
           <h1>Agenda</h1>
           <p>Plan today, park later, and keep life out of your head.</p>
         </div>
@@ -242,6 +243,7 @@ export const DailyPlanPage = () => {
         }}
         somedayTasks={somedayTasks}
         soonTasks={soonTasks}
+        todayKey={todayKey}
         todayTasks={todayTasks}
       />
     </main>

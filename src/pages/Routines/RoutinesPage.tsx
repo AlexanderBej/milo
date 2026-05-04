@@ -142,7 +142,6 @@ export const RoutinesPage = () => {
     <main className={styles.page}>
       <header className={styles.header}>
         <div>
-          <p className={styles.eyebrow}>Routines</p>
           <h1>Reusable rhythm</h1>
           <p>Keep repeatable habits visible without turning them into tasks.</p>
         </div>

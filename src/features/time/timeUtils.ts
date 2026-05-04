@@ -5,6 +5,15 @@ const MS_IN_DAY = 24 * 60 * 60 * 1000;
 const asDate = (value: Date | string | number) =>
   value instanceof Date ? value : new Date(value);
 
+export const getLocalDateKey = (dateValue: Date | string | number) => {
+  const date = asDate(dateValue);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${String(year)}-${month}-${day}`;
+};
+
 export const getTimeSlot = (now: Date | string | number): TimeSlot => {
   const hour = asDate(now).getHours();
 

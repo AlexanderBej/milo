@@ -18,6 +18,7 @@ export {
   selectTodayIncompleteTasks,
   selectTodoTasks,
 } from "./selectors";
+export { getOverdueDueLabel, isTaskOverdue } from "./taskUtils";
 export {
   addTask,
   clearTaskMessage,

@@ -141,7 +141,6 @@ export const SettingsPage = () => {
     <main className={styles.page}>
       <header className={styles.header}>
         <div>
-          <p className={styles.eyebrow}>Settings</p>
           <h1>Preferences</h1>
           <p>Small adjustments so MILO feels easier to come back to.</p>
         </div>

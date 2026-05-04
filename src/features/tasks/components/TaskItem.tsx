@@ -3,6 +3,7 @@ import { Check, Trash, X } from "phosphor-react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { clsx } from "clsx";
 
+import { getOverdueDueLabel, isTaskOverdue } from "../taskUtils";
 import type { Task, TaskPriority } from "../types";
 import styles from "./TaskItem.module.scss";
 import { Select } from "@shared/components/Select";
@@ -51,6 +52,7 @@ const getTaskMetaLabel = (task: Task) => {
 
 type TaskItemProps = {
   task: Task;
+  todayKey: string;
   onComplete: (taskId: string) => void;
   onDelete: (taskId: string) => void;
   onPriorityChange: (taskId: string, priority: TaskPriority) => void;
@@ -63,6 +65,7 @@ type TaskItemProps = {
 
 export const TaskItem = ({
   task,
+  todayKey,
   onComplete,
   onDelete,
   onPriorityChange,
@@ -70,6 +73,7 @@ export const TaskItem = ({
   onUndo,
 }: TaskItemProps) => {
   const isDone = task.status === "done";
+  const isOverdue = isTaskOverdue(task, todayKey);
   const metaLabel = getTaskMetaLabel(task);
   const detailsId = useId();
   const shouldReduceMotion = useReducedMotion();
@@ -101,6 +105,14 @@ export const TaskItem = ({
           >
             {task.content}
           </button>
+          {isOverdue && task.dueDate ? (
+            <span
+              className={styles.overdueChip}
+              title={getOverdueDueLabel(task.dueDate, todayKey)}
+            >
+              Overdue
+            </span>
+          ) : null}
         </div>
 
         <div className={styles.actions}>

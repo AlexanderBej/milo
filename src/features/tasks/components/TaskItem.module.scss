@@ -25,8 +25,10 @@
 }
 
 .textBlock {
-  display: grid;
+  display: flex;
+  flex-wrap: wrap;
   gap: var(--space-2);
+  align-items: center;
   min-width: 0;
 }
 
@@ -96,6 +98,19 @@
   color: var(--color-text-muted);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
+}
+
+.overdueChip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.5rem;
+  border: 1px solid color-mix(in srgb, #f59e0b 32%, transparent);
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, #f59e0b 10%, var(--color-bg-card));
+  color: color-mix(in srgb, #fbbf24 82%, var(--color-text-primary));
+  padding: 0 var(--space-2);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
 }
 
 .controls {

@@ -10,6 +10,7 @@ type TaskSectionProps = {
   helper: string;
   emptyText: string;
   tasks: Task[];
+  todayKey: string;
   onComplete: (taskId: string) => void;
   onDelete: (taskId: string) => void;
   onPriorityChange: (taskId: string, priority: TaskPriority) => void;
@@ -25,6 +26,7 @@ export const TaskSection = ({
   helper,
   emptyText,
   tasks,
+  todayKey,
   onComplete,
   onDelete,
   onPriorityChange,
@@ -45,6 +47,7 @@ export const TaskSection = ({
                 onPlanningChange={onPlanningChange}
                 onUndo={onUndo}
                 task={task}
+                todayKey={todayKey}
               />
             ))}
           </AnimatePresence>

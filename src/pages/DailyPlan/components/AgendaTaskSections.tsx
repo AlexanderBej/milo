@@ -16,6 +16,7 @@ type AgendaTaskSectionsProps = {
   onUndo: (taskId: string) => void;
   somedayTasks: Task[];
   soonTasks: Task[];
+  todayKey: string;
   todayTasks: Task[];
 };
 
@@ -30,6 +31,7 @@ export const AgendaTaskSections = ({
   onUndo,
   somedayTasks,
   soonTasks,
+  todayKey,
   todayTasks,
 }: AgendaTaskSectionsProps) => {
   return (
@@ -43,6 +45,7 @@ export const AgendaTaskSections = ({
           onPlanningChange={onPlanningChange}
           onPriorityChange={onPriorityChange}
           tasks={todayTasks}
+          todayKey={todayKey}
           title="Today"
         />
 
@@ -54,6 +57,7 @@ export const AgendaTaskSections = ({
           onPlanningChange={onPlanningChange}
           onPriorityChange={onPriorityChange}
           tasks={soonTasks}
+          todayKey={todayKey}
           title="Soon"
         />
 
@@ -65,6 +69,7 @@ export const AgendaTaskSections = ({
           onPlanningChange={onPlanningChange}
           onPriorityChange={onPriorityChange}
           tasks={laterTasks}
+          todayKey={todayKey}
           title="Later"
         />
 
@@ -76,6 +81,7 @@ export const AgendaTaskSections = ({
           onPlanningChange={onPlanningChange}
           onPriorityChange={onPriorityChange}
           tasks={somedayTasks}
+          todayKey={todayKey}
           title="Someday"
         />
       </section>
@@ -90,6 +96,7 @@ export const AgendaTaskSections = ({
           onPriorityChange={onPriorityChange}
           onUndo={onUndo}
           tasks={doneTasks}
+          todayKey={todayKey}
           title="Done"
         />
       </section>

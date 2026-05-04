@@ -9,16 +9,40 @@ export const TimeEngine = () => {
   const dispatch = useAppDispatch();
 
   useEffect(() => {
+    let timer: number | undefined;
+
     const updateNow = () => {
       dispatch(setNowIso(new Date().toISOString()));
     };
 
-    updateNow();
+    const stopTimer = () => {
+      if (timer) {
+        window.clearInterval(timer);
+        timer = undefined;
+      }
+    };
 
-    const timer = window.setInterval(updateNow, TICK_MS);
+    const startTimer = () => {
+      stopTimer();
+      updateNow();
+      timer = window.setInterval(updateNow, TICK_MS);
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        stopTimer();
+        return;
+      }
+
+      startTimer();
+    };
+
+    startTimer();
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
-      window.clearInterval(timer);
+      stopTimer();
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [dispatch]);
 

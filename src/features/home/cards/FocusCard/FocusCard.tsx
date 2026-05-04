@@ -12,10 +12,12 @@ import {
 } from "@features/focus";
 import {
   completeTask,
+  isTaskOverdue,
   selectTasks,
   undoCompleteTask,
   type Task,
 } from "@features/tasks";
+import { selectTodayKey } from "@features/time";
 import { Button } from "@shared/components/Button";
 
 import styles from "./FocusCard.module.scss";
@@ -53,6 +55,7 @@ export const FocusCard = () => {
   const dispatch = useAppDispatch();
   const focusTask = useAppSelector(selectRecommendedFocusTask);
   const tasks = useAppSelector(selectTasks);
+  const todayKey = useAppSelector(selectTodayKey);
   const [toast, setToast] = useState<HomeToast | null>(null);
 
   useEffect(() => {
@@ -131,6 +134,9 @@ export const FocusCard = () => {
               {priorityLabels[focusTask.priority]}
             </span>
           )}
+          {focusTask && isTaskOverdue(focusTask, todayKey) ? (
+            <span className={styles.overdueBadge}>Overdue</span>
+          ) : null}
           <div className={styles.focusHeaderTitle}>
             <span className={styles.icon}>
               <Target weight="duotone" />

@@ -3,11 +3,12 @@ import { Link } from "react-router-dom";
 
 import { useAppSelector } from "@app/hooks";
 import {
+  isTaskOverdue,
   selectDoneTasks,
   selectNextTodayTask,
   selectTodayIncompleteTasks,
 } from "@features/tasks";
-import { useNow } from "@features/time";
+import { selectTodayKey, useNow } from "@features/time";
 import { Card } from "@shared/components/Card";
 
 import styles from "../cards.module.scss";
@@ -26,6 +27,7 @@ export const DailyPlanCard = () => {
   const doneTasks = useAppSelector(selectDoneTasks);
   const todayTasks = useAppSelector(selectTodayIncompleteTasks);
   const nextTodayTask = useAppSelector(selectNextTodayTask);
+  const todayKey = useAppSelector(selectTodayKey);
   const now = useNow();
   const previewTasks = todayTasks.slice(0, 3);
   const completedTodayCount = doneTasks.filter(
@@ -58,6 +60,9 @@ export const DailyPlanCard = () => {
                 <li className={styles.planPreviewItem} key={task.id}>
                   <span className={styles.checkCircle} aria-hidden />
                   <span>{task.content}</span>
+                  {isTaskOverdue(task, todayKey) ? (
+                    <span className={styles.overduePreviewChip}>Overdue</span>
+                  ) : null}
                 </li>
               ))}
             </ul>

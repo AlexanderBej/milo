@@ -1,7 +1,7 @@
 import { createSelector } from "@reduxjs/toolkit";
 import type { RootState } from "@app/store";
-import { selectNowIso } from "@features/time/selectors";
-import type { Task } from "./types";
+import { selectTodayKey } from "@features/time/selectors";
+import { isTaskOverdue } from "./taskUtils";
 
 export const selectTasksState = (state: RootState) => state.tasks;
 
@@ -30,38 +30,31 @@ export const selectActiveTasks = createSelector([selectTodoTasks], (tasks) =>
 
 export const selectCompletedTasks = selectDoneTasks;
 
-const getLocalDateKey = (date: Date) => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-
-  return `${String(year)}-${month}-${day}`;
-};
-
-const isTaskOverdue = (task: Task, today: string) =>
-  Boolean(task.dueDate && task.dueDate < today);
-
 export const selectOverdueIncompleteTasks = createSelector(
-  [selectActiveTasks, selectNowIso],
-  (tasks, nowIso) => {
-    const today = getLocalDateKey(new Date(nowIso));
-
-    return tasks.filter((task) => isTaskOverdue(task, today));
-  },
+  [selectActiveTasks, selectTodayKey],
+  (tasks, todayKey) => tasks.filter((task) => isTaskOverdue(task, todayKey)),
 );
 
 export const selectActiveTodayTasks = createSelector(
-  [selectActiveTasks, selectNowIso],
-  (tasks, nowIso) => {
-    const today = getLocalDateKey(new Date(nowIso));
+  [selectActiveTasks, selectTodayKey],
+  (tasks, todayKey) =>
+    tasks
+      .filter(
+        (task) =>
+          task.dueDate === todayKey ||
+          isTaskOverdue(task, todayKey) ||
+          (!task.dueDate && (task.planningBucket ?? "today") === "today"),
+      )
+      .sort((a, b) => {
+        const aOverdue = isTaskOverdue(a, todayKey);
+        const bOverdue = isTaskOverdue(b, todayKey);
 
-    return tasks.filter(
-      (task) =>
-        task.dueDate === today ||
-        isTaskOverdue(task, today) ||
-        (!task.dueDate && (task.planningBucket ?? "today") === "today"),
-    );
-  },
+        if (aOverdue === bOverdue) {
+          return 0;
+        }
+
+        return aOverdue ? -1 : 1;
+      }),
 );
 
 export const selectTodayIncompleteTasks = selectActiveTodayTasks;
@@ -72,45 +65,36 @@ export const selectNextTodayTask = createSelector(
 );
 
 export const selectActiveSoonTasks = createSelector(
-  [selectActiveTasks, selectNowIso],
-  (tasks, nowIso) => {
-    const today = getLocalDateKey(new Date(nowIso));
-
-    return tasks.filter(
+  [selectActiveTasks, selectTodayKey],
+  (tasks, todayKey) =>
+    tasks.filter(
       (task) =>
-        !isTaskOverdue(task, today) &&
-        task.dueDate !== today &&
+        !isTaskOverdue(task, todayKey) &&
+        task.dueDate !== todayKey &&
         task.planningBucket === "soon",
-    );
-  },
+    ),
 );
 
 export const selectActiveLaterTasks = createSelector(
-  [selectActiveTasks, selectNowIso],
-  (tasks, nowIso) => {
-    const today = getLocalDateKey(new Date(nowIso));
-
-    return tasks.filter(
+  [selectActiveTasks, selectTodayKey],
+  (tasks, todayKey) =>
+    tasks.filter(
       (task) =>
-        !isTaskOverdue(task, today) &&
-        task.dueDate !== today &&
+        !isTaskOverdue(task, todayKey) &&
+        task.dueDate !== todayKey &&
         task.planningBucket === "later",
-    );
-  },
+    ),
 );
 
 export const selectActiveSomedayTasks = createSelector(
-  [selectActiveTasks, selectNowIso],
-  (tasks, nowIso) => {
-    const today = getLocalDateKey(new Date(nowIso));
-
-    return tasks.filter(
+  [selectActiveTasks, selectTodayKey],
+  (tasks, todayKey) =>
+    tasks.filter(
       (task) =>
-        !isTaskOverdue(task, today) &&
-        task.dueDate !== today &&
+        !isTaskOverdue(task, todayKey) &&
+        task.dueDate !== todayKey &&
         task.planningBucket === "someday",
-    );
-  },
+    ),
 );
 
 export const selectMustTasks = createSelector([selectActiveTasks], (tasks) =>

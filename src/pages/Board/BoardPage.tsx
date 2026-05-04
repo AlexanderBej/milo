@@ -140,7 +140,6 @@ export const BoardPage = () => {
     <main className={styles.page}>
       <header className={styles.header}>
         <div>
-          <p className={styles.eyebrow}>Board</p>
           <h1>Let your thoughts spread out.</h1>
           <p>
             Sketch the shape of an idea, then turn the useful bits into tasks.

@@ -53,7 +53,6 @@ const HomeHeader = () => {
   return (
     <header className={styles.header}>
       <div>
-        <p className={styles.eyebrow}>Home</p>
         <h1>{greeting}</h1>
         <p>{homeCopyByTimeSlot[getTimeSlot(now)]}</p>
       </div>

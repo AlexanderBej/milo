@@ -192,7 +192,6 @@ export const InboxPage = () => {
     <main className={styles.mainContent}>
       <header className={styles.header}>
         <div>
-          <p className={styles.eyebrow}>Inbox</p>
           <h1>Loose thoughts</h1>
           <p>Turn captures into the next place they belong.</p>
         </div>

@@ -1,4 +1,5 @@
 import type { Task } from "@features/tasks";
+import { getLocalDateKey } from "@features/time";
 
 export type PlanningSection = "today" | "soon" | "later" | "someday";
 
@@ -11,13 +12,13 @@ export type PlanningChoice =
   | "someday";
 
 export function getTodayDateString() {
-  return new Date().toISOString().slice(0, 10);
+  return getLocalDateKey(new Date());
 }
 
 export function getTomorrowDateString() {
   const date = new Date();
   date.setDate(date.getDate() + 1);
-  return date.toISOString().slice(0, 10);
+  return getLocalDateKey(date);
 }
 
 export function getTaskPlanningSection(task: Task): PlanningSection {
