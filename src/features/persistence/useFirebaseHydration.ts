@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@app/hooks";
-import { setBoardNotes } from "@features/board";
-import { setPreferences } from "@features/preferences";
+import { setBoardAreas, setBoardNotes } from "@features/board";
+import { defaultPreferences, setPreferences } from "@features/preferences";
 import { setCaptures } from "@features/quickCapture";
 import { setRoutineCompletions, setRoutines } from "@features/routines";
 import { setTasks } from "@features/tasks";
@@ -65,12 +65,14 @@ export const useFirebaseHydration = () => {
         const [
           captures,
           tasks,
+          boardAreas,
           boardNotes,
           routines,
           routineCompletions,
           preferences,
         ] = await withTimeout(
           Promise.all([
+            import("@services/firebase/boardAreaService"),
             import("@services/firebase/boardNoteService"),
             import("@services/firebase/captureService"),
             import("@services/firebase/preferenceService"),
@@ -78,20 +80,30 @@ export const useFirebaseHydration = () => {
             import("@services/firebase/taskService"),
           ]).then(
             ([
+              { getBoardAreas },
               { getBoardNotes },
               { getCaptures },
-              { getPreferences },
+              { getPreferences, savePreferences },
               { getRoutineCompletions, getRoutines },
               { getTasks },
             ]) =>
               Promise.all([
                 getCaptures(userId),
                 getTasks(userId),
+                getBoardAreas(userId),
                 getBoardNotes(userId),
                 getRoutines(userId),
                 getRoutineCompletions(userId),
                 getPreferences(userId),
-              ]),
+              ]).then(async (results) => {
+                const preferencesResult = results[6];
+
+                if (!preferencesResult) {
+                  await savePreferences(userId, defaultPreferences);
+                }
+
+                return results;
+              }),
           ),
           6000,
         );
@@ -102,6 +114,7 @@ export const useFirebaseHydration = () => {
 
         dispatch(setCaptures(captures));
         dispatch(setTasks(tasks));
+        dispatch(setBoardAreas(boardAreas));
         dispatch(setBoardNotes(boardNotes));
         dispatch(setRoutines(routines));
         dispatch(setRoutineCompletions(routineCompletions));

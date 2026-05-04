@@ -8,6 +8,11 @@ export const selectBoardNotes = createSelector(
   (board) => board.notes,
 );
 
+export const selectBoardAreas = createSelector(
+  [selectBoardState],
+  (board) => board.areas,
+);
+
 export const selectBoardNoteCount = createSelector(
   [selectBoardNotes],
   (notes) => notes.length,

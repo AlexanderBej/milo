@@ -12,7 +12,7 @@ import {
 import { signOut } from "firebase/auth";
 
 import { useAppDispatch, useAppSelector } from "@app/hooks";
-import { setBoardNotes } from "@features/board";
+import { setBoardAreas, setBoardNotes } from "@features/board";
 import { clearFocus } from "@features/focus";
 import {
   selectPreferences,
@@ -101,7 +101,7 @@ export const SettingsPage = () => {
 
   const resetLocalData = () => {
     const confirmed = window.confirm(
-      "Reset local demo data on this device? Firebase data will not be deleted.",
+      "Clear local session data on this device? Firebase data will not be deleted.",
     );
 
     if (!confirmed) {
@@ -110,12 +110,13 @@ export const SettingsPage = () => {
 
     dispatch(setCaptures([]));
     dispatch(setTasks([]));
+    dispatch(setBoardAreas([]));
     dispatch(setBoardNotes([]));
     dispatch(setRoutines([]));
     dispatch(setRoutineCompletions([]));
     dispatch(clearFocus());
     window.sessionStorage.removeItem("milo:nudges:hidden");
-    setSaveMessage("Local data reset");
+    setSaveMessage("Local session data cleared");
   };
 
   const handleSignOut = () => {
@@ -316,7 +317,7 @@ export const SettingsPage = () => {
                 onClick={resetLocalData}
                 variant="ghost"
               >
-                Reset demo/local data
+                Clear local session data
               </Button>
             </div>
           </div>

@@ -27,6 +27,7 @@ type BoardNoteProps = {
   onDelete: (noteId: string) => void;
   onDuplicate: (note: BoardNoteType) => void;
   onMove: (noteId: string, x: number, y: number) => void;
+  onMoveEnd: (noteId: string) => void;
   onUpdate: (noteId: string, content: string) => void;
   zoom: number;
 };
@@ -50,6 +51,7 @@ export const BoardNote = ({
   onDelete,
   onDuplicate,
   onMove,
+  onMoveEnd,
   onUpdate,
   zoom,
 }: BoardNoteProps) => {
@@ -176,6 +178,7 @@ export const BoardNote = ({
 
     positionRef.current = nextPosition;
     setPosition(nextPosition);
+    onMove(note.id, nextX, nextY);
   };
 
   const finishDrag = (event: PointerEvent<HTMLDivElement>) => {
@@ -190,6 +193,7 @@ export const BoardNote = ({
     dragState.current = null;
     setIsDragging(false);
     onMove(note.id, positionRef.current.x, positionRef.current.y);
+    onMoveEnd(note.id);
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -225,6 +229,7 @@ export const BoardNote = ({
     positionRef.current = { x: nextX, y: nextY };
     setPosition(positionRef.current);
     onMove(note.id, nextX, nextY);
+    onMoveEnd(note.id);
   };
 
   return (

@@ -68,9 +68,6 @@ const quickCaptureSlice = createSlice({
 
       item.archivedAt = new Date().toISOString();
     },
-    removeCapture(state, action: PayloadAction<string>) {
-      state.items = state.items.filter((item) => item.id !== action.payload);
-    },
     restoreCapture(
       state,
       action: PayloadAction<{ item: CaptureItem; index?: number }>,
@@ -104,7 +101,6 @@ export const {
   addCapture,
   archiveCapture,
   processCapture,
-  removeCapture,
   restoreCapture,
   setCaptures,
   softDeleteCapture,

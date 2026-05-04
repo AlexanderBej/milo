@@ -1,10 +1,4 @@
-import {
-  collection,
-  deleteDoc,
-  doc,
-  getDocs,
-  setDoc,
-} from "firebase/firestore";
+import { collection, doc, getDocs, setDoc } from "firebase/firestore";
 import type { CaptureItem } from "@shared/types";
 import { db } from "./firebaseClient";
 import { getCapturesPath } from "./paths";
@@ -47,11 +41,4 @@ export const saveCapture = async (
     doc(ensureDb(), getCapturesPath(userId), capture.id),
     removeUndefinedFields(capture),
   );
-};
-
-export const deleteCapture = async (
-  userId: string,
-  captureId: string,
-): Promise<void> => {
-  await deleteDoc(doc(ensureDb(), getCapturesPath(userId), captureId));
 };

@@ -7,11 +7,15 @@ import {
 } from "@reduxjs/toolkit";
 
 import {
+  addArea,
   addNote,
   boardReducer,
+  deleteArea,
   deleteNote,
-  moveNote,
+  persistNotePosition,
+  persistAreaLayout,
   restoreNote,
+  updateAreaTitle,
   updateNote,
 } from "@features/board";
 import { focusReducer } from "@features/focus";
@@ -25,7 +29,6 @@ import {
   archiveCapture,
   processCapture,
   quickCaptureReducer,
-  removeCapture,
   restoreCapture,
   softDeleteCapture,
 } from "@features/quickCapture";
@@ -33,7 +36,6 @@ import {
   addRoutine,
   completeRoutineForPeriod,
   deactivateRoutine,
-  deleteRoutine,
   routinesReducer,
   toggleRoutineChecklistItemForPeriod,
   updateRoutine,
@@ -42,7 +44,6 @@ import {
   addTask,
   completeTask,
   deleteTask,
-  moveTask,
   restoreTask,
   tasksReducer,
   undoCompleteTask,
@@ -217,25 +218,6 @@ startAppListening({
   },
 });
 
-startAppListening({
-  actionCreator: removeCapture,
-  effect: async (action) => {
-    const userId = getAuthenticatedUserId();
-
-    if (!userId) {
-      return;
-    }
-
-    try {
-      const { deleteCapture } =
-        await import("@services/firebase/captureService");
-      await deleteCapture(userId, action.payload);
-    } catch (error) {
-      console.error("Failed to delete capture.", error);
-    }
-  },
-});
-
 const saveCurrentTask = async (taskId: string) => {
   const userId = getAuthenticatedUserId();
 
@@ -300,41 +282,9 @@ startAppListening({
 });
 
 startAppListening({
-  actionCreator: moveTask,
-  effect: async () => {
-    const userId = getAuthenticatedUserId();
-
-    if (!userId) {
-      return;
-    }
-
-    const tasks = store.getState().tasks.items;
-
-    try {
-      const { saveTask } = await import("@services/firebase/taskService");
-      await Promise.all(tasks.map((task) => saveTask(userId, task)));
-    } catch (error) {
-      console.error("Failed to save task order.", error);
-    }
-  },
-});
-
-startAppListening({
   actionCreator: deleteTask,
   effect: async (action) => {
-    const userId = getAuthenticatedUserId();
-
-    if (!userId) {
-      return;
-    }
-
-    try {
-      const { deleteTask: deleteFirebaseTask } =
-        await import("@services/firebase/taskService");
-      await deleteFirebaseTask(userId, action.payload);
-    } catch (error) {
-      console.error("Failed to delete task.", error);
-    }
+    await saveCurrentTask(action.payload);
   },
 });
 
@@ -414,35 +364,6 @@ startAppListening({
 });
 
 startAppListening({
-  actionCreator: deleteRoutine,
-  effect: async (action, listenerApi) => {
-    const userId = getAuthenticatedUserId();
-
-    if (!userId) {
-      return;
-    }
-
-    const originalState = listenerApi.getOriginalState();
-    const originalCompletions = originalState.routines.completions.filter(
-      (completion) => completion.routineId === action.payload,
-    );
-
-    try {
-      const { deleteRoutine: deleteFirebaseRoutine, deleteRoutineCompletion } =
-        await import("@services/firebase/routineService");
-      await deleteFirebaseRoutine(userId, action.payload);
-      await Promise.all(
-        originalCompletions.map((completion) =>
-          deleteRoutineCompletion(userId, completion.id),
-        ),
-      );
-    } catch (error) {
-      console.error("Failed to delete routine.", error);
-    }
-  },
-});
-
-startAppListening({
   actionCreator: toggleRoutineChecklistItemForPeriod,
   effect: async (action) => {
     await saveCurrentRoutineCompletion(
@@ -484,6 +405,28 @@ const saveCurrentBoardNote = async (noteId: string) => {
   }
 };
 
+const saveCurrentBoardArea = async (areaId: string) => {
+  const userId = getAuthenticatedUserId();
+
+  if (!userId) {
+    return;
+  }
+
+  const area = store.getState().board.areas.find((item) => item.id === areaId);
+
+  if (!area) {
+    return;
+  }
+
+  try {
+    const { saveBoardArea } =
+      await import("@services/firebase/boardAreaService");
+    await saveBoardArea(userId, area);
+  } catch (error) {
+    console.error("Failed to save board area.", error);
+  }
+};
+
 startAppListening({
   actionCreator: addNote,
   effect: async (action) => {
@@ -499,9 +442,9 @@ startAppListening({
 });
 
 startAppListening({
-  actionCreator: moveNote,
+  actionCreator: persistNotePosition,
   effect: async (action) => {
-    await saveCurrentBoardNote(action.payload.id);
+    await saveCurrentBoardNote(action.payload);
   },
 });
 
@@ -509,6 +452,46 @@ startAppListening({
   actionCreator: updateNote,
   effect: async (action) => {
     await saveCurrentBoardNote(action.payload.id);
+  },
+});
+
+startAppListening({
+  actionCreator: addArea,
+  effect: async (action) => {
+    await saveCurrentBoardArea(action.payload.id);
+  },
+});
+
+startAppListening({
+  actionCreator: updateAreaTitle,
+  effect: async (action) => {
+    await saveCurrentBoardArea(action.payload.id);
+  },
+});
+
+startAppListening({
+  actionCreator: persistAreaLayout,
+  effect: async (action) => {
+    await saveCurrentBoardArea(action.payload);
+  },
+});
+
+startAppListening({
+  actionCreator: deleteArea,
+  effect: async (action) => {
+    const userId = getAuthenticatedUserId();
+
+    if (!userId) {
+      return;
+    }
+
+    try {
+      const { deleteBoardArea } =
+        await import("@services/firebase/boardAreaService");
+      await deleteBoardArea(userId, action.payload);
+    } catch (error) {
+      console.error("Failed to delete board area.", error);
+    }
   },
 });
 

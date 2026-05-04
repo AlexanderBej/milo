@@ -1,6 +1,7 @@
 import {
   addRoutine,
   completeRoutineForPeriod,
+  deactivateRoutine,
   routinesReducer,
   toggleRoutineChecklistItemForPeriod,
 } from "./routinesSlice";
@@ -81,5 +82,31 @@ describe("routinesReducer", () => {
       completedChecklistItems: ["Brush teeth", "Set alarm"],
     });
     expect(state.completions[0].completedAt).toBeDefined();
+  });
+
+  it("deactivates routines without removing completion history", () => {
+    let state = routinesReducer(
+      undefined,
+      addRoutine({
+        title: "Morning routine",
+        checklist: ["Water"],
+        schedule: "daily",
+        timeWindow: { start: "08:00", end: "10:00" },
+      }),
+    );
+
+    const routineId = state.routines[0].id;
+    state = routinesReducer(
+      state,
+      completeRoutineForPeriod({
+        routineId,
+        periodKey: "2026-05-03",
+        now: "2026-05-03T08:00:00.000Z",
+      }),
+    );
+    state = routinesReducer(state, deactivateRoutine(routineId));
+
+    expect(state.routines[0]).toMatchObject({ id: routineId, active: false });
+    expect(state.completions).toHaveLength(1);
   });
 });

@@ -23,7 +23,6 @@ export {
   clearTaskMessage,
   completeTask,
   deleteTask,
-  moveTask,
   restoreTask,
   setTasks,
   tasksReducer,

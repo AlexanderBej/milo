@@ -202,7 +202,13 @@ const tasksSlice = createSlice({
     },
 
     deleteTask(state, action: PayloadAction<string>) {
-      state.items = state.items.filter((task) => task.id !== action.payload);
+      const task = state.items.find((item) => item.id === action.payload);
+
+      if (!task) {
+        return;
+      }
+
+      task.archivedAt = new Date().toISOString();
     },
 
     restoreTask(state, action: PayloadAction<{ task: Task; index?: number }>) {
@@ -256,38 +262,6 @@ const tasksSlice = createSlice({
       state.message = undefined;
     },
 
-    moveTask(
-      state,
-      action: PayloadAction<{ id: string; direction: "up" | "down" }>,
-    ) {
-      sortTasksByOrder(state.items);
-
-      const task = state.items.find((item) => item.id === action.payload.id);
-
-      if (!task) {
-        return;
-      }
-
-      const sameLaneTasks = state.items.filter(
-        (item) =>
-          item.status === task.status && item.priority === task.priority,
-      );
-
-      const laneIndex = sameLaneTasks.findIndex((item) => item.id === task.id);
-      const targetLaneIndex =
-        action.payload.direction === "up" ? laneIndex - 1 : laneIndex + 1;
-
-      if (targetLaneIndex < 0 || targetLaneIndex >= sameLaneTasks.length) {
-        return;
-      }
-
-      const targetTask = sameLaneTasks[targetLaneIndex];
-      const currentOrder = task.order;
-      task.order = targetTask.order;
-      targetTask.order = currentOrder;
-      sortTasksByOrder(state.items);
-    },
-
     clearTaskMessage(state) {
       state.message = undefined;
     },
@@ -299,7 +273,6 @@ export const {
   clearTaskMessage,
   completeTask,
   deleteTask,
-  moveTask,
   restoreTask,
   setTasks,
   undoCompleteTask,

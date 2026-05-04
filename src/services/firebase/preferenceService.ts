@@ -30,6 +30,7 @@ export const savePreferences = async (
   userId: string,
   preferences: PreferencesState,
 ): Promise<void> => {
+  console.log("Writing preferences");
   await setDoc(
     doc(ensureDb(), getMainPreferencesPath(userId)),
     removeUndefinedFields(preferences),

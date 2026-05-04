@@ -1,10 +1,4 @@
-import {
-  collection,
-  deleteDoc,
-  doc,
-  getDocs,
-  setDoc,
-} from "firebase/firestore";
+import { collection, doc, getDocs, setDoc } from "firebase/firestore";
 import type { Task } from "@features/tasks";
 import { db } from "./firebaseClient";
 import { getTasksPath } from "./paths";
@@ -33,15 +27,9 @@ export const getTasks = async (userId: string): Promise<Task[]> => {
 };
 
 export const saveTask = async (userId: string, task: Task): Promise<void> => {
+  console.log("Writing task:", task.id);
   await setDoc(
     doc(ensureDb(), getTasksPath(userId), task.id),
     removeUndefinedFields(task),
   );
-};
-
-export const deleteTask = async (
-  userId: string,
-  taskId: string,
-): Promise<void> => {
-  await deleteDoc(doc(ensureDb(), getTasksPath(userId), taskId));
 };

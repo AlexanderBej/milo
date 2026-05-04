@@ -14,7 +14,7 @@ import { Button } from "@shared/components/Button";
 import {
   addRoutine,
   completeRoutineForPeriod,
-  deleteRoutine,
+  deactivateRoutine,
   selectRoutines,
   selectTodayRoutineProgress,
   toggleRoutineChecklistItemForPeriod,
@@ -379,12 +379,12 @@ export const RoutinesPage = () => {
                     <Button
                       icon={<Trash />}
                       onClick={() => {
-                        dispatch(deleteRoutine(routine.id));
+                        dispatch(deactivateRoutine(routine.id));
                       }}
                       size="sm"
                       variant="ghost"
                     >
-                      Delete
+                      Archive
                     </Button>
                   </div>
                 </article>

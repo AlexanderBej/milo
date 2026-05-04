@@ -27,7 +27,6 @@ export {
   completeRoutineForDate,
   completeRoutineForPeriod,
   deactivateRoutine,
-  deleteRoutine,
   routinesReducer,
   setRoutineCompletions,
   setRoutines,

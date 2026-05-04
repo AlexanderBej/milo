@@ -7,6 +7,23 @@ export type BoardNote = {
   updatedAt?: string;
 };
 
+export type BoardArea = {
+  id: string;
+  title: string;
+  position: {
+    x: number;
+    y: number;
+  };
+  size: {
+    width: number;
+    height: number;
+  };
+  color?: string;
+  createdAt: number;
+  updatedAt?: number;
+};
+
 export type BoardState = {
+  areas: BoardArea[];
   notes: BoardNote[];
 };

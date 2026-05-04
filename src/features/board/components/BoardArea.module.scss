@@ -1,0 +1,173 @@
+.area {
+  --board-area-color: #38bdf8;
+
+  position: absolute;
+  z-index: 1;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
+  border: 1px solid var(--board-area-color, var(--color-border-subtle));
+  border-radius: var(--radius-card);
+  background: color-mix(
+    in srgb,
+    var(--board-area-color, var(--color-primary)) 12%,
+    transparent
+  );
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.025);
+  touch-action: none;
+  user-select: none;
+
+  &:hover,
+  &:focus-within {
+    .deleteButton {
+      opacity: 1;
+    }
+  }
+}
+
+.sky {
+  --board-area-color: #38bdf8;
+}
+
+.violet {
+  --board-area-color: #a78bfa;
+}
+
+.amber {
+  --board-area-color: #f59e0b;
+}
+
+.emerald {
+  --board-area-color: #34d399;
+}
+
+.rose {
+  --board-area-color: #fb7185;
+}
+
+.indigo {
+  --board-area-color: #818cf8;
+}
+
+.areaDragging {
+  border-color: color-mix(
+    in srgb,
+    var(--board-area-color, var(--color-primary)) 72%,
+    var(--color-border-strong)
+  );
+  background: color-mix(
+    in srgb,
+    var(--board-area-color, var(--color-primary)) 16%,
+    transparent
+  );
+  cursor: grabbing;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 2.75rem;
+  border-bottom: 1px solid
+    color-mix(
+      in srgb,
+      var(--board-area-color, var(--color-primary)) 22%,
+      transparent
+    );
+  background: color-mix(
+    in srgb,
+    var(--board-area-color, var(--color-primary)) 10%,
+    transparent
+  );
+  cursor: grab;
+  padding: 0 var(--space-3);
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.dragIcon {
+  flex: 0 0 auto;
+  color: color-mix(
+    in srgb,
+    var(--board-area-color, var(--color-primary)) 70%,
+    var(--color-text-muted)
+  );
+}
+
+.titleInput {
+  min-width: 0;
+  flex: 1 1 auto;
+  border: 0;
+  border-radius: var(--radius-button);
+  background: transparent;
+  color: var(--color-text-primary);
+  font: inherit;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0;
+  padding: var(--space-1) var(--space-2);
+
+  &:focus {
+    background: color-mix(in srgb, var(--color-bg-elevated) 78%, transparent);
+    outline: none;
+    box-shadow: var(--shadow-focus);
+  }
+}
+
+.deleteButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-button);
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  opacity: 0;
+  transition: var(--transition-surface);
+
+  &:hover,
+  &:focus-visible {
+    border-color: var(--color-border-subtle);
+    background: color-mix(in srgb, #ff6b6b 12%, var(--color-bg-card));
+    color: color-mix(in srgb, #ff8a8a 88%, var(--color-text-primary));
+    opacity: 1;
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--shadow-focus);
+  }
+}
+
+.body {
+  cursor: grab;
+}
+
+.resizeHandle {
+  position: absolute;
+  right: 0.35rem;
+  bottom: 0.35rem;
+  width: 1rem;
+  height: 1rem;
+  border-right: 2px solid
+    color-mix(
+      in srgb,
+      var(--board-area-color, var(--color-primary)) 52%,
+      transparent
+    );
+  border-bottom: 2px solid
+    color-mix(
+      in srgb,
+      var(--board-area-color, var(--color-primary)) 52%,
+      transparent
+    );
+  border-radius: 0 0 calc(var(--radius-card) - 0.4rem) 0;
+  background: transparent;
+  cursor: nwse-resize;
+}

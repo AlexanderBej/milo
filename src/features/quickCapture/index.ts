@@ -16,7 +16,6 @@ export {
   archiveCapture,
   processCapture,
   quickCaptureReducer,
-  removeCapture,
   restoreCapture,
   setCaptures,
   softDeleteCapture,

@@ -194,15 +194,6 @@ const routinesSlice = createSlice({
       }
     },
 
-    deleteRoutine(state, action: PayloadAction<string>) {
-      state.routines = state.routines.filter(
-        (routine) => routine.id !== action.payload,
-      );
-      state.completions = state.completions.filter(
-        (completion) => completion.routineId !== action.payload,
-      );
-    },
-
     toggleRoutineChecklistItemForPeriod(
       state,
       action: PayloadAction<ToggleRoutineChecklistItemPayload>,
@@ -308,7 +299,6 @@ export const {
   addRoutine,
   completeRoutineForPeriod,
   deactivateRoutine,
-  deleteRoutine,
   setRoutineCompletions,
   setRoutines,
   toggleRoutineChecklistItemForPeriod,

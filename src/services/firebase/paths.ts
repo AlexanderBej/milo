@@ -18,6 +18,9 @@ export const getTasksPath = (userId: string) => `${getUserPath(userId)}/tasks`;
 export const getBoardNotesPath = (userId: string) =>
   `${getUserPath(userId)}/boardNotes`;
 
+export const getBoardAreasPath = (userId: string) =>
+  `${getUserPath(userId)}/boardAreas`;
+
 export const getRoutinesPath = (userId: string) =>
   `${getUserPath(userId)}/routines`;
 

@@ -9,7 +9,11 @@ import { AnimatePresence } from "framer-motion";
 import { PlusCircle } from "phosphor-react";
 
 import { Button } from "@shared/components/Button";
-import type { BoardNote as BoardNoteType } from "../types";
+import type {
+  BoardArea as BoardAreaType,
+  BoardNote as BoardNoteType,
+} from "../types";
+import { BoardArea } from "./BoardArea";
 import { BoardNote } from "./BoardNote";
 import styles from "./BoardCanvas.module.scss";
 
@@ -20,13 +24,22 @@ const MAX_ZOOM = 1.6;
 const ZOOM_STEP = 0.1;
 
 type BoardCanvasProps = {
+  areas: BoardAreaType[];
   highlightedNoteId?: string | null;
   notes: BoardNoteType[];
+  onAddArea: (position: { x: number; y: number }) => void;
   onAddNote: (position: { x: number; y: number }) => void;
   onConvertToTask: (note: BoardNoteType) => void;
+  onDeleteArea: (areaId: string) => void;
   onDeleteNote: (noteId: string) => void;
   onDuplicateNote: (note: BoardNoteType) => void;
+  onMoveArea: (areaId: string, x: number, y: number) => void;
+  onMoveAreaEnd: (areaId: string) => void;
   onMoveNote: (noteId: string, x: number, y: number) => void;
+  onMoveNoteEnd: (noteId: string) => void;
+  onRenameArea: (areaId: string, title: string) => void;
+  onResizeArea: (areaId: string, width: number, height: number) => void;
+  onResizeAreaEnd: (areaId: string) => void;
   onUpdateNote: (noteId: string, content: string) => void;
 };
 
@@ -48,13 +61,22 @@ const clampZoom = (value: number) => {
 };
 
 export const BoardCanvas = ({
+  areas,
   highlightedNoteId,
   notes,
+  onAddArea,
   onAddNote,
   onConvertToTask,
+  onDeleteArea,
   onDeleteNote,
   onDuplicateNote,
+  onMoveArea,
+  onMoveAreaEnd,
   onMoveNote,
+  onMoveNoteEnd,
+  onRenameArea,
+  onResizeArea,
+  onResizeAreaEnd,
   onUpdateNote,
 }: BoardCanvasProps) => {
   const viewportRef = useRef<HTMLDivElement | null>(null);
@@ -163,6 +185,15 @@ export const BoardCanvas = ({
     onAddNote(getVisibleCenterPosition());
   };
 
+  const handleAddArea = () => {
+    const center = getVisibleCenterPosition();
+
+    onAddArea({
+      x: Math.min(Math.max(center.x - 120, 0), 1880),
+      y: Math.min(Math.max(center.y - 80, 0), 1280),
+    });
+  };
+
   const handleZoomIn = () => {
     zoomAroundPoint(zoom + ZOOM_STEP, getViewportCenter());
   };
@@ -208,6 +239,7 @@ export const BoardCanvas = ({
     return (
       target instanceof Element &&
       (target.closest("[data-board-note='true']") ||
+        target.closest("[data-board-area='true']") ||
         target.closest("[data-board-canvas-static='true']"))
     );
   };
@@ -344,6 +376,9 @@ export const BoardCanvas = ({
               Fit
             </button>
           </div>
+          <Button onClick={handleAddArea} variant="secondary">
+            Add area
+          </Button>
           <Button icon={<PlusCircle weight="fill" />} onClick={handleAddNote}>
             Add note
           </Button>
@@ -358,7 +393,7 @@ export const BoardCanvas = ({
         onWheel={handleWheel}
         ref={viewportRef}
       >
-        {notes.length === 0 ? (
+        {notes.length === 0 && areas.length === 0 ? (
           <div className={styles.emptyMessage} data-board-canvas-static="true">
             <h3>Drop a thought here.</h3>
             <p>Use the board when an idea is too messy for a task list.</p>
@@ -380,6 +415,19 @@ export const BoardCanvas = ({
           }}
         >
           <div className={styles.canvas}>
+            {areas.map((area) => (
+              <BoardArea
+                area={area}
+                key={area.id}
+                onDelete={onDeleteArea}
+                onMove={onMoveArea}
+                onMoveEnd={onMoveAreaEnd}
+                onRename={onRenameArea}
+                onResize={onResizeArea}
+                onResizeEnd={onResizeAreaEnd}
+                zoom={zoom}
+              />
+            ))}
             <AnimatePresence>
               {notes.map((note) => (
                 <BoardNote
@@ -390,6 +438,7 @@ export const BoardCanvas = ({
                   onDelete={onDeleteNote}
                   onDuplicate={onDuplicateNote}
                   onMove={onMoveNote}
+                  onMoveEnd={onMoveNoteEnd}
                   onUpdate={onUpdateNote}
                   zoom={zoom}
                 />

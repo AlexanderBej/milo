@@ -1,10 +1,4 @@
-import {
-  collection,
-  deleteDoc,
-  doc,
-  getDocs,
-  setDoc,
-} from "firebase/firestore";
+import { collection, doc, getDocs, setDoc } from "firebase/firestore";
 import type { Routine, RoutineCompletion } from "@features/routines";
 import { db } from "./firebaseClient";
 import { getRoutineCompletionsPath, getRoutinesPath } from "./paths";
@@ -59,13 +53,6 @@ export const saveRoutine = async (
   );
 };
 
-export const deleteRoutine = async (
-  userId: string,
-  routineId: string,
-): Promise<void> => {
-  await deleteDoc(doc(ensureDb(), getRoutinesPath(userId), routineId));
-};
-
 export const getRoutineCompletions = async (
   userId: string,
 ): Promise<RoutineCompletion[]> => {
@@ -106,14 +93,5 @@ export const saveRoutineCompletion = async (
   await setDoc(
     doc(ensureDb(), getRoutineCompletionsPath(userId), completion.id),
     removeUndefinedFields(completion),
-  );
-};
-
-export const deleteRoutineCompletion = async (
-  userId: string,
-  completionId: string,
-): Promise<void> => {
-  await deleteDoc(
-    doc(ensureDb(), getRoutineCompletionsPath(userId), completionId),
   );
 };

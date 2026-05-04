@@ -19,7 +19,9 @@ export const selectTodoTasks = createSelector([selectTasks], (tasks) =>
 );
 
 export const selectDoneTasks = createSelector([selectTasks], (tasks) =>
-  tasks.filter((task) => task.status === "done" || task.completed),
+  tasks.filter(
+    (task) => !task.archivedAt && (task.status === "done" || task.completed),
+  ),
 );
 
 export const selectActiveTasks = createSelector([selectTodoTasks], (tasks) =>

@@ -3,11 +3,19 @@ import { CheckCircle } from "phosphor-react";
 
 import { useAppDispatch, useAppSelector } from "@app/hooks";
 import {
+  addArea,
   addNote,
+  deleteArea,
   deleteNote,
+  moveArea,
   moveNote,
+  persistAreaLayout,
+  persistNotePosition,
+  resizeArea,
   restoreNote,
+  selectBoardAreas,
   selectBoardNotes,
+  updateAreaTitle,
   updateNote,
   type BoardNote,
 } from "@features/board";
@@ -24,6 +32,7 @@ type BoardToast = {
 
 export const BoardPage = () => {
   const dispatch = useAppDispatch();
+  const areas = useAppSelector(selectBoardAreas);
   const notes = useAppSelector(selectBoardNotes);
   const mustDoLimit = useAppSelector(selectMustDoLimit);
   const [highlightedNoteId, setHighlightedNoteId] = useState<string | null>(
@@ -65,6 +74,13 @@ export const BoardPage = () => {
     dispatch(action);
     setHighlightedNoteId(action.payload.id);
     setToast({ message: "Note added." });
+  };
+
+  const handleAddArea = (position: { x: number; y: number }) => {
+    const action = addArea({ position });
+
+    dispatch(action);
+    setToast({ message: "Area added." });
   };
 
   const handleConvertToTask = (note: BoardNote) => {
@@ -132,14 +148,38 @@ export const BoardPage = () => {
         </div>
       </header>
       <BoardCanvas
+        areas={areas}
         highlightedNoteId={highlightedNoteId}
         notes={notes}
+        onAddArea={handleAddArea}
         onAddNote={handleAddNote}
         onConvertToTask={handleConvertToTask}
+        onDeleteArea={(areaId) => {
+          dispatch(deleteArea(areaId));
+          setToast({ message: "Area deleted." });
+        }}
         onDeleteNote={handleDeleteNote}
         onDuplicateNote={handleDuplicateNote}
+        onMoveArea={(areaId, x, y) => {
+          dispatch(moveArea({ id: areaId, x, y }));
+        }}
+        onMoveAreaEnd={(areaId) => {
+          dispatch(persistAreaLayout(areaId));
+        }}
         onMoveNote={(noteId, x, y) => {
           dispatch(moveNote({ id: noteId, x, y }));
+        }}
+        onMoveNoteEnd={(noteId) => {
+          dispatch(persistNotePosition(noteId));
+        }}
+        onRenameArea={(areaId, title) => {
+          dispatch(updateAreaTitle({ id: areaId, title }));
+        }}
+        onResizeArea={(areaId, width, height) => {
+          dispatch(resizeArea({ id: areaId, width, height }));
+        }}
+        onResizeAreaEnd={(areaId) => {
+          dispatch(persistAreaLayout(areaId));
         }}
         onUpdateNote={(noteId, content) => {
           dispatch(updateNote({ id: noteId, content }));

@@ -1,6 +1,7 @@
 import {
   addTask,
   completeTask,
+  deleteTask,
   tasksReducer,
   undoCompleteTask,
   updateTaskPriority,
@@ -101,5 +102,22 @@ describe("tasksReducer", () => {
     state = tasksReducer(state, completeTask(taskId));
 
     expect(state.items[0].completedAt).toBe(completedAt);
+  });
+
+  it("archives tasks instead of removing them", () => {
+    let state = tasksReducer(undefined, addTask({ content: "Keep history" }));
+    const taskId = state.items[0].id;
+
+    state = tasksReducer(state, completeTask(taskId));
+    const completedAt = state.items[0].completedAt;
+    state = tasksReducer(state, deleteTask(taskId));
+
+    expect(state.items).toHaveLength(1);
+    expect(state.items[0]).toMatchObject({
+      id: taskId,
+      completedAt,
+      status: "done",
+    });
+    expect(state.items[0].archivedAt).toBeDefined();
   });
 });
