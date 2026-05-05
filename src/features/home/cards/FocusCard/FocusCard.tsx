@@ -4,8 +4,13 @@ import { AnimatePresence, motion } from "framer-motion";
 
 import { useAppDispatch, useAppSelector } from "@app/hooks";
 import {
+  BREAK_DURATION_OPTIONS,
   clearFocus,
+  FOCUS_DURATION_OPTIONS,
+  selectFocusState,
   selectRecommendedFocusTask,
+  setSelectedBreakMinutes,
+  setSelectedFocusMinutes,
   skipFocusTask,
   startFocus,
   swapFocusTask,
@@ -19,6 +24,7 @@ import {
 } from "@features/tasks";
 import { selectTodayKey } from "@features/time";
 import { Button } from "@shared/components/Button";
+import { Select } from "@shared/components/Select";
 
 import styles from "./FocusCard.module.scss";
 import { FocusOrb } from "@features/home/FocusOrb";
@@ -53,6 +59,7 @@ const priorityLabels: Record<Task["priority"], string> = {
 
 export const FocusCard = () => {
   const dispatch = useAppDispatch();
+  const focus = useAppSelector(selectFocusState);
   const focusTask = useAppSelector(selectRecommendedFocusTask);
   const tasks = useAppSelector(selectTasks);
   const todayKey = useAppSelector(selectTodayKey);
@@ -129,6 +136,12 @@ export const FocusCard = () => {
       </div>
       <div className={styles.focusHeader}>
         <div className={styles.focusHeaderBox}>
+          <div className={styles.focusHeaderTitle}>
+            <span className={styles.icon}>
+              <Target weight="duotone" />
+            </span>
+            <p className={styles.focusLabel}>Focus</p>
+          </div>
           {focusTask && (
             <span className={styles.priorityBadge}>
               {priorityLabels[focusTask.priority]}
@@ -137,12 +150,6 @@ export const FocusCard = () => {
           {focusTask && isTaskOverdue(focusTask, todayKey) ? (
             <span className={styles.overdueBadge}>Overdue</span>
           ) : null}
-          <div className={styles.focusHeaderTitle}>
-            <span className={styles.icon}>
-              <Target weight="duotone" />
-            </span>
-            <p className={styles.focusLabel}>Focus</p>
-          </div>
         </div>
         <span className={styles.focusHint}>One clear next step</span>
       </div>
@@ -157,42 +164,87 @@ export const FocusCard = () => {
             key={focusTask.id}
             transition={{ duration: 0.18, ease: [0.2, 0, 0, 1] }}
           >
-            {/* <span className={styles.priorityBadge}>
-              {priorityLabels[focusTask.priority]}
-            </span> */}
-            <h2>{focusTask.content}</h2>
-            <p>Start here. Keep it small and visible.</p>
-            <div className={styles.focusActions}>
+            <div className={styles.contentBox}>
+              <div className={styles.contentBoxText}>
+                <h2>{focusTask.content}</h2>
+                <p>Start here. Keep it small and visible.</p>
+              </div>
+              <div className={styles.contentBoxActions}>
+                <Button
+                  icon={<CheckCircle weight="duotone" />}
+                  onClick={handleDone}
+                  size="lg"
+                  variant="secondary"
+                >
+                  Done
+                </Button>
+                <Button
+                  icon={<ArrowsClockwise />}
+                  onClick={handleSwap}
+                  size="lg"
+                  variant="secondary"
+                >
+                  Swap
+                </Button>
+
+                <Button
+                  icon={<X />}
+                  onClick={handleSkip}
+                  size="lg"
+                  variant="ghost"
+                >
+                  Skip
+                </Button>
+              </div>
+            </div>
+            <div className={styles.focusActionsContainer}>
+              <div className={styles.durationSelectors}>
+                <label>
+                  <span>Focus</span>
+                  <Select
+                    aria-label="Focus duration"
+                    onChange={(event) => {
+                      dispatch(
+                        setSelectedFocusMinutes(Number(event.target.value)),
+                      );
+                    }}
+                    value={focus.selectedFocusMinutes}
+                    variant="pill"
+                  >
+                    {FOCUS_DURATION_OPTIONS.map((minutes) => (
+                      <option key={minutes} value={minutes}>
+                        {minutes} min
+                      </option>
+                    ))}
+                  </Select>
+                </label>
+                <label>
+                  <span>Break</span>
+                  <Select
+                    aria-label="Break duration"
+                    onChange={(event) => {
+                      dispatch(
+                        setSelectedBreakMinutes(Number(event.target.value)),
+                      );
+                    }}
+                    value={focus.selectedBreakMinutes}
+                    variant="pill"
+                  >
+                    {BREAK_DURATION_OPTIONS.map((minutes) => (
+                      <option key={minutes} value={minutes}>
+                        {minutes} min
+                      </option>
+                    ))}
+                  </Select>
+                </label>
+              </div>
               <Button
                 icon={<Play weight="fill" />}
                 onClick={handleStart}
                 size="lg"
+                className={styles.startBtn}
               >
                 Start
-              </Button>
-              <Button
-                icon={<CheckCircle weight="duotone" />}
-                onClick={handleDone}
-                size="lg"
-                variant="secondary"
-              >
-                Done
-              </Button>
-              <Button
-                icon={<ArrowsClockwise />}
-                onClick={handleSwap}
-                size="lg"
-                variant="secondary"
-              >
-                Swap
-              </Button>
-              <Button
-                icon={<X />}
-                onClick={handleSkip}
-                size="lg"
-                variant="ghost"
-              >
-                Skip
               </Button>
             </div>
           </motion.div>
@@ -205,7 +257,6 @@ export const FocusCard = () => {
             key="empty"
             transition={{ duration: 0.18, ease: [0.2, 0, 0, 1] }}
           >
-            {/* <span className={styles.priorityBadge}>Clear</span> */}
             <h2>Nothing needs your focus right now.</h2>
             <p>Add something to your plan or enjoy the quiet.</p>
           </motion.div>

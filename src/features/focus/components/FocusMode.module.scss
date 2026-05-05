@@ -37,10 +37,18 @@
     align-items: center;
     justify-content: space-between;
     gap: var(--space-4);
+
+    .kicker {
+      color: var(--color-primary-hover);
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-bold);
+      letter-spacing: 0;
+      margin: 0;
+      text-transform: uppercase;
+    }
   }
 
   .modeBadge,
-  .kicker,
   .statusPanel h3,
   .statusPanel p,
   .centerStage h2 {
@@ -75,7 +83,7 @@
     text-align: center;
 
     h2 {
-      max-width: 22ch;
+      max-width: 80%;
       color: var(--color-text-primary);
       font-size: var(--font-size-2xl);
       line-height: var(--line-height-tight);
@@ -83,12 +91,11 @@
     }
   }
 
-  .kicker {
-    color: var(--color-primary-hover);
+  .description {
+    width: 90%;
     font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-bold);
-    letter-spacing: 0;
-    text-transform: uppercase;
+    line-height: 1.25rem;
+    color: var(--color-text-secondary);
   }
 
   .timer {
@@ -119,6 +126,13 @@
       color: var(--color-text-muted);
       font-size: var(--font-size-md);
     }
+  }
+
+  .promptActions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-3);
   }
 
   .controls {
@@ -171,6 +185,8 @@
 
     .controls,
     .controls > button,
+    .promptActions,
+    .promptActions > button,
     .topBar > button {
       width: 100%;
     }

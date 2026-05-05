@@ -16,7 +16,11 @@ import routineStyles from "./RoutinesCard.module.scss";
 
 const formatRoutineWindow = (start: string, end: string) => `${start}-${end}`;
 
-export const RoutinesCard = () => {
+type RoutinesCardProps = {
+  className?: string;
+};
+
+export const RoutinesCard: React.FC<RoutinesCardProps> = ({ className }) => {
   const todayProgress = useAppSelector(selectTodayRoutineProgress);
   const activeRoutineProgress = useAppSelector(selectActiveRoutineForNow);
   const upcomingRoutineProgress = useAppSelector(selectUpcomingRoutineForNow);
@@ -27,12 +31,11 @@ export const RoutinesCard = () => {
 
   return (
     <Card
-      actions={
-        <Link className={styles.cardTextLink} to="/routines">
-          Open Routines
-        </Link>
-      }
-      className={clsx(activeRoutineProgress && routineStyles.routineCardActive)}
+      url="/routines"
+      className={clsx(
+        className,
+        activeRoutineProgress && routineStyles.routineCardActive,
+      )}
       icon={<ListChecks weight="duotone" />}
       title="Routines"
       color="--color-accent-amber"

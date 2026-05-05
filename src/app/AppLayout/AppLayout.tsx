@@ -8,15 +8,45 @@ import { AppSidebar } from "@app/AppSidebar/AppSidebar";
 
 import styles from "./AppLayout.module.scss";
 
+const SIDEBAR_COLLAPSED_STORAGE_KEY = "milo.sidebarCollapsed";
+
+const getInitialSidebarCollapsed = () => {
+  try {
+    return (
+      window.localStorage.getItem(SIDEBAR_COLLAPSED_STORAGE_KEY) === "true"
+    );
+  } catch {
+    return false;
+  }
+};
+
 export const AppLayout = () => {
   const { error: syncError, isLoading: isSyncLoading } = useFirebaseHydration();
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(
+    getInitialSidebarCollapsed,
+  );
   const [showSyncCheck, setShowSyncCheck] = useState(true);
   const [showCapturedToast, setShowCapturedToast] = useState(false);
   const [showFocusCompleteToast, setShowFocusCompleteToast] = useState(false);
 
+  const toggleSidebarCollapsed = useCallback(() => {
+    setIsSidebarCollapsed((current) => !current);
+  }, []);
+
   const showFocusCompleteFeedback = useCallback(() => {
     setShowFocusCompleteToast(true);
   }, []);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(
+        SIDEBAR_COLLAPSED_STORAGE_KEY,
+        String(isSidebarCollapsed),
+      );
+    } catch {
+      // localStorage can be unavailable in private or locked-down contexts.
+    }
+  }, [isSidebarCollapsed]);
 
   useEffect(() => {
     if (!showCapturedToast) {
@@ -57,8 +87,18 @@ export const AppLayout = () => {
   }, []);
 
   return (
-    <div className={styles.appShell}>
-      <AppSidebar setShowCapturedToast={setShowCapturedToast} />
+    <div
+      className={
+        isSidebarCollapsed
+          ? `${styles.appShell} ${styles.appShellSidebarCollapsed}`
+          : styles.appShell
+      }
+    >
+      <AppSidebar
+        isCollapsed={isSidebarCollapsed}
+        onToggleCollapsed={toggleSidebarCollapsed}
+        setShowCapturedToast={setShowCapturedToast}
+      />
 
       <div className={styles.contentShell}>
         {isSyncLoading && showSyncCheck ? (

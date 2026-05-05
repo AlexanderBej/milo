@@ -1,4 +1,5 @@
 import { Lightning } from "phosphor-react";
+import clsx from "clsx";
 
 import { useAppSelector } from "@app/hooks";
 import { selectNudgesEnabled } from "@features/preferences";
@@ -7,7 +8,11 @@ import { Card } from "@shared/components/Card";
 
 import styles from "../cards.module.scss";
 
-export const NudgePanel = () => {
+type NudgePanelProps = {
+  className?: string;
+};
+
+export const NudgePanel: React.FC<NudgePanelProps> = ({ className }) => {
   const nudgesEnabled = useAppSelector(selectNudgesEnabled);
 
   if (nudgesEnabled) {
@@ -19,6 +24,7 @@ export const NudgePanel = () => {
       icon={<Lightning weight="duotone" />}
       title="Nudges"
       color="--color-accent-teal"
+      className={clsx(className)}
     >
       <div className={styles.messageStack}>
         <h3>Nudges are quiet right now.</h3>

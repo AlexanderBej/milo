@@ -1,12 +1,5 @@
 import { useEffect } from "react";
-import {
-  CheckCircle,
-  Pause,
-  Play,
-  Prohibit,
-  Repeat,
-  SignOut,
-} from "phosphor-react";
+import { CheckCircle, Pause, Play, Repeat, SignOut } from "phosphor-react";
 
 import { useAppDispatch, useAppSelector } from "@app/hooks";
 import {
@@ -16,6 +9,7 @@ import {
   resumeFocus,
   selectFocusState,
   startBreak,
+  startNextFocus,
   tickFocus,
 } from "@features/focus";
 import { completeTask, selectTasks } from "@features/tasks";
@@ -97,6 +91,16 @@ export const FocusMode = ({ onComplete }: FocusModeProps) => {
       return;
     }
 
+    if (isFocusComplete) {
+      dispatch(startBreak());
+      return;
+    }
+
+    if (isBreakComplete) {
+      dispatch(startNextFocus());
+      return;
+    }
+
     dispatch(resumeFocus());
   };
 
@@ -115,7 +119,7 @@ export const FocusMode = ({ onComplete }: FocusModeProps) => {
         role="dialog"
       >
         <div className={styles.topBar}>
-          <span className={styles.modeBadge}>{modeLabel}</span>
+          <span className={styles.kicker}>{modeLabel} mode</span>
           <Button
             icon={<SignOut />}
             onClick={() => dispatch(exitFocus())}
@@ -127,44 +131,58 @@ export const FocusMode = ({ onComplete }: FocusModeProps) => {
         </div>
 
         <div className={styles.centerStage}>
-          <p className={styles.kicker}>Current task</p>
+          <p className={styles.kicker}>{modeLabel} mode</p>
           <h2 id="focus-mode-title">{focusedTask.content}</h2>
+          <p className={styles.description}>{focusedTask.description}</p>
           <div className={styles.timer} aria-live="polite">
             {formatRemainingTime(focus.remainingSeconds)}
           </div>
 
           {isFocusComplete ? (
             <div className={styles.statusPanel} role="status">
-              <h3>Nice focus. Take 5?</h3>
+              <h3>Nice focus. Take a break?</h3>
               <Button
                 icon={<Play weight="fill" />}
                 onClick={() => dispatch(startBreak())}
                 size="lg"
               >
-                Start 5 min break
+                Start break
               </Button>
             </div>
           ) : null}
 
           {isBreakComplete ? (
             <div className={styles.statusPanel} role="status">
-              <h3>Break complete</h3>
-              <p>Ease back in when you are ready.</p>
+              <h3>Ready for another round?</h3>
+              <div className={styles.promptActions}>
+                <Button
+                  icon={<Play weight="fill" />}
+                  onClick={() => dispatch(startNextFocus())}
+                  size="lg"
+                >
+                  Start focus
+                </Button>
+              </div>
             </div>
           ) : null}
         </div>
 
         <div className={styles.controls} aria-label="Focus controls">
-          <Button
-            disabled={isTimerComplete}
-            icon={
-              focus.isRunning ? <Pause weight="fill" /> : <Play weight="fill" />
-            }
-            onClick={handleToggleRunning}
-            size="lg"
-          >
-            {focus.isRunning ? "Pause" : "Resume"}
-          </Button>
+          {!isTimerComplete ? (
+            <Button
+              icon={
+                focus.isRunning ? (
+                  <Pause weight="fill" />
+                ) : (
+                  <Play weight="fill" />
+                )
+              }
+              onClick={handleToggleRunning}
+              size="lg"
+            >
+              {focus.isRunning ? "Pause" : "Resume"}
+            </Button>
+          ) : null}
           <Button
             icon={<Repeat />}
             onClick={() => dispatch(resetFocusTimer())}
@@ -180,14 +198,6 @@ export const FocusMode = ({ onComplete }: FocusModeProps) => {
             variant="secondary"
           >
             Complete task
-          </Button>
-          <Button
-            icon={<Prohibit />}
-            onClick={() => dispatch(exitFocus())}
-            size="lg"
-            variant="ghost"
-          >
-            Exit focus
           </Button>
         </div>
       </section>

@@ -83,7 +83,6 @@
     font-weight: var(--font-weight-medium);
   }
 
-  .focusContent,
   .focusEmpty {
     position: relative;
     z-index: 1;
@@ -93,7 +92,7 @@
 
     h2 {
       max-width: 18ch;
-      margin: var(--space-1) 0 var(--space-2);
+      margin: 0 0 var(--space-2);
       color: var(--color-text-primary);
       font-size: clamp(var(--font-size-2xl), 4vw, 3.25rem);
       line-height: var(--line-height-tight);
@@ -106,7 +105,77 @@
   }
 
   .focusContent {
-    max-width: 54rem;
+    width: 100%;
+    position: relative;
+    z-index: 1;
+    display: flex;
+    justify-items: start;
+    gap: var(--space-12);
+    justify-content: space-between;
+    min-height: 11rem;
+
+    .contentBox {
+      flex: 1;
+
+      h2 {
+        max-width: 18ch;
+        margin: 0 0 var(--space-2);
+        color: var(--color-text-primary);
+        font-size: clamp(var(--font-size-2xl), 4vw, 3.25rem);
+        line-height: var(--line-height-tight);
+      }
+
+      p {
+        color: var(--color-text-secondary);
+        font-size: var(--font-size-lg);
+      }
+
+      .contentBoxActions {
+        display: flex;
+        gap: var(--space-3);
+        align-items: center;
+        margin-top: var(--space-6);
+
+        // justify-content: space-between;
+      }
+    }
+
+    .focusActionsContainer {
+      width: 30%;
+
+      .durationSelectors {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-3);
+        margin-top: var(--space-5);
+
+        label {
+          display: inline-grid;
+          gap: var(--space-2);
+          min-width: 8.5rem;
+        }
+
+        span {
+          color: var(--color-text-muted);
+          font-size: var(--font-size-xs);
+          font-weight: var(--font-weight-bold);
+          letter-spacing: 0;
+          text-transform: uppercase;
+        }
+      }
+
+      .startBtn {
+        width: 100%;
+        margin-top: var(--space-6);
+      }
+
+      .focusActions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-3);
+        margin-top: var(--space-6);
+      }
+    }
   }
 
   .priorityBadge {
@@ -142,13 +211,6 @@
     font-weight: var(--font-weight-bold);
     letter-spacing: 0;
     text-transform: uppercase;
-  }
-
-  .focusActions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-3);
-    margin-top: var(--space-6);
   }
 
   .inlineToast {
@@ -229,6 +291,8 @@
     }
 
     .focusActions,
+    .durationSelectors,
+    .durationSelectors label,
     .focusActions > button {
       width: 100%;
     }

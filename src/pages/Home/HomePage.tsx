@@ -5,6 +5,8 @@ import { getGreetingForTime, getTimeSlot, useNow } from "@features/time";
 import {
   FocusCard,
   DailyPlanCard,
+  FoodCard,
+  MoneyCard,
   NudgePanel,
   BoardCard,
   InboxCard,
@@ -26,15 +28,13 @@ export const HomePage = () => {
       <HomeHeader />
       <FocusCard />
       <section className={styles.supportingGrid} aria-label="Today overview">
-        <div className={styles.leftColumn}>
-          <DailyPlanCard />
-        </div>
-        <div className={styles.rightColumn}>
-          <NudgePanel />
-          <BoardCard />
-          <InboxCard />
-          <RoutinesCard />
-        </div>
+        <DailyPlanCard className={styles.dailyPlanCard} />
+        <RoutinesCard className={styles.routinesCard} />
+        <NudgePanel className={styles.nudgePanel} />
+        <BoardCard className={styles.boardCard} />
+        <MoneyCard className={styles.moneyCard} />
+        <InboxCard className={styles.inboxCard} />
+        <FoodCard className={styles.foodCard} />
       </section>
     </main>
   );

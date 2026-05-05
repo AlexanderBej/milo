@@ -2,8 +2,19 @@ import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
 export type FocusMode = "focus" | "break";
 
-const FOCUS_DURATION_SECONDS = 25 * 60;
-const BREAK_DURATION_SECONDS = 5 * 60;
+export const FOCUS_DURATION_OPTIONS = [15, 25, 50] as const;
+export const BREAK_DURATION_OPTIONS = [2, 5, 10] as const;
+
+const DEFAULT_FOCUS_MINUTES = 25;
+const DEFAULT_BREAK_MINUTES = 5;
+
+const minutesToSeconds = (minutes: number) => minutes * 60;
+
+const normalizeDuration = (
+  minutes: number,
+  options: readonly number[],
+  fallback: number,
+) => (options.includes(minutes) ? minutes : fallback);
 
 export type FocusState = {
   currentTaskId: string | null;
@@ -12,6 +23,8 @@ export type FocusState = {
   startedAt: string | null;
   isRunning: boolean;
   mode: FocusMode;
+  selectedFocusMinutes: number;
+  selectedBreakMinutes: number;
   durationSeconds: number;
   remainingSeconds: number;
 };
@@ -23,13 +36,17 @@ const initialState: FocusState = {
   startedAt: null,
   isRunning: false,
   mode: "focus",
-  durationSeconds: FOCUS_DURATION_SECONDS,
-  remainingSeconds: FOCUS_DURATION_SECONDS,
+  selectedFocusMinutes: DEFAULT_FOCUS_MINUTES,
+  selectedBreakMinutes: DEFAULT_BREAK_MINUTES,
+  durationSeconds: minutesToSeconds(DEFAULT_FOCUS_MINUTES),
+  remainingSeconds: minutesToSeconds(DEFAULT_FOCUS_MINUTES),
 };
 
 const resetTimerForMode = (state: FocusState, mode: FocusMode) => {
   const duration =
-    mode === "focus" ? FOCUS_DURATION_SECONDS : BREAK_DURATION_SECONDS;
+    mode === "focus"
+      ? minutesToSeconds(state.selectedFocusMinutes)
+      : minutesToSeconds(state.selectedBreakMinutes);
 
   state.mode = mode;
   state.durationSeconds = duration;
@@ -53,6 +70,28 @@ const focusSlice = createSlice({
       state.startedAt = new Date().toISOString();
       state.isRunning = true;
       resetTimerForMode(state, "focus");
+    },
+    setSelectedFocusMinutes(state, action: PayloadAction<number>) {
+      state.selectedFocusMinutes = normalizeDuration(
+        action.payload,
+        FOCUS_DURATION_OPTIONS,
+        DEFAULT_FOCUS_MINUTES,
+      );
+
+      if (!state.currentTaskId && state.mode === "focus") {
+        resetTimerForMode(state, "focus");
+      }
+    },
+    setSelectedBreakMinutes(state, action: PayloadAction<number>) {
+      state.selectedBreakMinutes = normalizeDuration(
+        action.payload,
+        BREAK_DURATION_OPTIONS,
+        DEFAULT_BREAK_MINUTES,
+      );
+
+      if (!state.currentTaskId && state.mode === "break") {
+        resetTimerForMode(state, "break");
+      }
     },
     pauseFocus(state) {
       state.isRunning = false;
@@ -107,6 +146,15 @@ const focusSlice = createSlice({
       resetTimerForMode(state, "break");
       state.isRunning = true;
     },
+    startNextFocus(state) {
+      if (!state.currentTaskId) {
+        return;
+      }
+
+      state.startedAt = new Date().toISOString();
+      resetTimerForMode(state, "focus");
+      state.isRunning = true;
+    },
     resetSkippedTasks(state) {
       state.lastSwappedTaskId = null;
       state.skippedTaskIds = [];
@@ -121,9 +169,12 @@ export const {
   resetSkippedTasks,
   resetFocusTimer,
   resumeFocus,
+  setSelectedBreakMinutes,
+  setSelectedFocusMinutes,
   skipFocusTask,
   startBreak,
   startFocus,
+  startNextFocus,
   swapFocusTask,
   tickFocus,
 } = focusSlice.actions;

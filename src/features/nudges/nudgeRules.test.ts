@@ -35,6 +35,8 @@ const focus: FocusState = {
   startedAt: null,
   isRunning: false,
   mode: "focus",
+  selectedFocusMinutes: 25,
+  selectedBreakMinutes: 5,
   durationSeconds: 25 * 60,
   remainingSeconds: 25 * 60,
 };

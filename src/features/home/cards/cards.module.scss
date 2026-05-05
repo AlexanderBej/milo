@@ -129,3 +129,14 @@
     white-space: nowrap;
   }
 }
+
+.integrationPlaceholder {
+  display: grid;
+  gap: var(--space-4);
+  align-content: space-between;
+  min-height: 100%;
+
+  button {
+    justify-self: start;
+  }
+}

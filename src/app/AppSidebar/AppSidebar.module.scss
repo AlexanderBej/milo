@@ -14,6 +14,9 @@
     ),
     var(--color-bg-surface);
   padding: var(--space-6);
+  transition:
+    padding 320ms var(--ease-standard),
+    gap 320ms var(--ease-standard);
 
   .brand,
   .profile {
@@ -25,6 +28,47 @@
 
   .brand {
     gap: var(--space-1);
+  }
+
+  .logoLink {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 140px;
+    height: 2.75rem;
+    min-width: 0;
+    border-radius: var(--radius-button);
+    overflow: hidden;
+    transition: width 320ms var(--ease-standard);
+
+    &:focus-visible {
+      outline: none;
+      box-shadow: var(--shadow-focus);
+    }
+  }
+
+  .logoFull {
+    width: 140px;
+    opacity: 1;
+    transition:
+      opacity 160ms var(--ease-standard) 320ms,
+      visibility 0ms linear 320ms;
+    visibility: visible;
+  }
+
+  .logoIcon {
+    position: absolute;
+    inset: 50% auto auto 50%;
+    display: block;
+    width: 2.25rem;
+    height: 2.25rem;
+    opacity: 0;
+    transform: translate(-50%, -50%);
+    transition:
+      opacity 140ms var(--ease-standard) 320ms,
+      visibility 0ms linear 460ms;
+    visibility: hidden;
   }
 
   .brandSubtitle,
@@ -41,6 +85,34 @@
   .brandSubtitle {
     font-size: 7px;
     width: 140px;
+  }
+
+  .toggleButton {
+    position: absolute;
+    right: -1rem;
+    bottom: 9rem;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-button);
+    background: color-mix(in srgb, var(--color-bg-elevated) 72%, transparent);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: var(--transition-surface);
+
+    &:hover {
+      border-color: var(--color-border-strong);
+      color: var(--color-text-primary);
+    }
+
+    &:focus-visible {
+      outline: none;
+      box-shadow: var(--shadow-focus);
+    }
   }
 
   .navList {
@@ -67,6 +139,23 @@
       background: color-mix(in srgb, var(--color-bg-elevated) 72%, transparent);
       color: var(--color-text-primary);
     }
+
+    svg {
+      flex: 0 0 auto;
+    }
+  }
+
+  .navLabel,
+  .captureLabel,
+  .profileDetails {
+    max-width: 9rem;
+    overflow: hidden;
+    opacity: 1;
+    transition:
+      max-width 240ms var(--ease-standard) 120ms,
+      opacity 140ms var(--ease-standard) 180ms,
+      visibility 0ms linear 180ms;
+    visibility: visible;
   }
 
   .navItemActive {
@@ -84,7 +173,47 @@
   }
 
   .captureButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    min-height: 2.75rem;
     width: 100%;
+    border: 1px solid transparent;
+    border-radius: var(--radius-button);
+    background: var(--color-primary);
+    color: var(--color-bg-base);
+    cursor: pointer;
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--line-height-tight);
+    padding: 0 var(--space-4);
+    transition:
+      var(--transition-colors),
+      transform var(--duration-fast) var(--ease-standard),
+      box-shadow var(--duration-fast) var(--ease-standard);
+    user-select: none;
+    white-space: nowrap;
+
+    &:hover {
+      background: var(--color-primary-hover);
+    }
+
+    &:active {
+      background: var(--color-primary-active);
+      transform: translateY(1px);
+    }
+
+    &:focus-visible {
+      outline: none;
+      box-shadow: var(--shadow-focus);
+    }
+
+    svg {
+      flex: 0 0 auto;
+      width: 1.1em;
+      height: 1.1em;
+    }
   }
 
   .profile {
@@ -114,9 +243,142 @@
   }
 }
 
+.collapsed {
+  gap: var(--space-5);
+  padding: var(--space-5) var(--space-4);
+
+  .navList {
+    gap: var(--space-3);
+    justify-items: center;
+  }
+
+  .brandSubtitle,
+  .logoFull,
+  .navLabel,
+  .captureLabel,
+  .profileDetails {
+    max-width: 0;
+    opacity: 0;
+    transition:
+      max-width 120ms var(--ease-standard),
+      opacity 80ms var(--ease-standard),
+      visibility 0ms linear 80ms;
+    visibility: hidden;
+  }
+
+  .logoLink {
+    width: 2.75rem;
+  }
+
+  .logoFull {
+    transition:
+      opacity 80ms var(--ease-standard),
+      visibility 0ms linear 80ms;
+  }
+
+  .logoIcon {
+    opacity: 1;
+    transition:
+      opacity 140ms var(--ease-standard) 80ms,
+      visibility 0ms linear 80ms;
+    visibility: visible;
+  }
+
+  .navItem,
+  .navItemActive {
+    position: relative;
+    gap: 0;
+    justify-content: center;
+    width: 2.75rem;
+    padding: 0;
+  }
+
+  .navItemActive::before {
+    position: absolute;
+    left: -0.55rem;
+    width: 0.2rem;
+    height: 1.35rem;
+    border-radius: var(--radius-pill);
+    background: var(--color-primary);
+    content: "";
+  }
+
+  .sidebarFooter {
+    justify-items: center;
+  }
+
+  .captureButton {
+    gap: 0;
+    width: 2.75rem;
+    padding: 0;
+  }
+
+  .profile {
+    width: 2.75rem;
+    height: 2.75rem;
+    padding: 0;
+
+    .profileImage {
+      width: 2rem;
+      height: 2rem;
+    }
+  }
+}
+
 @media (max-width: 58rem) {
   .sidebar {
     position: static;
     height: auto;
+
+    .toggleButton {
+      position: static;
+      margin-top: var(--space-3);
+    }
+  }
+
+  .collapsed {
+    gap: var(--space-6);
+    padding: var(--space-6);
+
+    .brand,
+    .profile {
+      align-items: center;
+    }
+
+    .navList {
+      justify-items: stretch;
+    }
+
+    .brandSubtitle,
+    .logoFull,
+    .navLabel,
+    .captureLabel,
+    .profileDetails {
+      max-width: 9rem;
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .logoIcon {
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    .navItem,
+    .navItemActive,
+    .captureButton {
+      gap: var(--space-3);
+    }
+
+    .navItem,
+    .navItemActive,
+    .captureButton,
+    .profile {
+      width: 100%;
+    }
+
+    .navItemActive::before {
+      content: none;
+    }
   }
 }

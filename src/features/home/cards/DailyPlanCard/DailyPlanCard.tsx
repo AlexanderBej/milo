@@ -1,5 +1,5 @@
 import { CheckSquare } from "phosphor-react";
-import { Link } from "react-router-dom";
+import clsx from "clsx";
 
 import { useAppSelector } from "@app/hooks";
 import {
@@ -13,6 +13,10 @@ import { Card } from "@shared/components/Card";
 
 import styles from "../cards.module.scss";
 
+type DailyPlanCardProps = {
+  className?: string;
+};
+
 const isSameLocalDate = (dateValue: string, now: Date) => {
   const date = new Date(dateValue);
 
@@ -23,7 +27,7 @@ const isSameLocalDate = (dateValue: string, now: Date) => {
   );
 };
 
-export const DailyPlanCard = () => {
+export const DailyPlanCard: React.FC<DailyPlanCardProps> = ({ className }) => {
   const doneTasks = useAppSelector(selectDoneTasks);
   const todayTasks = useAppSelector(selectTodayIncompleteTasks);
   const nextTodayTask = useAppSelector(selectNextTodayTask);
@@ -36,13 +40,10 @@ export const DailyPlanCard = () => {
 
   return (
     <Card
-      actions={
-        <Link className={styles.cardTextLink} to="/plan">
-          Open Agenda
-        </Link>
-      }
+      url="/plan"
       icon={<CheckSquare weight="duotone" />}
       title="Agenda"
+      className={clsx(className)}
     >
       <div className={styles.planSummary}>
         {todayTasks.length > 0 ? (

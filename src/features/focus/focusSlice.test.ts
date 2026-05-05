@@ -4,9 +4,12 @@ import {
   pauseFocus,
   resetFocusTimer,
   resumeFocus,
+  setSelectedBreakMinutes,
+  setSelectedFocusMinutes,
   skipFocusTask,
   startBreak,
   startFocus,
+  startNextFocus,
   swapFocusTask,
   tickFocus,
 } from ".";
@@ -43,6 +46,8 @@ const buildFocusState = (
   startedAt: null,
   isRunning: false,
   mode: "focus",
+  selectedFocusMinutes: 25,
+  selectedBreakMinutes: 5,
   durationSeconds: 25 * 60,
   remainingSeconds: 25 * 60,
   ...focus,
@@ -91,6 +96,46 @@ describe("focusReducer", () => {
     expect(state.mode).toBe("break");
     expect(state.durationSeconds).toBe(5 * 60);
     expect(state.remainingSeconds).toBe(5 * 60);
+    expect(state.isRunning).toBe(true);
+  });
+
+  it("uses selected durations for focus, break, and the next focus round", () => {
+    let state = focusReducer(undefined, setSelectedFocusMinutes(50));
+    state = focusReducer(state, setSelectedBreakMinutes(10));
+    state = focusReducer(state, startFocus("task-1"));
+
+    expect(state.mode).toBe("focus");
+    expect(state.selectedFocusMinutes).toBe(50);
+    expect(state.durationSeconds).toBe(50 * 60);
+    expect(state.remainingSeconds).toBe(50 * 60);
+
+    state = { ...state, remainingSeconds: 0, isRunning: false };
+    state = focusReducer(state, startBreak());
+
+    expect(state.mode).toBe("break");
+    expect(state.durationSeconds).toBe(10 * 60);
+    expect(state.remainingSeconds).toBe(10 * 60);
+
+    state = { ...state, remainingSeconds: 0, isRunning: false };
+    state = focusReducer(state, startNextFocus());
+
+    expect(state.mode).toBe("focus");
+    expect(state.durationSeconds).toBe(50 * 60);
+    expect(state.remainingSeconds).toBe(50 * 60);
+    expect(state.isRunning).toBe(true);
+  });
+
+  it("keeps zero-state resume disabled while explicit loop actions continue", () => {
+    let state = focusReducer(undefined, startFocus("task-1"));
+    state = { ...state, mode: "break", remainingSeconds: 0, isRunning: false };
+    state = focusReducer(state, resumeFocus());
+
+    expect(state.isRunning).toBe(false);
+
+    state = focusReducer(state, startNextFocus());
+
+    expect(state.mode).toBe("focus");
+    expect(state.remainingSeconds).toBe(25 * 60);
     expect(state.isRunning).toBe(true);
   });
 

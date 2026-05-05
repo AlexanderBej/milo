@@ -1,5 +1,5 @@
-import { Link } from "react-router-dom";
 import { Chalkboard } from "phosphor-react";
+import clsx from "clsx";
 
 import { useAppSelector } from "@app/hooks";
 import { Card } from "@shared/components/Card";
@@ -7,19 +7,20 @@ import { selectBoardNotes } from "@features/board";
 
 import styles from "../cards.module.scss";
 
-export const BoardCard = () => {
+type BoardCardProps = {
+  className?: string;
+};
+
+export const BoardCard: React.FC<BoardCardProps> = ({ className }) => {
   const notes = useAppSelector(selectBoardNotes);
   const visibleNotes = notes.slice(-3).reverse();
 
   return (
     <Card
-      actions={
-        <Link className={styles.cardTextLink} to="/board">
-          Open Board
-        </Link>
-      }
+      url="/board"
       icon={<Chalkboard weight="duotone" />}
       title="Board"
+      className={clsx(className)}
     >
       <div className={styles.boardPreview}>
         {notes.length > 0 ? (

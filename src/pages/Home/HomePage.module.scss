@@ -37,18 +37,44 @@
 
 .supportingGrid {
   display: grid;
-  grid-template-columns: minmax(0, 1.28fr) minmax(18rem, 0.72fr);
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(3, 1fr);
   gap: var(--space-6);
   align-items: start;
 
-  .leftColumn,
-  .rightColumn {
-    display: grid;
-    gap: var(--space-4);
+  .dailyPlanCard {
+    grid-area: 1 / 1 / 3 / 3;
+    height: 100%;
   }
 
-  .rightColumn {
-    gap: var(--space-5);
+  .routinesCard {
+    grid-area: 1 / 3 / 2 / 5;
+    height: 100%;
+  }
+
+  .nudgePanel {
+    grid-area: 2 / 3 / 3 / 4;
+    height: 100%;
+  }
+
+  .inboxCard {
+    grid-area: 3 / 2 / 4 / 4;
+    height: 100%;
+  }
+
+  .moneyCard {
+    grid-area: 3 / 1 / 4 / 2;
+    height: 100%;
+  }
+
+  .boardCard {
+    grid-area: 2 / 4 / 3 / 5;
+    height: 100%;
+  }
+
+  .foodCard {
+    grid-area: 3 / 4 / 4 / 5;
+    height: 100%;
   }
 }
 
@@ -59,12 +85,6 @@
 
   .supportingGrid {
     grid-template-columns: 1fr;
-  }
-
-  .focusCard {
-    .focusMarker {
-      display: none;
-    }
   }
 }
 

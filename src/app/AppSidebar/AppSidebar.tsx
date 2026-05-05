@@ -2,6 +2,8 @@ import { useCallback, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   CalendarBlank,
+  CaretLeft,
+  CaretRight,
   Chalkboard,
   GearSix,
   House,
@@ -13,14 +15,16 @@ import {
 
 import { QuickCaptureModal } from "@features/quickCapture/components";
 import { selectDisplayName } from "@features/preferences";
-import { Button } from "@shared/components/Button";
 import { useAppSelector } from "../hooks";
 import logo from "../../assets/logo-full.svg";
+import logoIcon from "../../assets/logo-icon.svg";
 
 import styles from "./AppSidebar.module.scss";
 import { selectAuthUser } from "@features/auth";
 
 type AppSidebarProps = {
+  isCollapsed: boolean;
+  onToggleCollapsed: () => void;
   setShowCapturedToast: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
@@ -34,11 +38,14 @@ const navItems = [
 ];
 
 export const AppSidebar: React.FC<AppSidebarProps> = ({
+  isCollapsed,
+  onToggleCollapsed,
   setShowCapturedToast,
 }) => {
   const location = useLocation();
   const displayName = useAppSelector(selectDisplayName);
   const user = useAppSelector(selectAuthUser);
+  const profileLabel = displayName.trim() || user?.displayName || "Profile";
   const [isCaptureOpen, setIsCaptureOpen] = useState(false);
 
   const openCapture = useCallback(() => {
@@ -55,16 +62,38 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
 
   return (
     <>
-      <aside className={styles.sidebar} aria-label="Primary navigation">
+      <aside
+        className={
+          isCollapsed ? `${styles.sidebar} ${styles.collapsed}` : styles.sidebar
+        }
+        aria-label="Primary navigation"
+      >
         <div className={styles.brand}>
-          {/* <div className={styles.brandMark}>M</div> */}
-          <img width={140} src={logo} alt="icon" />
-          <div>
-            {/* <p className={styles.brandTitle}>MILO</p> */}
-            <p className={styles.brandSubtitle}>
-              Modular Intelligence for Life Organization
-            </p>
-          </div>
+          <Link
+            aria-label="MILO home"
+            className={styles.logoLink}
+            title={isCollapsed ? "MILO" : undefined}
+            to="/"
+          >
+            <img className={styles.logoFull} src={logo} alt="MILO" />
+            <img className={styles.logoIcon} src={logoIcon} alt="MILO" />
+          </Link>
+          <p className={styles.brandSubtitle}>
+            Modular Intelligence for Life Organization
+          </p>
+          <button
+            aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            className={styles.toggleButton}
+            onClick={onToggleCollapsed}
+            title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            type="button"
+          >
+            {isCollapsed ? (
+              <CaretRight aria-hidden size={18} weight="bold" />
+            ) : (
+              <CaretLeft aria-hidden size={18} weight="bold" />
+            )}
+          </button>
         </div>
 
         <nav className={styles.navList}>
@@ -77,7 +106,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
                   size={20}
                   weight={isActive ? "fill" : "regular"}
                 />
-                <span>{label}</span>
+                <span className={styles.navLabel}>{label}</span>
               </>
             );
 
@@ -86,6 +115,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
                 aria-current={isActive ? "page" : undefined}
                 className={isActive ? styles.navItemActive : styles.navItem}
                 key={label}
+                title={isCollapsed ? label : undefined}
                 to={path}
               >
                 {content}
@@ -99,15 +129,20 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
         </nav>
 
         <div className={styles.sidebarFooter}>
-          <Button
+          <button
+            aria-label={isCollapsed ? "Quick Capture" : undefined}
             className={styles.captureButton}
-            icon={<PlusCircle weight="fill" />}
             onClick={openCapture}
-            size="md"
+            title={isCollapsed ? "Quick Capture" : undefined}
+            type="button"
           >
-            Quick Capture
-          </Button>
-          <div className={styles.profile}>
+            <PlusCircle aria-hidden weight="fill" />
+            <span className={styles.captureLabel}>Quick Capture</span>
+          </button>
+          <div
+            className={styles.profile}
+            title={isCollapsed ? profileLabel : undefined}
+          >
             {user?.photoURL ? (
               <img
                 src={user.photoURL}
@@ -118,10 +153,8 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
             ) : (
               <UserCircle aria-hidden size={32} weight="duotone" />
             )}
-            <div>
-              <p className={styles.profileName}>
-                {displayName.trim() || user?.displayName}
-              </p>
+            <div className={styles.profileDetails}>
+              <p className={styles.profileName}>{profileLabel}</p>
             </div>
           </div>
         </div>

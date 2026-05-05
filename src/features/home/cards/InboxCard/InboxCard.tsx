@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
-import { Link } from "react-router-dom";
 import { Tray } from "phosphor-react";
+import clsx from "clsx";
 
 import { useAppSelector } from "@app/hooks";
 import { Card } from "@shared/components/Card";
@@ -13,7 +13,11 @@ import { useNow, formatRelativeTime } from "@features/time";
 
 import styles from "../cards.module.scss";
 
-export const InboxCard = () => {
+type InboxCardProps = {
+  className?: string;
+};
+
+export const InboxCard: React.FC<InboxCardProps> = ({ className }) => {
   const captureCount = useAppSelector(selectUnprocessedCaptureCount);
   const captures = useAppSelector(selectUnprocessedCaptures);
   const latestCapture = useAppSelector(selectLatestUnprocessedCapture);
@@ -22,14 +26,11 @@ export const InboxCard = () => {
 
   return (
     <Card
-      actions={
-        <Link className={styles.cardTextLink} to="/inbox">
-          Open Inbox
-        </Link>
-      }
+      url="/inbox"
       icon={<Tray weight="duotone" />}
       title="Inbox"
       color="--color-primary-hover"
+      className={clsx(className)}
     >
       <div className={styles.messageStack}>
         <h3>

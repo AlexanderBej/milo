@@ -79,8 +79,22 @@ describe("HomePage", () => {
       "/inbox",
     );
     expect(screen.queryByRole("button", { name: /focus mode/i })).toBeNull();
-    expect(screen.queryByText(/^food$/i)).toBeNull();
-    expect(screen.queryByText(/^money$/i)).toBeNull();
+    expect(screen.getByText(/^food$/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/food planning isn’t connected yet/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getAllByRole("button", { name: /coming later/i }),
+    ).toHaveLength(2);
+    expect(screen.getByText(/^money$/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/money tracking isn’t connected yet/i),
+    ).toBeInTheDocument();
+    screen
+      .getAllByRole("button", { name: /coming later/i })
+      .forEach((button) => {
+        expect(button).toBeDisabled();
+      });
     expect(selectCaptureItems(store.getState())).toHaveLength(0);
   });
 
