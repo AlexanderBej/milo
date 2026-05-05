@@ -112,7 +112,7 @@
     justify-items: start;
     gap: var(--space-12);
     justify-content: space-between;
-    min-height: 11rem;
+    min-height: 8rem;
 
     .contentBox {
       flex: 1;
@@ -141,18 +141,18 @@
     }
 
     .focusActionsContainer {
-      width: 30%;
+      width: 230px;
 
       .durationSelectors {
         display: flex;
         flex-wrap: wrap;
         gap: var(--space-3);
-        margin-top: var(--space-5);
+        justify-content: space-between;
 
         label {
           display: inline-grid;
           gap: var(--space-2);
-          min-width: 8.5rem;
+          min-width: 6.5rem;
         }
 
         span {

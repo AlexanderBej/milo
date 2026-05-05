@@ -173,7 +173,6 @@ export const FocusCard = () => {
                 <Button
                   icon={<CheckCircle weight="duotone" />}
                   onClick={handleDone}
-                  size="lg"
                   variant="secondary"
                 >
                   Done
@@ -181,18 +180,12 @@ export const FocusCard = () => {
                 <Button
                   icon={<ArrowsClockwise />}
                   onClick={handleSwap}
-                  size="lg"
                   variant="secondary"
                 >
                   Swap
                 </Button>
 
-                <Button
-                  icon={<X />}
-                  onClick={handleSkip}
-                  size="lg"
-                  variant="ghost"
-                >
+                <Button icon={<X />} onClick={handleSkip} variant="ghost">
                   Skip
                 </Button>
               </div>
