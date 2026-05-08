@@ -5,8 +5,9 @@ import { useAppSelector } from "@app/hooks";
 import {
   isTaskOverdue,
   selectDoneTasks,
-  selectNextTodayTask,
   selectTodayIncompleteTasks,
+  type Task,
+  type TaskPriority,
 } from "@features/tasks";
 import { selectTodayKey, useNow } from "@features/time";
 import { Card } from "@shared/components/Card";
@@ -16,6 +17,28 @@ import styles from "../cards.module.scss";
 type DailyPlanCardProps = {
   className?: string;
 };
+
+const prioritySections: Array<{
+  label: string;
+  priority: TaskPriority;
+  sectionClassName: string;
+}> = [
+  {
+    label: "Must",
+    priority: "must",
+    sectionClassName: styles.mustPrioritySection,
+  },
+  {
+    label: "Should",
+    priority: "should",
+    sectionClassName: styles.shouldPrioritySection,
+  },
+  {
+    label: "Could",
+    priority: "could",
+    sectionClassName: styles.couldPrioritySection,
+  },
+];
 
 const isSameLocalDate = (dateValue: string, now: Date) => {
   const date = new Date(dateValue);
@@ -30,13 +53,28 @@ const isSameLocalDate = (dateValue: string, now: Date) => {
 export const DailyPlanCard: React.FC<DailyPlanCardProps> = ({ className }) => {
   const doneTasks = useAppSelector(selectDoneTasks);
   const todayTasks = useAppSelector(selectTodayIncompleteTasks);
-  const nextTodayTask = useAppSelector(selectNextTodayTask);
   const todayKey = useAppSelector(selectTodayKey);
   const now = useNow();
-  const previewTasks = todayTasks.slice(0, 3);
+  const priorityBuckets = prioritySections.map((section) => ({
+    ...section,
+    tasks: todayTasks.filter((task) => task.priority === section.priority),
+  }));
+  const nextTodayTask =
+    priorityBuckets.find((section) => section.tasks.length > 0)?.tasks[0] ??
+    null;
   const completedTodayCount = doneTasks.filter(
     (task) => task.completedAt && isSameLocalDate(task.completedAt, now),
   ).length;
+
+  const renderTask = (task: Task) => (
+    <li className={styles.planPreviewItem} key={task.id}>
+      <span className={styles.checkCircle} aria-hidden />
+      <span>{task.content}</span>
+      {isTaskOverdue(task, todayKey) ? (
+        <span className={styles.overduePreviewChip}>Overdue</span>
+      ) : null}
+    </li>
+  );
 
   return (
     <Card
@@ -53,20 +91,37 @@ export const DailyPlanCard: React.FC<DailyPlanCardProps> = ({ className }) => {
           </p>
         ) : null}
 
-        {previewTasks.length > 0 ? (
+        {todayTasks.length > 0 && nextTodayTask ? (
           <>
             <p className={styles.cardMeta}>Next: {nextTodayTask.content}</p>
-            <ul className={styles.planPreviewList}>
-              {previewTasks.map((task) => (
-                <li className={styles.planPreviewItem} key={task.id}>
-                  <span className={styles.checkCircle} aria-hidden />
-                  <span>{task.content}</span>
-                  {isTaskOverdue(task, todayKey) ? (
-                    <span className={styles.overduePreviewChip}>Overdue</span>
-                  ) : null}
-                </li>
+            <div
+              className={styles.planPrioritySections}
+              aria-label="Agenda priority groups"
+            >
+              {priorityBuckets.map((section) => (
+                <section
+                  className={clsx(
+                    styles.planPrioritySection,
+                    section.sectionClassName,
+                  )}
+                  key={section.priority}
+                >
+                  <div className={styles.planPriorityHeader}>
+                    <h3>{section.label}</h3>
+                    <span className={styles.priorityCount}>
+                      {section.tasks.length}
+                    </span>
+                  </div>
+                  {section.tasks.length > 0 ? (
+                    <ul className={styles.planPreviewList}>
+                      {section.tasks.map(renderTask)}
+                    </ul>
+                  ) : (
+                    <p className={styles.emptyPriorityText}>Clear</p>
+                  )}
+                </section>
               ))}
-            </ul>
+            </div>
           </>
         ) : (
           <h3>

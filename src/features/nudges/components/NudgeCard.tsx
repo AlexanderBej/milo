@@ -49,7 +49,11 @@ const quietContextByTimeSlot = {
   night: "MILO will keep things light unless something needs attention.",
 } as const;
 
-export const NudgeCard = () => {
+type NudgeCardProps = {
+  className?: string;
+};
+
+export const NudgeCard: React.FC<NudgeCardProps> = ({ className }) => {
   const navigate = useNavigate();
   const now = useNow();
   const nudges = useAppSelector(selectNudges);
@@ -98,6 +102,7 @@ export const NudgeCard = () => {
       icon={<Coffee weight="duotone" />}
       title="Nudges"
       color="--color-accent-teal"
+      className={clsx(className)}
     >
       <div
         className={clsx(

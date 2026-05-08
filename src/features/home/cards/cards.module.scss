@@ -112,6 +112,78 @@
   }
 }
 
+.planPrioritySections {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.planPrioritySection {
+  --priority-accent: var(--color-primary-hover);
+
+  display: grid;
+  gap: var(--space-2);
+  border-left: 3px solid var(--priority-accent);
+  border-radius: var(--radius-button);
+  background: color-mix(in srgb, var(--priority-accent) 8%, transparent);
+  padding: var(--space-3);
+
+  .checkCircle {
+    border-color: color-mix(
+      in srgb,
+      var(--priority-accent) 72%,
+      var(--color-border-strong)
+    );
+    background: color-mix(in srgb, var(--priority-accent) 12%, transparent);
+  }
+}
+
+.mustPrioritySection {
+  --priority-accent: var(--color-accent-flame);
+}
+
+.shouldPrioritySection {
+  --priority-accent: var(--color-accent-amber);
+}
+
+.couldPrioritySection {
+  --priority-accent: var(--color-accent-teal);
+}
+
+.planPriorityHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+
+  h3 {
+    color: var(--priority-accent);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: 0;
+    text-transform: uppercase;
+  }
+}
+
+.priorityCount {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.45rem;
+  min-height: 1.45rem;
+  border: 1px solid color-mix(in srgb, var(--priority-accent) 34%, transparent);
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--priority-accent) 12%, transparent);
+  color: color-mix(in srgb, var(--priority-accent) 82%, var(--color-text-primary));
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+}
+
+.emptyPriorityText {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+}
+
 .boardPreviewList {
   li {
     overflow: hidden;

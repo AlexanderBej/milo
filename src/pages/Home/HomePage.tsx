@@ -14,6 +14,7 @@ import {
 } from "@features/home/cards";
 
 import styles from "./HomePage.module.scss";
+import { EmblaCarousel } from "@shared/components/EmblaCarousel";
 
 const homeCopyByTimeSlot = {
   morning: "Want to set the tone for today?",
@@ -31,9 +32,11 @@ export const HomePage = () => {
         <DailyPlanCard className={styles.dailyPlanCard} />
         <RoutinesCard className={styles.routinesCard} />
         <NudgePanel className={styles.nudgePanel} />
-        <BoardCard className={styles.boardCard} />
+        <EmblaCarousel className={styles.carousel}>
+          <InboxCard className={styles.inboxCard} />
+          <BoardCard className={styles.boardCard} />
+        </EmblaCarousel>
         <MoneyCard className={styles.moneyCard} />
-        <InboxCard className={styles.inboxCard} />
         <FoodCard className={styles.foodCard} />
       </section>
     </main>

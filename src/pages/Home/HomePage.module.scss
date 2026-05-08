@@ -38,7 +38,7 @@
 .supportingGrid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  grid-template-rows: repeat(3, 1fr);
+  grid-template-rows: repeat(4, auto);
   gap: var(--space-6);
   align-items: start;
 
@@ -52,28 +52,30 @@
     height: 100%;
   }
 
-  .nudgePanel {
-    grid-area: 2 / 3 / 3 / 4;
-    height: 100%;
+  .carousel {
+    grid-area: 2 / 3 / 3 / 5;
+
+    .boardCard {
+      height: 100%;
+    }
+
+    .inboxCard {
+      height: 100%;
+    }
   }
 
-  .inboxCard {
-    grid-area: 3 / 2 / 4 / 4;
+  .nudgePanel {
+    grid-area: 3 / 1 / 4 / 5;
     height: 100%;
   }
 
   .moneyCard {
-    grid-area: 3 / 1 / 4 / 2;
-    height: 100%;
-  }
-
-  .boardCard {
-    grid-area: 2 / 4 / 3 / 5;
+    grid-area: 4 / 1 / 5 / 3;
     height: 100%;
   }
 
   .foodCard {
-    grid-area: 3 / 4 / 4 / 5;
+    grid-area: 4 / 3 / 5 / 5;
     height: 100%;
   }
 }

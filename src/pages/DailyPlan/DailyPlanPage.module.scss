@@ -111,7 +111,7 @@
 }
 
 .input {
-  width: 550px;
+  max-width: 550px;
   min-height: 2.75rem;
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-input);
@@ -122,7 +122,8 @@
 }
 
 .textarea {
-  width: 550px;
+  max-width: 550px;
+  min-width: 365px;
   min-height: 100px;
   resize: vertical;
   border: 1px solid var(--color-border-subtle);

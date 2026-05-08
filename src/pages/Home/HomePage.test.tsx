@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { configureStore } from "@reduxjs/toolkit";
 import { Provider } from "react-redux";
@@ -132,6 +132,47 @@ describe("HomePage", () => {
         }),
       ).toBeInTheDocument();
     });
+  });
+
+  it("groups the agenda card tasks by priority", () => {
+    renderHomePage((store) => {
+      store.dispatch(
+        addTask({ content: "Refill the nice coffee", priority: "could" }),
+      );
+      store.dispatch(
+        addTask({ content: "Send the team update", priority: "should" }),
+      );
+      store.dispatch(
+        addTask({ content: "Ship the invoice", priority: "must" }),
+      );
+    });
+
+    const priorityGroups = screen.getByLabelText(/agenda priority groups/i);
+    const groupHeadings = within(priorityGroups).getAllByRole("heading", {
+      level: 3,
+    });
+
+    expect(groupHeadings.map((heading) => heading.textContent)).toEqual([
+      "Must",
+      "Should",
+      "Could",
+    ]);
+    expect(screen.getByText(/next: ship the invoice/i)).toBeInTheDocument();
+    expect(
+      within(groupHeadings[0].closest("section") as HTMLElement).getByText(
+        "Ship the invoice",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      within(groupHeadings[1].closest("section") as HTMLElement).getByText(
+        "Send the team update",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      within(groupHeadings[2].closest("section") as HTMLElement).getByText(
+        "Refill the nice coffee",
+      ),
+    ).toBeInTheDocument();
   });
 
   it("captures a quick thought from the sidebar quick capture button", async () => {

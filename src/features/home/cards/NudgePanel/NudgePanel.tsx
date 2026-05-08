@@ -16,7 +16,7 @@ export const NudgePanel: React.FC<NudgePanelProps> = ({ className }) => {
   const nudgesEnabled = useAppSelector(selectNudgesEnabled);
 
   if (nudgesEnabled) {
-    return <HomeNudgeCard />;
+    return <HomeNudgeCard className={className} />;
   }
 
   return (

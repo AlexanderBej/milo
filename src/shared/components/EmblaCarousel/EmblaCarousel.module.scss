@@ -1,0 +1,67 @@
+.embla {
+  width: 100%;
+}
+
+.viewport {
+  overflow: hidden;
+}
+
+.container {
+  display: flex;
+  align-items: stretch;
+  gap: var(--space-3);
+  padding: 2px 2px 10px;
+}
+
+.slide {
+  flex: 0 0 86%;
+  min-width: 0;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-2) 2px 0;
+}
+
+.dots {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--color-text-muted) 42%, transparent);
+  cursor: pointer;
+  padding: 0;
+  transition:
+    transform 180ms var(--ease-standard),
+    background 180ms var(--ease-standard),
+    width 180ms var(--ease-standard);
+}
+
+.dot:hover {
+  background: color-mix(in srgb, var(--color-text-secondary) 62%, transparent);
+}
+
+.dot:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+
+.dot:active {
+  transform: scale(0.95);
+}
+
+.dotActive {
+  width: 16px;
+  background: color-mix(in srgb, var(--color-text-primary) 68%, transparent);
+}
